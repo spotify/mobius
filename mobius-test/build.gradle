@@ -1,0 +1,31 @@
+apply plugin: 'java-library'
+apply plugin: 'jacoco'
+
+configurations {
+    apt {
+        visible false
+    }
+}
+
+dependencies {
+    compileOnly project(':mobius-core')
+    compileOnly "com.google.auto.value:auto-value:${versions.autoValue}"
+
+    apt "com.google.auto.value:auto-value:${versions.autoValue}"
+
+    implementation "com.google.guava:guava:${versions.guava}"
+    implementation "junit:junit:${versions.junit}"
+    implementation "org.hamcrest:hamcrest-library:${versions.hamcrestLibrary}"
+
+    testImplementation project(':mobius-core')
+    testImplementation "junit:junit:${versions.junit}"
+    testImplementation "org.assertj:assertj-core:${versions.assertjcore}"
+    testImplementation "com.google.guava:guava-testlib:${versions.guava}"
+}
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')

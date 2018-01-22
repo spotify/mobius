@@ -1,0 +1,54 @@
+[![Maven Central](https://img.shields.io/maven-central/v/com.spotify.mobius/mobius-core.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.spotify.mobius%22)
+[![License](https://img.shields.io/github/license/spotify/mobius.svg)](LICENSE)
+
+# Mobius
+
+Mobius is a reactive framework for managing state evolution, with add-ons for connecting with 
+Android UIs and RxJava Observables. It emphasises separation of concerns, testability and giving
+special treatment to unsafe (meaning state-changing, impure) parts of the code.
+
+To learn more, see the [website](https://spotify.github.com/mobius) for an introduction and the
+[wiki](https://github.com/spotify/mobius/wiki) for a user guide.
+
+## Status
+
+Mobius is in Beta status, meaning it is used in production in Spotify Android applications, but
+we may keep making changes relatively quickly.
+
+Mobius is currently built for Java 7 (because Java 8 is not fully supported on all versions of
+Android), hence the duplication of some concepts defined in `java.util.function` (see
+`com.spotify.mobius.functions`). When using Mobius, we do however recommend using Java 8 or
+later, primarily because of the improved type inference and because using lambdas greatly
+improves readability and conciseness of code.
+
+## Using it in your project
+
+The latest version of Mobius is available through Maven Central (LATEST_RELEASE below is
+![latest not found](https://img.shields.io/maven-central/v/com.spotify.mobius/mobius-core.svg)):
+
+```groovy
+implementation 'com.spotify.mobius:mobius-core:LATEST_RELEASE'
+testImplementation 'com.spotify.mobius:mobius-test:LATEST_RELEASE'
+
+implementation 'com.spotify.mobius:mobius-rx:LATEST_RELEASE'                  // only for RxJava 1 support
+implementation 'com.spotify.mobius:mobius-rx2:LATEST_RELEASE'                 // only for RxJava 2 support
+implementation 'com.spotify.mobius:mobius-android:LATEST_RELEASE'             // only for Android support
+implementation 'com.spotify.mobius:mobius-extras:LATEST_RELEASE'              // utilities for common patterns
+```
+
+## Building
+
+### Formatting
+
+We're using Google's auto-formatter to format the code. The build pipeline is set up to fail builds
+that aren't correctly formatted. To ensure correct formatting, run
+
+```bash
+./gradlew format
+```
+
+## Code of Conduct
+
+This project adheres to the [Open Code of Conduct][code-of-conduct]. By participating, you are expected to honor this code.
+
+[code-of-conduct]: https://github.com/spotify/code-of-conduct/blob/master/code-of-conduct.md

@@ -1,0 +1,116 @@
+import com.github.sherter.googlejavaformatgradleplugin.GoogleJavaFormat
+import com.github.sherter.googlejavaformatgradleplugin.VerifyGoogleJavaFormat
+
+buildscript {
+    repositories {
+        jcenter()
+        google()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.5.2"
+        classpath('com.android.tools.build:gradle:3.0.1')
+        classpath 'net.researchgate:gradle-release:2.6.0'
+    }
+}
+
+plugins {
+    id 'com.github.sherter.google-java-format' version '0.6'
+    id "com.github.hierynomus.license" version "0.14.0"
+}
+
+repositories {
+    jcenter()
+}
+
+apply plugin: 'net.researchgate.release'
+
+static def isAndroidProject(Project p) {
+    return p.plugins.findPlugin('com.android.library')
+}
+
+ext {
+    minSdkVersion = 14
+    compileSdkVersion = 25
+    targetSdkVersion = compileSdkVersion
+
+    versions = [
+            'autoValue'        : '1.5',
+            'assertjcore'      : '3.8.0',
+            'awaitility'       : '3.0.0',
+            'guava'            : '23.0-android',
+            'junit'            : '4.12',
+            'logback'          : '1.2.3',
+            'rxJava'           : '1.3.4',
+            'rxJava2'          : '2.1.8',
+            'slf4j'            : '1.7.25',
+            'jsr305'           : '3.0.1',
+            'hamcrestLibrary'  : '1.3',
+            'mockito'          : '1.10.19'
+    ]
+}
+
+subprojects {
+    ext.VERSION_NAME = properties.version
+
+    repositories {
+        jcenter()
+    }
+
+    group = GROUP
+    version = VERSION_NAME
+
+    afterEvaluate { proj ->
+        if (isAndroidProject(proj)) {
+            proj.apply from: rootProject.file('gradle/java_8_sources.gradle')
+            proj.compileUnitTestsAsJava8()
+
+            // for android, auto-format, even though that leads to worse error messages for syntax
+            // errors
+            android.libraryVariants.all { variant ->
+                variant.javaCompiler.dependsOn(rootProject.tasks.format)
+            }
+        } else if (proj.plugins.findPlugin('java-library')) {
+            // for Java (which is easier than android because AGP), ensure compilation is run before
+            // formatting, since the compiler has much better error messages for syntax errors.
+            rootProject.tasks.format.dependsOn(proj.tasks.compileTestJava)
+        }
+        // ensure that builds fail if code is not formatted properly
+        proj.tasks.check.dependsOn(rootProject.tasks.verifyFormat)
+    }
+}
+
+task format(type: GoogleJavaFormat) {
+    exclude '**/package-info.java'
+}
+task verifyFormat(type: VerifyGoogleJavaFormat) {
+    exclude '**/package-info.java'
+}
+task build(dependsOn: getTasksByName('build', true))
+task uploadArchives(dependsOn: getTasksByName('uploadArchives', true))
+
+release {
+    failOnUnversionedFiles = false
+    tagTemplate = 'v$version'
+
+    git {
+        requireBranch = 'master'
+        pushToRemote = 'upstream'
+    }
+}
+
+afterReleaseBuild.dependsOn uploadArchives
+
+allprojects {
+    apply plugin: 'com.github.hierynomus.license'
+
+    license {
+        header rootProject.file('apache2.header')
+        exclude("**/AutoValue_*.java")
+        mapping("java", "SLASHSTAR_STYLE")
+    }
+
+    getTasksByName('check', false).each { checkTask -> checkTask.dependsOn(tasks.withType(Javadoc)) }
+}

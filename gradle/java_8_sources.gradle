@@ -1,0 +1,52 @@
+def convertCompileTasksToJava8(def compileTaskGetter) {
+    def isApplication = plugins.findPlugin('com.android.application')
+
+    def variants
+    if (isApplication) {
+        variants = android.applicationVariants
+    } else {
+        variants = android.libraryVariants
+    }
+
+    variants.all { variant ->
+        def compileTask = compileTaskGetter(variant)
+
+        if (!compileTask.enabled) {
+            return
+        }
+
+        // lambdas FTW:
+        compileTask.sourceCompatibility = JavaVersion.VERSION_1_8
+        compileTask.targetCompatibility = JavaVersion.VERSION_1_8
+        // adding java.nio, streams, functional interfaces to runtime
+        def newBootstrapClasspath
+        if (compileTask.options.bootstrapClasspath) {
+            newBootstrapClasspath = files(getJDKBootClasspath(), compileTask.options.bootstrapClasspath)
+        } else {
+            newBootstrapClasspath = project.files(getJDKBootClasspath())
+        }
+        compileTask.options.bootstrapClasspath = newBootstrapClasspath    }
+}
+
+File getJDKBootClasspath() {
+    def jar = project.file([System.env.'JAVA_HOME', 'jre', 'lib', 'rt.jar'].join(File.separator))
+    if (jar.exists()) {
+        return jar
+    }
+
+    jar = project.file([System.properties.'java.home', 'lib', 'rt.jar'].join(File.separator))
+    if (jar.exists()) {
+        return jar
+    }
+
+    throw new IllegalArgumentException("rt.jar file does not exist. " +
+            "Please set the JAVA_HOME variable in your environment to match the location of your Java installation")
+}
+
+ext.compileSourcesAsJava8 = {
+    convertCompileTasksToJava8({variant -> variant.variantData.javacTask})
+}
+
+ext.compileUnitTestsAsJava8 = {
+    convertCompileTasksToJava8({variant -> variant.unitTestVariant.variantData.javacTask})
+}

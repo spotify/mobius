@@ -1,0 +1,8 @@
+rootProject.name = 'mobius'
+
+include 'mobius-core'
+include 'mobius-test'
+include 'mobius-rx'
+include 'mobius-rx2'
+include 'mobius-android'
+include 'mobius-extras'
