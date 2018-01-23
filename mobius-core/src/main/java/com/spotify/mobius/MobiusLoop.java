@@ -288,23 +288,22 @@ public class MobiusLoop<M, E, F> implements Disposable {
     void stop();
 
     /**
-     * Invoke this method when you want to restore the controller to a specific state.
+     * Invoke this method if you want to replace which model the controller should start from.
      *
      * <p>May only be called when the controller isn't running.
      *
-     * @param model the model with the state the controller should be restored to
+     * @param model the model with the state the controller should start from
      */
-    void restoreState(M model);
+    void replaceModel(M model);
 
     /**
-     * Invoke this method when you wish to save the current state of the controller.
-     *
-     * <p>May only be called when the controller isn't running.
+     * Get the current model of the loop that this controller is running, or the most recent model
+     * if it's not running.
      *
      * @return a model with the state of the controller
      */
     @Nonnull
-    M saveState();
+    M getModel();
   }
 
   /** Interface for logging init and update calls. */

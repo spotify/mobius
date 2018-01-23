@@ -78,15 +78,15 @@ class MobiusLoopController<M, E, F>
   }
 
   @Override
-  public synchronized void restoreState(M model) {
+  public synchronized void replaceModel(M model) {
     checkNotNull(model);
-    currentState.onRestoreState(model);
+    currentState.onReplaceModel(model);
   }
 
   @Override
   @Nonnull
-  public synchronized M saveState() {
-    return currentState.onSaveState();
+  public synchronized M getModel() {
+    return currentState.onGetModel();
   }
 
   public void postUpdateView(final M model) {

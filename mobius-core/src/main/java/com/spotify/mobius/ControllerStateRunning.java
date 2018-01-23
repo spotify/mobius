@@ -26,6 +26,7 @@ class ControllerStateRunning<M, E, F> extends ControllerStateBase<M, E> {
   @Nonnull private final ControllerActions<M, E> actions;
   @Nonnull private final Connection<M> renderer;
   @Nonnull private final MobiusLoop<M, E, F> loop;
+  @Nonnull private final M startModel;
 
   ControllerStateRunning(
       ControllerActions<M, E> actions,
@@ -36,6 +37,7 @@ class ControllerStateRunning<M, E, F> extends ControllerStateBase<M, E> {
     this.actions = actions;
     this.renderer = renderer;
     this.loop = loopFactory.startFrom(modelToStartFrom);
+    this.startModel = modelToStartFrom;
   }
 
   void start() {
@@ -73,5 +75,12 @@ class ControllerStateRunning<M, E, F> extends ControllerStateBase<M, E> {
     loop.dispose();
     M mostRecentModel = loop.getMostRecentModel();
     actions.goToStateCreated(renderer, mostRecentModel);
+  }
+
+  @Nonnull
+  @Override
+  public M onGetModel() {
+    M model = loop.getMostRecentModel();
+    return model != null ? model : startModel;
   }
 }

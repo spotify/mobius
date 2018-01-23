@@ -52,13 +52,13 @@ class ControllerStateCreated<M, E, F> extends ControllerStateBase<M, E> {
   }
 
   @Override
-  public void onRestoreState(M model) {
+  public void onReplaceModel(M model) {
     nextModelToStartFrom = model;
   }
 
   @Nonnull
   @Override
-  public M onSaveState() {
+  public M onGetModel() {
     return nextModelToStartFrom;
   }
 }

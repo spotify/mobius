@@ -210,15 +210,15 @@ public class MobiusLoopControllerTest {
       underTest.connect(view());
       underTest.start();
       underTest.stop();
-      String model = underTest.saveState();
+      String model = underTest.getModel();
 
       assertEquals("init", model);
     }
 
     @Test
     public void canRestoreState() throws Exception {
-      underTest.restoreState("restored");
-      String model = underTest.saveState();
+      underTest.replaceModel("restored");
+      String model = underTest.getModel();
 
       assertEquals("restored", model);
     }
@@ -226,7 +226,7 @@ public class MobiusLoopControllerTest {
     @Test
     public void canSaveStateAfterCreating() throws Exception {
       underTest.connect(view());
-      String model = underTest.saveState();
+      String model = underTest.getModel();
 
       assertEquals("init", model);
     }
@@ -234,8 +234,8 @@ public class MobiusLoopControllerTest {
     @Test
     public void canRestoreStateAfterCreating() throws Exception {
       underTest.connect(view());
-      underTest.restoreState("restored");
-      String model = underTest.saveState();
+      underTest.replaceModel("restored");
+      String model = underTest.getModel();
 
       assertEquals("restored", model);
     }
@@ -245,19 +245,18 @@ public class MobiusLoopControllerTest {
       underTest.connect(view());
       underTest.start();
 
-      assertThatThrownBy(() -> underTest.restoreState("restored"))
+      assertThatThrownBy(() -> underTest.replaceModel("restored"))
           .isInstanceOf(IllegalStateException.class)
           .hasMessageContaining("running");
     }
 
     @Test
-    public void cannotSaveStateAfterStarting() throws Exception {
+    public void canSaveStateAfterStarting() throws Exception {
       underTest.connect(view());
       underTest.start();
 
-      assertThatThrownBy(() -> underTest.saveState())
-          .isInstanceOf(IllegalStateException.class)
-          .hasMessageContaining("running");
+      String model = underTest.getModel();
+      assertEquals("init", model);
     }
 
     @Test
@@ -265,7 +264,7 @@ public class MobiusLoopControllerTest {
       underTest.connect(view());
       underTest.start();
       underTest.stop();
-      String model = underTest.saveState();
+      String model = underTest.getModel();
 
       assertEquals("init", model);
     }
@@ -275,8 +274,8 @@ public class MobiusLoopControllerTest {
       underTest.connect(view());
       underTest.start();
       underTest.stop();
-      underTest.restoreState("restored");
-      String model = underTest.saveState();
+      underTest.replaceModel("restored");
+      String model = underTest.getModel();
 
       assertEquals("restored", model);
     }
@@ -310,7 +309,7 @@ public class MobiusLoopControllerTest {
       @SuppressWarnings("unchecked")
       Connection<String> renderer = mock(Connection.class);
 
-      underTest.restoreState("restored");
+      underTest.replaceModel("restored");
       underTest.connect(eventConsumer -> renderer);
       underTest.start();
 

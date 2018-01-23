@@ -58,16 +58,13 @@ abstract class ControllerStateBase<M, E> {
         String.format("cannot call stop when in the %s state", getStateName()));
   }
 
-  public void onRestoreState(M model) {
+  public void onReplaceModel(M model) {
     throw new IllegalStateException(
-        String.format("cannot call restoreState when in the %s state", getStateName()));
+        String.format("cannot call replaceModel when in the %s state", getStateName()));
   }
 
   @Nonnull
-  public M onSaveState() {
-    throw new IllegalStateException(
-        String.format("cannot call saveState when in the %s state", getStateName()));
-  }
+  public abstract M onGetModel();
 
   public void onDispatchEvent(E event) {
     LOGGER.debug(
