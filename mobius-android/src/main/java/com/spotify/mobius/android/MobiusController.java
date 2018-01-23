@@ -19,11 +19,10 @@
  */
 package com.spotify.mobius.android;
 
-import android.os.Bundle;
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
 import com.spotify.mobius.ConnectionLimitExceededException;
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 public interface MobiusController<M, E> {
   /**
@@ -63,16 +62,21 @@ public interface MobiusController<M, E> {
   void stop();
 
   /**
-   * Invoke this method if you're restoring state from a bundle.
+   * Invoke this method when you want to restore the controller to a specific state.
    *
-   * @param in the bundle that contains the serialized state
+   * <p>May only be called when the controller isn't started.
+   *
+   * @param model the model with the state the controller should be restored to
    */
-  void restoreState(@Nullable Bundle in);
+  void restoreState(M model);
 
   /**
-   * Invoke this method when you wish to save the current state for later restoration.
+   * Invoke this method when you wish to save the current state of the controller.
    *
-   * @param out the bundle to save the state in
+   * <p>May only be called when the controller isn't started.
+   *
+   * @return a model with the state of the controller
    */
-  void saveState(@Nullable Bundle out);
+  @Nonnull
+  M saveState();
 }

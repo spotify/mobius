@@ -27,7 +27,7 @@ interface ControllerActions<M, E> {
 
   void postUpdateView(M model);
 
-  void goToStateInit(@Nullable M nextModelToStartFrom);
+  void goToStateInit(M nextModelToStartFrom);
 
   void goToStateCreated(Connection<M> renderer, @Nullable M nextModelToStartFrom);
 

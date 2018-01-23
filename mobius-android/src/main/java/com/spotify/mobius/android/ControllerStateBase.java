@@ -19,9 +19,8 @@
  */
 package com.spotify.mobius.android;
 
-import android.os.Bundle;
 import com.spotify.mobius.Connectable;
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,12 +59,13 @@ abstract class ControllerStateBase<M, E> {
         String.format("cannot call stop when in the %s state", getStateName()));
   }
 
-  public void onRestoreState(@Nullable Bundle in) {
+  public void onRestoreState(M model) {
     throw new IllegalStateException(
         String.format("cannot call restoreState when in the %s state", getStateName()));
   }
 
-  public void onSaveState(Bundle out) {
+  @Nonnull
+  public M onSaveState() {
     throw new IllegalStateException(
         String.format("cannot call saveState when in the %s state", getStateName()));
   }

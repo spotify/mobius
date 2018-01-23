@@ -21,19 +21,17 @@ package com.spotify.mobius.android;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import android.os.Bundle;
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
 import com.spotify.mobius.First;
@@ -49,7 +47,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -85,21 +82,7 @@ public class MobiusAndroidControllerTest {
                     (model, event) -> Next.next(model + event), effectHandler)
                 .eventRunner(WorkRunners::immediate)
                 .effectRunner(WorkRunners::immediate),
-            new ModelSaveRestore<String>() {
-              @Nonnull
-              @Override
-              public String getDefaultModel() {
-                return "init";
-              }
-
-              @Override
-              public void saveModel(String model, Bundle out) {}
-
-              @Override
-              public String restoreModel(Bundle in) {
-                return "";
-              }
-            },
+            "init",
             WorkRunners.immediate());
 
     @Test
@@ -224,125 +207,83 @@ public class MobiusAndroidControllerTest {
                     (model, event) -> Next.next(model + event), effectHandler)
                 .eventRunner(WorkRunners::immediate)
                 .effectRunner(WorkRunners::immediate),
-            new ModelSaveRestore<String>() {
-              @Nonnull
-              @Override
-              public String getDefaultModel() {
-                return "init";
-              }
-
-              @Override
-              public void saveModel(String model, Bundle out) {
-                out.putString("key", "saved");
-              }
-
-              @Override
-              public String restoreModel(Bundle in) {
-                return in.getString("key");
-              }
-            },
+            "init",
             WorkRunners.immediate());
 
     @Test
     public void canSaveState() throws Exception {
-      Bundle bundle = mock(Bundle.class);
-
       underTest.connect(view());
       underTest.start();
       underTest.stop();
-      underTest.saveState(bundle);
+      String model = underTest.saveState();
 
-      verify(bundle).putString(anyString(), anyString());
+      assertEquals("init", model);
     }
 
     @Test
     public void canRestoreState() throws Exception {
-      Bundle bundle = mock(Bundle.class);
-      when(bundle.getString(anyString())).thenReturn("restored");
+      underTest.restoreState("restored");
+      String model = underTest.saveState();
 
-      underTest.restoreState(bundle);
-
-      verify(bundle).getString(anyString());
+      assertEquals("restored", model);
     }
 
     @Test
     public void canSaveStateAfterCreating() throws Exception {
-      Bundle bundle = mock(Bundle.class);
-
       underTest.connect(view());
-      underTest.saveState(bundle);
+      String model = underTest.saveState();
 
-      verify(bundle).putString(anyString(), anyString());
+      assertEquals("init", model);
     }
 
     @Test
     public void canRestoreStateAfterCreating() throws Exception {
-      Bundle bundle = mock(Bundle.class);
-      when(bundle.getString(anyString())).thenReturn("restored");
-
       underTest.connect(view());
-      underTest.restoreState(bundle);
+      underTest.restoreState("restored");
+      String model = underTest.saveState();
 
-      verify(bundle).getString(anyString());
+      assertEquals("restored", model);
     }
 
     @Test
     public void cannotRestoreStateAfterStarting() throws Exception {
-      Bundle bundle = mock(Bundle.class);
-
       underTest.connect(view());
       underTest.start();
 
-      assertThatThrownBy(() -> underTest.restoreState(bundle))
+      assertThatThrownBy(() -> underTest.restoreState("restored"))
           .isInstanceOf(IllegalStateException.class)
           .hasMessageContaining("running");
     }
 
     @Test
     public void cannotSaveStateAfterStarting() throws Exception {
-      Bundle bundle = mock(Bundle.class);
-
       underTest.connect(view());
       underTest.start();
 
-      assertThatThrownBy(() -> underTest.saveState(bundle))
+      assertThatThrownBy(() -> underTest.saveState())
           .isInstanceOf(IllegalStateException.class)
           .hasMessageContaining("running");
     }
 
     @Test
     public void canSaveStateAfterStopping() throws Exception {
-      Bundle bundle = mock(Bundle.class);
-
       underTest.connect(view());
       underTest.start();
       underTest.stop();
-      underTest.saveState(bundle);
+      String model = underTest.saveState();
 
-      verify(bundle).putString(anyString(), anyString());
+      assertEquals("init", model);
     }
 
     @Test
     public void canRestoreStateAfterStopping() throws Exception {
-      Bundle bundle = mock(Bundle.class);
-      when(bundle.getString(anyString())).thenReturn("restored");
-
       underTest.connect(view());
       underTest.start();
       underTest.stop();
-      underTest.restoreState(bundle);
+      underTest.restoreState("restored");
+      String model = underTest.saveState();
 
-      verify(bundle).getString(anyString());
-    }
-
-    @Test
-    public void canCallSaveWithNullBundle() throws Exception {
-      underTest.saveState(null);
-    }
-
-    @Test
-    public void canCallRestoreWithNullBundle() throws Exception {
-      underTest.restoreState(null);
+      assertEquals("restored", model);
     }
   }
 
@@ -355,21 +296,7 @@ public class MobiusAndroidControllerTest {
                 .eventRunner(WorkRunners::immediate)
                 .effectRunner(WorkRunners::immediate)
                 .init(First::first),
-            new ModelSaveRestore<String>() {
-              @Nonnull
-              @Override
-              public String getDefaultModel() {
-                return "init";
-              }
-
-              @Override
-              public void saveModel(String model, Bundle out) {}
-
-              @Override
-              public String restoreModel(Bundle in) {
-                return "restored";
-              }
-            },
+            "init",
             WorkRunners.immediate());
 
     @Test
@@ -388,7 +315,7 @@ public class MobiusAndroidControllerTest {
       @SuppressWarnings("unchecked")
       Connection<String> renderer = mock(Connection.class);
 
-      underTest.restoreState(mock(Bundle.class));
+      underTest.restoreState("restored");
       underTest.connect(eventConsumer -> renderer);
       underTest.start();
 
@@ -429,23 +356,7 @@ public class MobiusAndroidControllerTest {
                 .eventRunner(WorkRunners::immediate)
                 .effectRunner(WorkRunners::immediate)
                 .init(First::first),
-            new ModelSaveRestore<String>() {
-              @Nonnull
-              @Override
-              public String getDefaultModel() {
-                return "init";
-              }
-
-              @Override
-              public void saveModel(String model, Bundle out) {
-                out.putString("key", "saved");
-              }
-
-              @Override
-              public String restoreModel(Bundle in) {
-                return in.getString("key");
-              }
-            },
+            "init",
             WorkRunners.immediate());
 
     @Test
@@ -520,23 +431,7 @@ public class MobiusAndroidControllerTest {
                   (model, event) -> Next.next(model + event), effectHandler)
               .eventRunner(WorkRunners::immediate)
               .effectRunner(WorkRunners::immediate),
-          new ModelSaveRestore<String>() {
-            @Nonnull
-            @Override
-            public String getDefaultModel() {
-              return "init";
-            }
-
-            @Override
-            public void saveModel(String model, Bundle out) {
-              out.putString("key", "saved");
-            }
-
-            @Override
-            public String restoreModel(Bundle in) {
-              return in.getString("key");
-            }
-          },
+          "init",
           mainThreadRunner);
     }
 
@@ -590,26 +485,6 @@ public class MobiusAndroidControllerTest {
       rendererGotModel.tryAcquire(5, TimeUnit.SECONDS);
 
       assertThat(actualThread.get(), is(mainThreadRunner.workerThread));
-    }
-
-    @Test
-    public void viewdataUpdaterMapsData() throws Exception {
-      @SuppressWarnings("unchecked")
-      Connection<String> renderer = mock(Connection.class);
-
-      MobiusController<String, String> mappedUnderTest =
-          new MappingMobiusController<>(underTest, model -> "mapped");
-
-      AtomicReference<Consumer<String>> consumer = new AtomicReference<>();
-
-      mappedUnderTest.connect(
-          eventConsumer -> {
-            consumer.set(eventConsumer);
-            return renderer;
-          });
-      mappedUnderTest.start();
-
-      verify(renderer).accept("mapped");
     }
 
     @Test
