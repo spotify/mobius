@@ -29,7 +29,7 @@ import com.spotify.mobius.runners.WorkRunner;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-class MobiusAndroidController<M, E, F> implements MobiusController<M, E>, ControllerActions<M, E> {
+class MobiusLoopController<M, E, F> implements MobiusController<M, E>, ControllerActions<M, E> {
 
   private final MobiusLoop.Factory<M, E, F> loopFactory;
   private final M defaultModel;
@@ -37,7 +37,7 @@ class MobiusAndroidController<M, E, F> implements MobiusController<M, E>, Contro
 
   private ControllerStateBase<M, E> currentState;
 
-  MobiusAndroidController(
+  MobiusLoopController(
       MobiusLoop.Factory<M, E, F> loopFactory, M defaultModel, WorkRunner mainThreadRunner) {
 
     this.loopFactory = checkNotNull(loopFactory);

@@ -51,7 +51,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-public class MobiusAndroidControllerTest {
+public class MobiusLoopControllerTest {
 
   private static final Connectable<String, String> effectHandler =
       eventConsumer ->
@@ -76,8 +76,8 @@ public class MobiusAndroidControllerTest {
 
   public static class Lifecycle {
 
-    private final MobiusAndroidController<String, String, String> underTest =
-        new MobiusAndroidController<>(
+    private final MobiusLoopController<String, String, String> underTest =
+        new MobiusLoopController<>(
             Mobius.<String, String, String>loop(
                     (model, event) -> Next.next(model + event), effectHandler)
                 .eventRunner(WorkRunners::immediate)
@@ -201,8 +201,8 @@ public class MobiusAndroidControllerTest {
 
   public static class StateSaveRestore {
 
-    private final MobiusAndroidController<String, String, String> underTest =
-        new MobiusAndroidController<>(
+    private final MobiusLoopController<String, String, String> underTest =
+        new MobiusLoopController<>(
             Mobius.<String, String, String>loop(
                     (model, event) -> Next.next(model + event), effectHandler)
                 .eventRunner(WorkRunners::immediate)
@@ -289,8 +289,8 @@ public class MobiusAndroidControllerTest {
 
   public static class Loop {
 
-    private final MobiusAndroidController<String, String, String> underTest =
-        new MobiusAndroidController<>(
+    private final MobiusLoopController<String, String, String> underTest =
+        new MobiusLoopController<>(
             Mobius.<String, String, String>loop(
                     (model, event) -> Next.next(model + event), effectHandler)
                 .eventRunner(WorkRunners::immediate)
@@ -349,8 +349,8 @@ public class MobiusAndroidControllerTest {
   }
 
   public static class Connect {
-    private final MobiusAndroidController<String, String, String> underTest =
-        new MobiusAndroidController<>(
+    private final MobiusLoopController<String, String, String> underTest =
+        new MobiusLoopController<>(
             Mobius.<String, String, String>loop(
                     (model, event) -> Next.next(model + event), effectHandler)
                 .eventRunner(WorkRunners::immediate)
@@ -417,16 +417,16 @@ public class MobiusAndroidControllerTest {
   public static class EventsAndUpdates {
     private final WorkRunner mainThreadRunner = new ImmediateWorkRunner();
 
-    private MobiusAndroidController<String, String, String> underTest;
+    private MobiusLoopController<String, String, String> underTest;
 
     @Before
     public void setUp() throws Exception {
       underTest = createWithWorkRunner(mainThreadRunner);
     }
 
-    private MobiusAndroidController<String, String, String> createWithWorkRunner(
+    private MobiusLoopController<String, String, String> createWithWorkRunner(
         WorkRunner mainThreadRunner) {
-      return new MobiusAndroidController<>(
+      return new MobiusLoopController<>(
           Mobius.<String, String, String>loop(
                   (model, event) -> Next.next(model + event), effectHandler)
               .eventRunner(WorkRunners::immediate)

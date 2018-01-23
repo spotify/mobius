@@ -29,6 +29,6 @@ public final class MobiusAndroid {
 
   public static <M, E, F> MobiusController<M, E> controller(
       MobiusLoop.Factory<M, E, F> loopFactory, M defaultModel) {
-    return new MobiusAndroidController<>(loopFactory, defaultModel, MainThreadWorkRunner.create());
+    return new MobiusLoopController<>(loopFactory, defaultModel, MainThreadWorkRunner.create());
   }
 }
