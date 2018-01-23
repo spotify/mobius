@@ -20,7 +20,6 @@
 package com.spotify.mobius;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 class ControllerStateCreated<M, E, F> extends ControllerStateBase<M, E> {
   @Nonnull private final ControllerActions<M, E> actions;
@@ -29,19 +28,11 @@ class ControllerStateCreated<M, E, F> extends ControllerStateBase<M, E> {
   @Nonnull private M nextModelToStartFrom;
 
   ControllerStateCreated(
-      ControllerActions<M, E> actions,
-      M defaultModel,
-      Connection<M> renderer,
-      @Nullable M nextModelToStartFrom) {
+      ControllerActions<M, E> actions, Connection<M> renderer, M nextModelToStartFrom) {
 
     this.actions = actions;
     this.renderer = renderer;
-
-    if (nextModelToStartFrom != null) {
-      this.nextModelToStartFrom = nextModelToStartFrom;
-    } else {
-      this.nextModelToStartFrom = defaultModel;
-    }
+    this.nextModelToStartFrom = nextModelToStartFrom;
   }
 
   @Override

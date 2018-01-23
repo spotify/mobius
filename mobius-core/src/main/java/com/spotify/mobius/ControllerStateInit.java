@@ -28,7 +28,6 @@ class ControllerStateInit<M, E, F> extends ControllerStateBase<M, E> {
   @Nonnull private M nextModelToStartFrom;
 
   ControllerStateInit(ControllerActions<M, E> actions, M nextModelToStartFrom) {
-
     this.actions = actions;
     this.nextModelToStartFrom = nextModelToStartFrom;
   }

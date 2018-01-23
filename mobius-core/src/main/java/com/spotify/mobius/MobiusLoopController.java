@@ -106,12 +106,16 @@ class MobiusLoopController<M, E, F> implements MobiusController<M, E>, Controlle
   @Override
   public synchronized void goToStateCreated(
       Connection<M> renderer, @Nullable M nextModelToStartFrom) {
-    currentState =
-        new ControllerStateCreated<M, E, F>(this, defaultModel, renderer, nextModelToStartFrom);
+
+    if (nextModelToStartFrom == null) {
+      nextModelToStartFrom = defaultModel;
+    }
+
+    currentState = new ControllerStateCreated<M, E, F>(this, renderer, nextModelToStartFrom);
   }
 
   @Override
-  public void goToStateCreated(Connectable<M, E> view, @Nullable M nextModelToStartFrom) {
+  public void goToStateCreated(Connectable<M, E> view, M nextModelToStartFrom) {
 
     SafeConnectable<M, E> safeModelHandler = new SafeConnectable<>(checkNotNull(view));
 

@@ -29,7 +29,7 @@ interface ControllerActions<M, E> {
 
   void goToStateCreated(Connection<M> renderer, @Nullable M nextModelToStartFrom);
 
-  void goToStateCreated(Connectable<M, E> view, @Nullable M nextModelToStartFrom);
+  void goToStateCreated(Connectable<M, E> view, M nextModelToStartFrom);
 
   void goToStateRunning(Connection<M> renderer, M nextModelToStartFrom);
 }
