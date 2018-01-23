@@ -26,7 +26,8 @@ import com.spotify.mobius.runners.WorkRunner;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-class MobiusLoopController<M, E, F> implements MobiusController<M, E>, ControllerActions<M, E> {
+class MobiusLoopController<M, E, F>
+    implements MobiusLoop.Controller<M, E>, ControllerActions<M, E> {
 
   private final MobiusLoop.Factory<M, E, F> loopFactory;
   private final M defaultModel;

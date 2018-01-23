@@ -20,7 +20,6 @@
 package com.spotify.mobius.android;
 
 import com.spotify.mobius.Mobius;
-import com.spotify.mobius.MobiusController;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.android.runners.MainThreadWorkRunner;
 
@@ -29,7 +28,7 @@ public final class MobiusAndroid {
     // prevent instantiation
   }
 
-  public static <M, E, F> MobiusController<M, E> controller(
+  public static <M, E, F> MobiusLoop.Controller<M, E> controller(
       MobiusLoop.Factory<M, E, F> loopFactory, M defaultModel) {
     return Mobius.controller(loopFactory, defaultModel, MainThreadWorkRunner.create());
   }

@@ -250,6 +250,63 @@ public class MobiusLoop<M, E, F> implements Disposable {
     MobiusLoop<M, E, F> startFrom(M startModel);
   }
 
+  public interface Controller<M, E> {
+    /**
+     * Indicates whether this controller is running.
+     *
+     * @return true if the controller is running
+     */
+    boolean isRunning();
+
+    /**
+     * Connect a view to this controller.
+     *
+     * <p>Must be called before {@link #start()}.
+     *
+     * <p>The {@link Connectable} will given an event consumer, which the view should use to send
+     * events to the MobiusLoop. The view should also return a {@link Connection} that accepts
+     * models and renders them. Disposing the connection should make the view stop emitting events.
+     *
+     * <p>The view Connectable is guaranteed to only be connected once, so you don't have to check
+     * for multiple connections or throw {@link ConnectionLimitExceededException}.
+     */
+    void connect(Connectable<M, E> view);
+
+    /** Disconnect UI from this controller. Can only be called if connected but not started. */
+    void disconnect();
+
+    /**
+     * Call this method to kick things off. This will start your Mobius loop from either the default
+     * model or a restored model if one exists.
+     */
+    void start();
+
+    /**
+     * Call this method to stop your mobius loop from running. Typically called when UI is no longer
+     * present.
+     */
+    void stop();
+
+    /**
+     * Invoke this method when you want to restore the controller to a specific state.
+     *
+     * <p>May only be called when the controller isn't running.
+     *
+     * @param model the model with the state the controller should be restored to
+     */
+    void restoreState(M model);
+
+    /**
+     * Invoke this method when you wish to save the current state of the controller.
+     *
+     * <p>May only be called when the controller isn't running.
+     *
+     * @return a model with the state of the controller
+     */
+    @Nonnull
+    M saveState();
+  }
+
   /** Interface for logging init and update calls. */
   public interface Logger<M, E, F> {
     /**
