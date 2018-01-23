@@ -27,8 +27,8 @@ import com.spotify.mobius.functions.Consumer;
 import javax.annotation.Nonnull;
 
 /**
- * A {@link com.spotify.mobius.Connectable} that ensures that an inner {@link
- * com.spotify.mobius.Connection} doesn't emit or receive any values after being disposed.
+ * A {@link Connectable} that ensures that an inner {@link Connection} doesn't emit or receive any
+ * values after being disposed.
  *
  * <p>This only acts as a safeguard, you still need to make sure that the Connectable disposes of
  * resources correctly.
