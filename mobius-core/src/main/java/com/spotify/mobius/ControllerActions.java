@@ -17,10 +17,8 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
-import com.spotify.mobius.Connectable;
-import com.spotify.mobius.Connection;
 import javax.annotation.Nullable;
 
 interface ControllerActions<M, E> {

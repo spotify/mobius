@@ -17,11 +17,8 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
-import com.spotify.mobius.Connectable;
-import com.spotify.mobius.Connection;
-import com.spotify.mobius.ConnectionLimitExceededException;
 import javax.annotation.Nonnull;
 
 public interface MobiusController<M, E> {
@@ -37,12 +34,13 @@ public interface MobiusController<M, E> {
    *
    * <p>Must be called before {@link #start()}.
    *
-   * <p>The {@link Connectable} will given an event consumer, which the view should use to send
-   * events to the MobiusLoop. The view should also return a {@link Connection} that accepts models
-   * and renders them. Disposing the connection should make the view stop emitting events.
+   * <p>The {@link com.spotify.mobius.Connectable} will given an event consumer, which the view
+   * should use to send events to the MobiusLoop. The view should also return a {@link
+   * com.spotify.mobius.Connection} that accepts models and renders them. Disposing the connection
+   * should make the view stop emitting events.
    *
    * <p>The view Connectable is guaranteed to only be connected once, so you don't have to check for
-   * multiple connections or throw {@link ConnectionLimitExceededException}.
+   * multiple connections or throw {@link com.spotify.mobius.ConnectionLimitExceededException}.
    */
   void connect(Connectable<M, E> view);
 
@@ -64,7 +62,7 @@ public interface MobiusController<M, E> {
   /**
    * Invoke this method when you want to restore the controller to a specific state.
    *
-   * <p>May only be called when the controller isn't started.
+   * <p>May only be called when the controller isn't running.
    *
    * @param model the model with the state the controller should be restored to
    */
@@ -73,7 +71,7 @@ public interface MobiusController<M, E> {
   /**
    * Invoke this method when you wish to save the current state of the controller.
    *
-   * <p>May only be called when the controller isn't started.
+   * <p>May only be called when the controller isn't running.
    *
    * @return a model with the state of the controller
    */

@@ -17,7 +17,7 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.core.Is.is;
@@ -32,11 +32,6 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-import com.spotify.mobius.Connectable;
-import com.spotify.mobius.Connection;
-import com.spotify.mobius.First;
-import com.spotify.mobius.Mobius;
-import com.spotify.mobius.Next;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.runners.ImmediateWorkRunner;
 import com.spotify.mobius.runners.WorkRunner;

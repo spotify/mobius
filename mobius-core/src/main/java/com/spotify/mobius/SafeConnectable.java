@@ -17,20 +17,18 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
-import com.spotify.mobius.Connectable;
-import com.spotify.mobius.Connection;
 import com.spotify.mobius.disposables.CompositeDisposable;
 import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import javax.annotation.Nonnull;
 
 /**
- * A {@link Connectable} that ensures that an inner {@link Connection} doesn't emit or receive any
- * values after being disposed.
+ * A {@link com.spotify.mobius.Connectable} that ensures that an inner {@link
+ * com.spotify.mobius.Connection} doesn't emit or receive any values after being disposed.
  *
  * <p>This only acts as a safeguard, you still need to make sure that the Connectable disposes of
  * resources correctly.

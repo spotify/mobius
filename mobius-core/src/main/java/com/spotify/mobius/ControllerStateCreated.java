@@ -17,63 +17,57 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
-import com.spotify.mobius.Connection;
-import com.spotify.mobius.MobiusLoop;
-import com.spotify.mobius.functions.Consumer;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-class ControllerStateRunning<M, E, F> extends ControllerStateBase<M, E> {
+class ControllerStateCreated<M, E, F> extends ControllerStateBase<M, E> {
   @Nonnull private final ControllerActions<M, E> actions;
   @Nonnull private final Connection<M> renderer;
-  @Nonnull private final MobiusLoop<M, E, F> loop;
 
-  ControllerStateRunning(
+  @Nonnull private M nextModelToStartFrom;
+
+  ControllerStateCreated(
       ControllerActions<M, E> actions,
+      M defaultModel,
       Connection<M> renderer,
-      MobiusLoop.Factory<M, E, F> loopFactory,
-      M modelToStartFrom) {
+      @Nullable M nextModelToStartFrom) {
 
     this.actions = actions;
     this.renderer = renderer;
-    this.loop = loopFactory.startFrom(modelToStartFrom);
-  }
 
-  void start() {
-    loop.observe(
-        new Consumer<M>() {
-          @Override
-          public void accept(M model) {
-            actions.postUpdateView(model);
-          }
-        });
+    if (nextModelToStartFrom != null) {
+      this.nextModelToStartFrom = nextModelToStartFrom;
+    } else {
+      this.nextModelToStartFrom = defaultModel;
+    }
   }
 
   @Override
   protected String getStateName() {
-    return "running";
+    return "created";
   }
 
   @Override
-  public boolean isRunning() {
-    return true;
+  public void onDisconnect() {
+    renderer.dispose();
+    actions.goToStateInit(nextModelToStartFrom);
   }
 
   @Override
-  public void onDispatchEvent(E event) {
-    loop.dispatchEvent(event);
+  public void onStart() {
+    actions.goToStateRunning(renderer, nextModelToStartFrom);
   }
 
   @Override
-  public void onUpdateView(M model) {
-    renderer.accept(model);
+  public void onRestoreState(M model) {
+    nextModelToStartFrom = model;
   }
 
+  @Nonnull
   @Override
-  public void onStop() {
-    loop.dispose();
-    M mostRecentModel = loop.getMostRecentModel();
-    actions.goToStateCreated(renderer, mostRecentModel);
+  public M onSaveState() {
+    return nextModelToStartFrom;
   }
 }

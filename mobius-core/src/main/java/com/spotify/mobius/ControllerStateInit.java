@@ -17,48 +17,30 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
-import com.spotify.mobius.Connection;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
-class ControllerStateCreated<M, E, F> extends ControllerStateBase<M, E> {
+class ControllerStateInit<M, E, F> extends ControllerStateBase<M, E> {
+
   @Nonnull private final ControllerActions<M, E> actions;
-  @Nonnull private final Connection<M> renderer;
 
   @Nonnull private M nextModelToStartFrom;
 
-  ControllerStateCreated(
-      ControllerActions<M, E> actions,
-      M defaultModel,
-      Connection<M> renderer,
-      @Nullable M nextModelToStartFrom) {
+  ControllerStateInit(ControllerActions<M, E> actions, M nextModelToStartFrom) {
 
     this.actions = actions;
-    this.renderer = renderer;
-
-    if (nextModelToStartFrom != null) {
-      this.nextModelToStartFrom = nextModelToStartFrom;
-    } else {
-      this.nextModelToStartFrom = defaultModel;
-    }
+    this.nextModelToStartFrom = nextModelToStartFrom;
   }
 
   @Override
   protected String getStateName() {
-    return "created";
+    return "init";
   }
 
   @Override
-  public void onDisconnect() {
-    renderer.dispose();
-    actions.goToStateInit(nextModelToStartFrom);
-  }
-
-  @Override
-  public void onStart() {
-    actions.goToStateRunning(renderer, nextModelToStartFrom);
+  public void onConnect(Connectable<M, E> view) {
+    actions.goToStateCreated(view, nextModelToStartFrom);
   }
 
   @Override
@@ -66,8 +48,8 @@ class ControllerStateCreated<M, E, F> extends ControllerStateBase<M, E> {
     nextModelToStartFrom = model;
   }
 
-  @Nonnull
   @Override
+  @Nonnull
   public M onSaveState() {
     return nextModelToStartFrom;
   }

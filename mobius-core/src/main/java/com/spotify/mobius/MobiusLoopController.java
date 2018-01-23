@@ -17,13 +17,10 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
-import com.spotify.mobius.Connectable;
-import com.spotify.mobius.Connection;
-import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.runners.WorkRunner;
 import javax.annotation.Nonnull;
