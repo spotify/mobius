@@ -17,11 +17,9 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
-import android.os.Bundle;
-import com.spotify.mobius.Connectable;
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,15 +58,13 @@ abstract class ControllerStateBase<M, E> {
         String.format("cannot call stop when in the %s state", getStateName()));
   }
 
-  public void onRestoreState(@Nullable Bundle in) {
+  public void onReplaceModel(M model) {
     throw new IllegalStateException(
-        String.format("cannot call restoreState when in the %s state", getStateName()));
+        String.format("cannot call replaceModel when in the %s state", getStateName()));
   }
 
-  public void onSaveState(Bundle out) {
-    throw new IllegalStateException(
-        String.format("cannot call saveState when in the %s state", getStateName()));
-  }
+  @Nonnull
+  public abstract M onGetModel();
 
   public void onDispatchEvent(E event) {
     LOGGER.debug(

@@ -22,6 +22,7 @@ dependencies {
     testImplementation "org.awaitility:awaitility:${versions.awaitility}"
     testImplementation "com.google.auto.value:auto-value:${versions.autoValue}"
     testImplementation "org.assertj:assertj-core:${versions.assertjcore}"
+    testImplementation "org.mockito:mockito-core:${versions.mockito}"
 }
 
 def generatedSrcDir = new File(project.buildDir, "/generated/java")

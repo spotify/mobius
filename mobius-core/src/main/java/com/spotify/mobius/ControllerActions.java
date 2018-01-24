@@ -17,21 +17,19 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
-import com.spotify.mobius.Connectable;
-import com.spotify.mobius.Connection;
 import javax.annotation.Nullable;
 
 interface ControllerActions<M, E> {
 
   void postUpdateView(M model);
 
-  void goToStateInit(@Nullable M nextModelToStartFrom);
+  void goToStateInit(M nextModelToStartFrom);
 
   void goToStateCreated(Connection<M> renderer, @Nullable M nextModelToStartFrom);
 
-  void goToStateCreated(Connectable<M, E> view, @Nullable M nextModelToStartFrom);
+  void goToStateCreated(Connectable<M, E> view, M nextModelToStartFrom);
 
   void goToStateRunning(Connection<M> renderer, M nextModelToStartFrom);
 }

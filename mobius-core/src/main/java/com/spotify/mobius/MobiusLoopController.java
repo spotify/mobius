@@ -17,35 +17,31 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
-import android.os.Bundle;
-import com.spotify.mobius.Connectable;
-import com.spotify.mobius.Connection;
-import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.runners.WorkRunner;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-class MobiusAndroidController<M, E, F> implements MobiusController<M, E>, ControllerActions<M, E> {
+class MobiusLoopController<M, E, F>
+    implements MobiusLoop.Controller<M, E>, ControllerActions<M, E> {
 
   private final MobiusLoop.Factory<M, E, F> loopFactory;
-  private final ModelSaveRestore<M> modelSaveRestore;
+  private final M defaultModel;
   private final WorkRunner mainThreadRunner;
 
   private ControllerStateBase<M, E> currentState;
 
-  MobiusAndroidController(
-      MobiusLoop.Factory<M, E, F> loopFactory,
-      ModelSaveRestore<M> modelSaveRestore,
-      WorkRunner mainThreadRunner) {
+  MobiusLoopController(
+      MobiusLoop.Factory<M, E, F> loopFactory, M defaultModel, WorkRunner mainThreadRunner) {
 
     this.loopFactory = checkNotNull(loopFactory);
-    this.modelSaveRestore = checkNotNull(modelSaveRestore);
+    this.defaultModel = checkNotNull(defaultModel);
     this.mainThreadRunner = checkNotNull(mainThreadRunner);
-    goToStateInit(null);
+    goToStateInit(defaultModel);
   }
 
   @Override
@@ -82,21 +78,15 @@ class MobiusAndroidController<M, E, F> implements MobiusController<M, E>, Contro
   }
 
   @Override
-  public synchronized void restoreState(@Nullable Bundle in) {
-    if (in == null) {
-      return;
-    }
-
-    currentState.onRestoreState(in);
+  public synchronized void replaceModel(M model) {
+    checkNotNull(model);
+    currentState.onReplaceModel(model);
   }
 
   @Override
-  public synchronized void saveState(@Nullable Bundle out) {
-    if (out == null) {
-      return;
-    }
-
-    currentState.onSaveState(out);
+  @Nonnull
+  public synchronized M getModel() {
+    return currentState.onGetModel();
   }
 
   public void postUpdateView(final M model) {
@@ -110,19 +100,23 @@ class MobiusAndroidController<M, E, F> implements MobiusController<M, E>, Contro
   }
 
   @Override
-  public synchronized void goToStateInit(@Nullable M nextModelToStartFrom) {
-    currentState = new ControllerStateInit<>(this, modelSaveRestore, nextModelToStartFrom);
+  public synchronized void goToStateInit(M nextModelToStartFrom) {
+    currentState = new ControllerStateInit<>(this, nextModelToStartFrom);
   }
 
   @Override
   public synchronized void goToStateCreated(
       Connection<M> renderer, @Nullable M nextModelToStartFrom) {
-    currentState =
-        new ControllerStateCreated<M, E, F>(this, modelSaveRestore, renderer, nextModelToStartFrom);
+
+    if (nextModelToStartFrom == null) {
+      nextModelToStartFrom = defaultModel;
+    }
+
+    currentState = new ControllerStateCreated<M, E, F>(this, renderer, nextModelToStartFrom);
   }
 
   @Override
-  public void goToStateCreated(Connectable<M, E> view, @Nullable M nextModelToStartFrom) {
+  public void goToStateCreated(Connectable<M, E> view, M nextModelToStartFrom) {
 
     SafeConnectable<M, E> safeModelHandler = new SafeConnectable<>(checkNotNull(view));
 

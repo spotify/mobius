@@ -250,6 +250,79 @@ public class MobiusLoop<M, E, F> implements Disposable {
     MobiusLoop<M, E, F> startFrom(M startModel);
   }
 
+  /**
+   * Defines a controller that can be used to start and stop MobiusLoops.
+   *
+   * <p>If a loop is stopped and then started again, the new loop will continue from where the last
+   * one left off.
+   */
+  public interface Controller<M, E> {
+    /**
+     * Indicates whether this controller is running.
+     *
+     * @return true if the controller is running
+     */
+    boolean isRunning();
+
+    /**
+     * Connect a view to this controller.
+     *
+     * <p>Must be called before {@link #start()}.
+     *
+     * <p>The {@link Connectable} will be given an event consumer, which the view should use to send
+     * events to the MobiusLoop. The view should also return a {@link Connection} that accepts
+     * models and renders them. Disposing the connection should make the view stop emitting events.
+     *
+     * <p>The view Connectable is guaranteed to only be connected once, so you don't have to check
+     * for multiple connections or throw {@link ConnectionLimitExceededException}.
+     *
+     * @throws IllegalStateException if the loop is running or if the controller already is
+     *     connected
+     */
+    void connect(Connectable<M, E> view);
+
+    /**
+     * Disconnect UI from this controller.
+     *
+     * @throws IllegalStateException if the loop is running or if there isn't anything to disconnect
+     */
+    void disconnect();
+
+    /**
+     * Start a MobiusLoop from the current model.
+     *
+     * @throws IllegalStateException if the loop already is running
+     */
+    void start();
+
+    /**
+     * Stop the currently running MobiusLoop.
+     *
+     * <p>When the loop is stopped, the last model of the loop will be remembered and used as the
+     * first model the next time the loop is started.
+     *
+     * @throws IllegalStateException if the loop isn't running
+     */
+    void stop();
+
+    /**
+     * Replace which model the controller should start from.
+     *
+     * @param model the model with the state the controller should start from
+     * @throws IllegalStateException if the loop is running
+     */
+    void replaceModel(M model);
+
+    /**
+     * Get the current model of the loop that this controller is running, or the most recent model
+     * if it's not running.
+     *
+     * @return a model with the state of the controller
+     */
+    @Nonnull
+    M getModel();
+  }
+
   /** Interface for logging init and update calls. */
   public interface Logger<M, E, F> {
     /**

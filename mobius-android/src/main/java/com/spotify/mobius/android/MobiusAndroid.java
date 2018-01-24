@@ -19,25 +19,17 @@
  */
 package com.spotify.mobius.android;
 
+import com.spotify.mobius.Mobius;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.android.runners.MainThreadWorkRunner;
-import com.spotify.mobius.functions.Function;
 
 public final class MobiusAndroid {
   private MobiusAndroid() {
     // prevent instantiation
   }
 
-  public static <M, E, F> MobiusController<M, E> controller(
-      MobiusLoop.Factory<M, E, F> loopFactory, ModelSaveRestore<M> modelSaveRestore) {
-    return new MobiusAndroidController<>(
-        loopFactory, modelSaveRestore, MainThreadWorkRunner.create());
-  }
-
-  public static <M, V, E, F> MobiusController<V, E> controller(
-      MobiusLoop.Factory<M, E, F> loopStart,
-      ModelSaveRestore<M> modelSaveRestore,
-      Function<M, V> viewDataMapper) {
-    return new MappingMobiusController<>(controller(loopStart, modelSaveRestore), viewDataMapper);
+  public static <M, E, F> MobiusLoop.Controller<M, E> controller(
+      MobiusLoop.Factory<M, E, F> loopFactory, M defaultModel) {
+    return Mobius.controller(loopFactory, defaultModel, MainThreadWorkRunner.create());
   }
 }

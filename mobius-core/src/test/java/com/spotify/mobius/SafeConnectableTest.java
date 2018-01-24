@@ -17,15 +17,13 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
-import com.spotify.mobius.Connectable;
-import com.spotify.mobius.Connection;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.test.RecordingConsumer;
 import java.util.ArrayList;

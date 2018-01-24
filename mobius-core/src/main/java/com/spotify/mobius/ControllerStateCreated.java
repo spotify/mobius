@@ -17,35 +17,22 @@
  * limitations under the License.
  * -/-/-
  */
-package com.spotify.mobius.android;
+package com.spotify.mobius;
 
-import android.os.Bundle;
-import com.spotify.mobius.Connection;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 class ControllerStateCreated<M, E, F> extends ControllerStateBase<M, E> {
   @Nonnull private final ControllerActions<M, E> actions;
-  @Nonnull private final ModelSaveRestore<M> modelSaveRestore;
   @Nonnull private final Connection<M> renderer;
 
   @Nonnull private M nextModelToStartFrom;
 
   ControllerStateCreated(
-      ControllerActions<M, E> actions,
-      ModelSaveRestore<M> modelSaveRestore,
-      Connection<M> renderer,
-      @Nullable M nextModelToStartFrom) {
+      ControllerActions<M, E> actions, Connection<M> renderer, M nextModelToStartFrom) {
 
     this.actions = actions;
-    this.modelSaveRestore = modelSaveRestore;
     this.renderer = renderer;
-
-    if (nextModelToStartFrom != null) {
-      this.nextModelToStartFrom = nextModelToStartFrom;
-    } else {
-      this.nextModelToStartFrom = modelSaveRestore.getDefaultModel();
-    }
+    this.nextModelToStartFrom = nextModelToStartFrom;
   }
 
   @Override
@@ -65,17 +52,13 @@ class ControllerStateCreated<M, E, F> extends ControllerStateBase<M, E> {
   }
 
   @Override
-  public void onRestoreState(@Nullable Bundle in) {
-    if (in != null) {
-      M model = modelSaveRestore.restoreModel(in);
-      if (model != null) {
-        nextModelToStartFrom = model;
-      }
-    }
+  public void onReplaceModel(M model) {
+    nextModelToStartFrom = model;
   }
 
+  @Nonnull
   @Override
-  public void onSaveState(Bundle out) {
-    modelSaveRestore.saveModel(nextModelToStartFrom, out);
+  public M onGetModel() {
+    return nextModelToStartFrom;
   }
 }
