@@ -115,6 +115,8 @@ public final class RxMobius {
               }
             };
 
+    private SubtypeEffectHandlerBuilder() {}
+
     /**
      * Add an {@link ObservableTransformer} for handling effects of a given type. The handler will
      * receive all effect objects that extend the given class.

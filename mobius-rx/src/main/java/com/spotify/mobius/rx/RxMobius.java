@@ -108,6 +108,8 @@ public final class RxMobius {
     private Func1<Transformer<? extends F, E>, Action1<Throwable>> onErrorFunction =
         new DefaultOnError();
 
+    private SubtypeEffectHandlerBuilder() {}
+
     /**
      * Add an {@link Observable.Transformer} for handling effects of a given type. The handler will
      * receive all effect objects that extend the given class.
