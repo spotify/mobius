@@ -99,7 +99,8 @@ public class Mobius {
    *
    * @param update the {@link Update} function of the loop
    * @param effectHandler the {@link Connectable} effect handler of the loop
-   * @return a {@link Builder} instance that you can further configure before starting the loop
+   * @return a {@link MobiusLoop.Builder} instance that you can further configure before starting
+   *     the loop
    */
   public static <M, E, F> MobiusLoop.Builder<M, E, F> loop(
       Update<M, E, F> update, Connectable<F, E> effectHandler) {
