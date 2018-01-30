@@ -1,5 +1,5 @@
 apply plugin: 'java-library'
-apply plugin: 'jacoco'
+
 
 configurations {
     apt {
@@ -64,3 +64,4 @@ compileTestJava {
 }
 
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+apply from: rootProject.file('gradle/jacoco-coverage.gradle')

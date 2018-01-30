@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 
+
 apply from: rootProject.file('gradle/java_8_sources.gradle')
 
 ext.compileUnitTestsAsJava8()
