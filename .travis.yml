@@ -1,7 +1,7 @@
 language: android
 
 script:
-  - ./gradlew check
+  - ./gradlew check jacocoTestReport
 
 #after_success:
 #  - bash <(curl -s https://codecov.io/bash)
