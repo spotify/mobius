@@ -2,7 +2,7 @@ language: android
 
 android:
   components:
-    - build-tools-27.0.3
+    - build-tools-26.0.2
 
 script:
   - ./gradlew check jacocoTestReport
