@@ -115,3 +115,7 @@ allprojects {
 
     getTasksByName('check', false).each { checkTask -> checkTask.dependsOn(tasks.withType(Javadoc)) }
 }
+
+nexusStaging {
+    packageGroup = "com.spotify"
+}
