@@ -90,7 +90,7 @@ task verifyFormat(type: VerifyGoogleJavaFormat) {
     exclude '**/package-info.java'
 }
 task build(dependsOn: getTasksByName('build', true))
-task uploadArchives(dependsOn: getTasksByName('uploadArchives', true))
+task uploadArchivesAggregate(dependsOn: getTasksByName('uploadArchives', true))
 
 release {
     failOnUnversionedFiles = false
@@ -102,7 +102,7 @@ release {
     }
 }
 
-afterReleaseBuild.dependsOn uploadArchives
+afterReleaseBuild.dependsOn uploadArchivesAggregate
 
 allprojects {
     apply plugin: 'com.github.hierynomus.license'
