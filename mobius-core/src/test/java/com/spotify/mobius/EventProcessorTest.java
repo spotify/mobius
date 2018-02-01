@@ -19,6 +19,8 @@
  */
 package com.spotify.mobius;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.google.common.collect.Sets;
 import com.spotify.mobius.internal_util.ImmutableUtil;
 import com.spotify.mobius.test.RecordingConsumer;
@@ -92,6 +94,11 @@ public class EventProcessorTest {
     underTest.init();
 
     stateConsumer.assertValues("init!", "init!->1", "init!->1->2", "init!->1->2->3");
+  }
+
+  @Test
+  public void shouldDisallowDuplicateInitialisation() throws Exception {
+    assertThatThrownBy(() -> underTest.init()).isInstanceOf(IllegalStateException.class);
   }
 
   private MobiusStore<String, Integer, Long> createStore() {
