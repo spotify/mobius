@@ -22,6 +22,8 @@ package com.spotify.mobius;
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 import com.spotify.mobius.functions.Consumer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Processes events and emits effects and models as a result of that.
@@ -36,6 +38,11 @@ class EventProcessor<M, E, F> {
   private final Consumer<F> effectConsumer;
   private final Consumer<M> modelConsumer;
 
+  // concurrency note: the two below fields are only read and written in synchronized sections,
+  // hence no need for further coordination.
+  private final List<E> eventsReceivedBeforeInit = new ArrayList<>();
+  private boolean initialised = false;
+
   EventProcessor(
       MobiusStore<M, E, F> store, Consumer<F> effectConsumer, Consumer<M> modelConsumer) {
     this.store = checkNotNull(store);
@@ -44,13 +51,27 @@ class EventProcessor<M, E, F> {
   }
 
   synchronized void init() {
+    if (initialised) {
+      throw new IllegalStateException("already initialised");
+    }
+
     First<M, F> first = store.init();
 
     dispatchModel(first.model());
     dispatchEffects(first.effects());
+
+    initialised = true;
+    for (E event : eventsReceivedBeforeInit) {
+      update(event);
+    }
   }
 
   synchronized void update(E event) {
+    if (!initialised) {
+      eventsReceivedBeforeInit.add(event);
+      return;
+    }
+
     Next<M, F> next = store.update(event);
 
     next.ifHasModel(
