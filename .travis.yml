@@ -4,6 +4,12 @@ android:
   components:
     - build-tools-26.0.2
 
+before_cache:
+  - find ~/.gradle/caches/ -name "*.lock" -type f -delete
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+
 script:
   - ./gradlew check jacocoTestReport
 
