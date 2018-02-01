@@ -5,6 +5,7 @@ android:
     - build-tools-26.0.2
 
 before_cache:
+  # Gradle creates lock files on every run which makes the cache "different" for every build
   - find ~/.gradle/caches/ -name "*.lock" -type f -delete
 cache:
   directories:
