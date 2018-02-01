@@ -38,16 +38,18 @@ public class EventProcessorTest {
     effectConsumer = new RecordingConsumer<>();
     stateConsumer = new RecordingConsumer<>();
     underTest = new EventProcessor<>(createStore(), effectConsumer, stateConsumer);
+    underTest.init();
   }
 
   @Test
   public void shouldEmitStateIfStateChanged() throws Exception {
     underTest.update(1);
-    stateConsumer.assertValues("init->1");
+    stateConsumer.assertValues("init!", "init!->1");
   }
 
   @Test
   public void shouldNotEmitStateIfStateNotChanged() throws Exception {
+    stateConsumer.clearValues();
     underTest.update(0);
     stateConsumer.assertValues();
   }
@@ -58,25 +60,38 @@ public class EventProcessorTest {
     underTest.update(1);
     underTest.update(0);
     underTest.update(2);
-    stateConsumer.assertValues("init->1", "init->1->2");
+    stateConsumer.assertValues("init!", "init!->1", "init!->1->2");
   }
 
   @Test
   public void shouldEmitEffectsWhenStateChanges() throws Exception {
+    effectConsumer.clearValues();
     underTest.update(3);
     effectConsumer.assertValuesInAnyOrder(10L, 20L, 30L);
   }
 
   @Test
   public void shouldEmitStateDuringInit() throws Exception {
-    underTest.init();
     stateConsumer.assertValues("init!");
   }
 
   @Test
   public void shouldEmitEffectsDuringInit() throws Exception {
-    underTest.init();
     effectConsumer.assertValuesInAnyOrder(15L, 25L, 35L);
+  }
+
+  @Test
+  public void shouldQueueUpdatesReceivedBeforeInit() throws Exception {
+    stateConsumer.clearValues();
+    underTest = new EventProcessor<>(createStore(), effectConsumer, stateConsumer);
+
+    underTest.update(1);
+    underTest.update(2);
+    underTest.update(3);
+
+    underTest.init();
+
+    stateConsumer.assertValues("init!", "init!->1", "init!->1->2", "init!->1->2->3");
   }
 
   private MobiusStore<String, Integer, Long> createStore() {

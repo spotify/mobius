@@ -72,4 +72,10 @@ public class RecordingConsumer<V> implements Consumer<V> {
       assertThat(values, containsInAnyOrder(expectedValues));
     }
   }
+
+  public void clearValues() {
+    synchronized (lock) {
+      values.clear();
+    }
+  }
 }
