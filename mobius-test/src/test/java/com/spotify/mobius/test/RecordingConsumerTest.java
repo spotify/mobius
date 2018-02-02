@@ -19,16 +19,29 @@
  */
 package com.spotify.mobius.test;
 
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import org.awaitility.Duration;
 import org.junit.Before;
 import org.junit.Test;
 
 public class RecordingConsumerTest {
 
-  RecordingConsumer<String> consumer;
+  private RecordingConsumer<String> consumer;
+
+  private ExecutorService executorService;
 
   @Before
   public void setUp() throws Exception {
     consumer = new RecordingConsumer<>();
+
+    executorService = Executors.newSingleThreadExecutor();
   }
 
   @Test
@@ -40,5 +53,31 @@ public class RecordingConsumerTest {
     consumer.accept("this!");
 
     consumer.assertValues("this!");
+  }
+
+  @Test
+  public void shouldTerminateWaitEarlyOnChange() throws Exception {
+    CountDownLatch latch = new CountDownLatch(1);
+
+    Future<Boolean> f =
+        executorService.submit(
+            () -> {
+              latch.countDown();
+              return consumer.waitForChange(100_000);
+            });
+
+    // wait for the other thread to start waiting for a change
+    latch.await();
+
+    consumer.accept("heya");
+
+    await().atMost(Duration.FIVE_SECONDS).until(f::isDone);
+
+    assertThat(f.get(), is(true));
+  }
+
+  @Test
+  public void shouldReturnTrueForNoChange() throws Exception {
+    assertThat(consumer.waitForChange(50), is(true));
   }
 }

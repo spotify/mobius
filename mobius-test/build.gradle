@@ -21,6 +21,7 @@ dependencies {
     testImplementation "junit:junit:${versions.junit}"
     testImplementation "org.assertj:assertj-core:${versions.assertjcore}"
     testImplementation "com.google.guava:guava-testlib:${versions.guava}"
+    testImplementation "org.awaitility:awaitility:${versions.awaitility}"
 }
 
 compileJava {
