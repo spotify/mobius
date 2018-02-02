@@ -69,6 +69,7 @@ public class InitSpecTest {
                 initSpec
                     .when("no crash here")
                     .thenError(error -> assertThat(error, instanceOf(IllegalStateException.class))))
-        .isInstanceOf(AssertionError.class);
+        .isInstanceOf(AssertionError.class)
+        .hasMessage("An exception was expected but was not thrown");
   }
 }
