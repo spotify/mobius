@@ -20,6 +20,7 @@
 package com.spotify.mobius.test;
 
 import static com.spotify.mobius.Effects.effects;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.instanceOf;
@@ -59,5 +60,16 @@ public class InitSpecTest {
     initSpec
         .when("bad model")
         .thenError(error -> assertThat(error, instanceOf(IllegalStateException.class)));
+  }
+
+  @Test
+  public void shouldFailIfExpectedErrorDoesntHappen() throws Exception {
+    assertThatThrownBy(
+            () ->
+                initSpec
+                    .when("no crash here")
+                    .thenError(error -> assertThat(error, instanceOf(IllegalStateException.class))))
+        .isInstanceOf(AssertionError.class)
+        .hasMessage("An exception was expected but was not thrown");
   }
 }

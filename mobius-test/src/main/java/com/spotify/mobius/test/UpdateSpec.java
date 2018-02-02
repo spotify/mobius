@@ -149,6 +149,7 @@ public class UpdateSpec<M, E, F> {
       } catch (Exception e) {
         error = e;
       }
+
       if (error == null) {
         throw new AssertionError("An exception was expected but was not thrown");
       }
