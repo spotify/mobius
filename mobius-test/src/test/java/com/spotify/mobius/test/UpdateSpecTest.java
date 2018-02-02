@@ -26,6 +26,7 @@ import static com.spotify.mobius.test.NextMatchers.hasNothing;
 import static com.spotify.mobius.test.UpdateSpec.assertThatNext;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 
 import com.spotify.mobius.Next;
@@ -125,5 +126,17 @@ public class UpdateSpecTest {
                     .thenError(e -> assertThat(e.getMessage(), is("expected"))))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("expected");
+  }
+
+  @Test
+  public void shouldFailIfExpectedErrorDoesntHappen() throws Exception {
+    assertThatThrownBy(
+            () ->
+                updateSpec
+                    .given("hi")
+                    .when("no crash here")
+                    .thenError(error -> assertThat(error, instanceOf(IllegalStateException.class))))
+        .isInstanceOf(AssertionError.class)
+        .hasMessage("An exception was expected but was not thrown");
   }
 }

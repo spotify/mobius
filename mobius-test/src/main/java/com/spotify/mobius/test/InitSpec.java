@@ -50,11 +50,17 @@ public class InitSpec<M, F> {
 
       @Override
       public void thenError(AssertError assertion) {
+        Exception error = null;
         try {
           init.init(model);
         } catch (Exception e) {
-          assertion.assertError(e);
+          error = e;
         }
+
+        if (error == null) {
+          throw new AssertionError("An exception was expected but was not thrown");
+        }
+        assertion.assertError(error);
       }
     };
   }
