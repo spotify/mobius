@@ -28,8 +28,18 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
-public class NextMatchers {
+/** Provides utility functions for matching {@link Next} instances in tests. */
+public final class NextMatchers {
+  private NextMatchers() {
+    // prevent instantiation
+  }
 
+  /**
+   * Returns a matcher that matches {@link Next} instances without a model.
+   *
+   * @param <M> the model type
+   * @param <F> the effect type
+   */
   public static <M, F> Matcher<Next<M, F>> hasNoModel() {
     return new TypeSafeDiagnosingMatcher<Next<M, F>>() {
       @Override
@@ -51,6 +61,12 @@ public class NextMatchers {
     };
   }
 
+  /**
+   * Returns a matcher that matches {@link Next} instances with a model.
+   *
+   * @param <M> the model type
+   * @param <F> the effect type
+   */
   public static <M, F> Matcher<Next<M, F>> hasModel() {
     return new TypeSafeDiagnosingMatcher<Next<M, F>>() {
       @Override
@@ -72,10 +88,26 @@ public class NextMatchers {
     };
   }
 
+  /**
+   * Returns a matcher that matches {@link Next} instances with a model that is equal to the
+   * supplied one.
+   *
+   * @param expected the expected model
+   * @param <M> the model type
+   * @param <F> the effect type
+   */
   public static <M, F> Matcher<Next<M, F>> hasModel(M expected) {
     return hasModel(equalTo(expected));
   }
 
+  /**
+   * Returns a matcher that matches {@link Next} instances with a model that matches the supplied
+   * model matcher.
+   *
+   * @param matcher the matcher to apply to the model
+   * @param <M> the model type
+   * @param <F> the effect type
+   */
   public static <M, F> Matcher<Next<M, F>> hasModel(Matcher<M> matcher) {
     return new TypeSafeDiagnosingMatcher<Next<M, F>>() {
       @Override
@@ -103,6 +135,12 @@ public class NextMatchers {
     };
   }
 
+  /**
+   * Returns a matcher that matches {@link Next} instances with no effects.
+   *
+   * @param <M> the model type
+   * @param <F> the effect type
+   */
   public static <M, F> Matcher<Next<M, F>> hasNoEffects() {
     return new TypeSafeDiagnosingMatcher<Next<M, F>>() {
       @Override
@@ -124,6 +162,14 @@ public class NextMatchers {
     };
   }
 
+  /**
+   * Returns a matcher that matches {@link Next} instances whose effects match the supplied effect
+   * matcher.
+   *
+   * @param matcher the matcher to apply to the effects
+   * @param <M> the model type
+   * @param <F> the effect type
+   */
   public static <M, F> Matcher<Next<M, F>> hasEffects(Matcher<Iterable<F>> matcher) {
     return new TypeSafeDiagnosingMatcher<Next<M, F>>() {
       @Override
@@ -165,6 +211,12 @@ public class NextMatchers {
     return hasEffects(hasItems(effects));
   }
 
+  /**
+   * Returns a matcher that matches {@link Next} instances with no model and no effects.
+   *
+   * @param <M> the model type
+   * @param <F> the effect type
+   */
   public static <M, F> Matcher<Next<M, F>> hasNothing() {
     return allOf(hasNoModel(), hasNoEffects());
   }

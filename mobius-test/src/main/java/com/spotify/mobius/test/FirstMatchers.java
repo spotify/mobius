@@ -27,12 +27,32 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
-public class FirstMatchers {
+/** Provides utility functions for matching against {@link First} instances. */
+public final class FirstMatchers {
+  private FirstMatchers() {
+    // prevent instantiation
+  }
 
+  /**
+   * Returns a matcher that matches {@link First} instances with a model that is equal to the
+   * supplied one.
+   *
+   * @param expected the expected model
+   * @param <M> the model type
+   * @param <F> the effect type
+   */
   public static <M, F> Matcher<First<M, F>> hasModel(M expected) {
     return hasModel(equalTo(expected));
   }
 
+  /**
+   * Returns a matcher that matches {@link First} instances with a model that matches the supplied
+   * model matcher.
+   *
+   * @param matcher the matcher to apply to the model
+   * @param <M> the model type
+   * @param <F> the effect type
+   */
   public static <M, F> Matcher<First<M, F>> hasModel(Matcher<M> matcher) {
     return new TypeSafeDiagnosingMatcher<First<M, F>>() {
       @Override
@@ -56,6 +76,12 @@ public class FirstMatchers {
     };
   }
 
+  /**
+   * Returns a matcher that matches {@link First} instances with no effects.
+   *
+   * @param <M> the model type
+   * @param <F> the effect type
+   */
   public static <M, F> Matcher<First<M, F>> hasNoEffects() {
     return new TypeSafeDiagnosingMatcher<First<M, F>>() {
       @Override
@@ -77,6 +103,14 @@ public class FirstMatchers {
     };
   }
 
+  /**
+   * Returns a matcher that matches {@link First} instances whose effects match the supplied effect
+   * matcher.
+   *
+   * @param matcher the matcher to apply to the effects
+   * @param <M> the model type
+   * @param <F> the effect type
+   */
   public static <M, F> Matcher<First<M, F>> hasEffects(Matcher<Iterable<F>> matcher) {
     return new TypeSafeDiagnosingMatcher<First<M, F>>() {
       @Override

@@ -32,7 +32,10 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nonnull;
 
-public class Mobius {
+public final class Mobius {
+  private Mobius() {
+    // prevent instantiation
+  }
 
   private static final Init<?, ?> NOOP_INIT =
       new Init<Object, Object>() {
