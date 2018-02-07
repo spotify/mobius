@@ -33,6 +33,18 @@ public final class Connectables {
     // prevent instantiation
   }
 
+  /**
+   * Apply a function to a {@link Connectable} in order to convert from one data type to another.
+   * This is useful for instance if you want your UI to use a subset or a transformed version of the
+   * full model used in the loop. The returned {@link Connectable} doesn't enforce a connection
+   * limit, but of course the connection limit of the wrapped {@link Connectable} applies.
+   *
+   * @param mapper the mapping function to apply
+   * @param connectable the underlying connectable
+   * @param <M> the underlying type; usually the model
+   * @param <E> the output type; usually the event type
+   * @param <V> the type to convert to; called V as a mnemonic for ViewData.
+   */
   @Nonnull
   public static <M, E, V> Connectable<M, E> map(
       final Function<M, V> mapper, final Connectable<V, E> connectable) {
