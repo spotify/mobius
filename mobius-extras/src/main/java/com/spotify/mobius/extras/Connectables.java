@@ -41,22 +41,22 @@ public final class Connectables {
    *
    * @param mapper the mapping function to apply
    * @param connectable the underlying connectable
-   * @param <M> the underlying type; usually the model
-   * @param <E> the output type; usually the event type
-   * @param <V> the type to convert to; called V as a mnemonic for ViewData.
+   * @param <F> the type to convert from
+   * @param <T> the type to convert to
+   * @param <O> the output type; usually the event type
    */
   @Nonnull
-  public static <M, E, V> Connectable<M, E> map(
-      final Function<M, V> mapper, final Connectable<V, E> connectable) {
-    return new Connectable<M, E>() {
+  public static <F, T, O> Connectable<F, O> convert(
+      final Function<F, T> mapper, final Connectable<T, O> connectable) {
+    return new Connectable<F, O>() {
       @Nonnull
       @Override
-      public Connection<M> connect(Consumer<E> output) throws ConnectionLimitExceededException {
-        final Connection<V> delegateConnection = connectable.connect(output);
+      public Connection<F> connect(Consumer<O> output) throws ConnectionLimitExceededException {
+        final Connection<T> delegateConnection = connectable.connect(output);
 
-        return new Connection<M>() {
+        return new Connection<F>() {
           @Override
-          public void accept(M value) {
+          public void accept(F value) {
             delegateConnection.accept(mapper.apply(value));
           }
 
