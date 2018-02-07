@@ -23,10 +23,8 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.lang.Thread.State;
+import java.util.concurrent.atomic.AtomicReference;
 import org.awaitility.Duration;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,13 +33,9 @@ public class RecordingConsumerTest {
 
   private RecordingConsumer<String> consumer;
 
-  private ExecutorService executorService;
-
   @Before
   public void setUp() throws Exception {
     consumer = new RecordingConsumer<>();
-
-    executorService = Executors.newSingleThreadExecutor();
   }
 
   @Test
@@ -57,23 +51,26 @@ public class RecordingConsumerTest {
 
   @Test
   public void shouldTerminateWaitEarlyOnChange() throws Exception {
-    CountDownLatch latch = new CountDownLatch(1);
+    AtomicReference<Boolean> waitResult = new AtomicReference<>();
 
-    Future<Boolean> f =
-        executorService.submit(
+    // given a thread that is blocked waiting for the consumer to get a value
+    Thread t =
+        new Thread(
             () -> {
-              latch.countDown();
-              return consumer.waitForChange(100_000);
+              waitResult.set(consumer.waitForChange(100_000));
             });
 
-    // wait for the other thread to start waiting for a change
-    latch.await();
+    t.start();
+    await().atMost(Duration.FIVE_SECONDS).until(() -> t.getState() == State.TIMED_WAITING);
 
+    // when a value arrives
     consumer.accept("heya");
 
-    await().atMost(Duration.FIVE_SECONDS).until(f::isDone);
+    // then, in less than 1/10th of the configured waiting time,
+    await().atMost(Duration.TEN_SECONDS).until(() -> waitResult.get() != null);
 
-    assertThat(f.get(), is(true));
+    // the result is 'true'
+    assertThat(waitResult.get(), is(true));
   }
 
   @Test
