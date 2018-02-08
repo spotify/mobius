@@ -35,7 +35,8 @@ public final class Connectables {
 
   /**
    * Convert a {@code Connectable<I, O>} to a {@code Connectable<J, O>} by applying a function from
-   * J to I for each J received, before invoking the {@code Connectable<I, O>}. This is a <a
+   * J to I for each J received, before invoking the {@code Connectable<I, O>}. This makes {@link
+   * Connectable} a <a
    * href="https://hackage.haskell.org/package/contravariant-1.4.1/docs/Data-Functor-Contravariant.html">contravariant
    * functor</a> in functional programming terms.
    *
