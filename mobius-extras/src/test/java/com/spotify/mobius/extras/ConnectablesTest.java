@@ -48,7 +48,7 @@ public class ConnectablesTest {
     delegate = new TestConnectable();
     mapParameter = new AtomicReference<>();
     mapped =
-        Connectables.convert(
+        Connectables.contramap(
             new Function<Double, String>() {
               @Nonnull
               @Override
