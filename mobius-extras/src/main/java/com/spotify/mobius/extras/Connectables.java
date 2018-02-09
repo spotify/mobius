@@ -34,22 +34,22 @@ public final class Connectables {
   }
 
   /**
-   * Convert a {@code Connectable<I, O>} to a {@code Connectable<J, O>} by applying a function from
-   * J to I for each J received, before invoking the {@code Connectable<I, O>}. This makes {@link
-   * Connectable} a <a
+   * Convert a {@code Connectable<I, O>} to a {@code Connectable<J, O>} by applying the supplied
+   * function from J to I for each J received, before passing it on to a {@code Connection<I>}
+   * received from the underlying {@code Connectable<I, O>}. This makes {@link Connectable} a <a
    * href="https://hackage.haskell.org/package/contravariant-1.4.1/docs/Data-Functor-Contravariant.html">contravariant
    * functor</a> in functional programming terms.
    *
-   * <p>This is useful for instance if you want your UI to use a subset or a transformed version of
-   * the full model used in the loop. The returned {@link Connectable} doesn't enforce a connection
-   * limit, but of course the connection limit of the wrapped {@link Connectable} applies.
+   * <p>The returned {@link Connectable} doesn't enforce a connection limit, but of course the
+   * connection limit of the wrapped {@link Connectable} applies.
    *
-   * <p>As a simplified example, suppose that your model consists of a {@code Long} timestamp that
-   * you want to format to a {@code String} before rendering it in the UI. Your UI could then
-   * implement {@code Connectable<String, Event>}, and you could create a {@code Function<Long,
-   * String>} that does the formatting. The {@link com.spotify.mobius.MobiusLoop} would be
-   * outputting {@code Long} models that you need to convert to Strings before they can be accepted
-   * by the UI.
+   * <p>This is useful for instance if you want your UI to use a subset or a transformed version of
+   * the full model used in the {@code MobiusLoop}. As a simplified example, suppose that your model
+   * consists of a {@code Long} timestamp that you want to format to a {@code String} before
+   * rendering it in the UI. Your UI could then implement {@code Connectable<String, Event>}, and
+   * you could create a {@code Function<Long, String>} that does the formatting. The {@link
+   * com.spotify.mobius.MobiusLoop} would be outputting {@code Long} models that you need to convert
+   * to Strings before they can be accepted by the UI.
    *
    * <pre>
    * public class Formatter {
