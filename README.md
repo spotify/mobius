@@ -7,7 +7,8 @@
 
 Mobius is a functional reactive framework for managing state evolution and side-effects, with add-ons for connecting to Android UIs and RxJava Observables. It emphasizes separation of concerns, testability, and isolating stateful parts of the code.
 
-To learn more, see the [wiki](https://github.com/spotify/mobius/wiki) for a user guide.
+To learn more, see the [wiki](https://github.com/spotify/mobius/wiki) for a user guide. You can also
+watch a [talk from Android @Scale introducing Mobius](https://www.facebook.com/atscaleevents/videos/2025571921049235/).
 
 ## Status
 
