@@ -28,6 +28,9 @@ import javax.annotation.Nonnull;
  * <p>Primarily used in {@link Mobius#loop(Update, Connectable)} to define the effect handler of a
  * Mobius loop. In that case, the incoming values will be effects, and the outgoing values will be
  * events that should be sent back to the loop.
+ * <p>When model callbacks are used on the UI thread instead. The incoming values will be events 
+ * and the outgoing values will be models that should be sent back to the loop.  See 
+ * https://github.com/spotify/mobius/wiki/Mobius-and-Android)
  *
  * @param <I> the incoming value type
  * @param <O> the outgoing value type
