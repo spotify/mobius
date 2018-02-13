@@ -19,6 +19,7 @@
  */
 package com.spotify.mobius;
 
+import com.spotify.mobius.MobiusLoop.Controller;
 import com.spotify.mobius.functions.Consumer;
 import javax.annotation.Nonnull;
 
@@ -28,6 +29,10 @@ import javax.annotation.Nonnull;
  * <p>Primarily used in {@link Mobius#loop(Update, Connectable)} to define the effect handler of a
  * Mobius loop. In that case, the incoming values will be effects, and the outgoing values will be
  * events that should be sent back to the loop.
+ *
+ * <p>Alternatively used in {@link Controller#connect(Connectable)} to connect a view to the
+ * controller. In that case, the incoming values will be models, and the outgoing values will be
+ * events.
  *
  * @param <I> the incoming value type
  * @param <O> the outgoing value type
