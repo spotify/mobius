@@ -56,6 +56,14 @@ public class UpdateSpec<M, E, F> {
       this.model = checkNotNull(model);
     }
 
+    /**
+     * Defines the event/s that should be executed when the test is run. Events are executed in the
+     * order supplied.
+     *
+     * @param event the first events
+     * @param events the following events, possibly none
+     * @return a {@link Then} instance for the remainder of the spec
+     */
     @SafeVarargs
     public final Then<M, F> when(E event, E... events) {
       return new ThenImpl(model, event, events);
@@ -72,8 +80,20 @@ public class UpdateSpec<M, E, F> {
    */
   public interface Then<M, F> {
 
+    /**
+     * Runs the specified test and then invokes the {@link Assert} on the {@link Result}.
+     *
+     * @param assertion to compare the result with
+     */
     void then(Assert<M, F> assertion);
 
+    /**
+     * Runs the specified test and validates that the last step throws the exception expected by the
+     * supplied {@link AssertError}. Note that if the test specification has multiple events, it
+     * will fail if the exception is thrown before the execution of the last event.
+     *
+     * @param assertion an expectation on the exception
+     */
     void thenError(AssertError assertion);
   }
 
