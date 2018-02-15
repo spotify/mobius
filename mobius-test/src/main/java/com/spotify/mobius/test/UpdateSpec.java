@@ -57,7 +57,7 @@ public class UpdateSpec<M, E, F> {
     }
 
     /**
-     * Defines the event/s that should be executed when the test is run. Events are executed in the
+     * Defines the event(s) that should be executed when the test is run. Events are executed in the
      * order supplied.
      *
      * @param event the first events
