@@ -75,8 +75,19 @@ public class InitSpec<M, F> {
    */
   public interface Then<M, F> {
 
+    /**
+     * Runs the specified test and then runs the {@link Assert} on the resulting {@link First}.
+     *
+     * @param assertion to compare the result with
+     */
     void then(Assert<M, F> assertion);
 
+    /**
+     * Runs the specified test and validates that it throws the exception expected by the supplied
+     * {@link AssertError}.
+     *
+     * @param assertion an expectation on the exception
+     */
     void thenError(AssertError assertion);
   }
 
