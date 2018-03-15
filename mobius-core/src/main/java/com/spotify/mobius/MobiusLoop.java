@@ -291,7 +291,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
     /**
      * Start a MobiusLoop from the current model.
      *
-     * @throws IllegalStateException if the loop already is running
+     * @throws IllegalStateException if the loop already is running or no view has been connected
      */
     void start();
 
