@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/spotify/mobius.svg?branch=master)](https://travis-ci.org/spotify/mobius)
 [![Code Coverage](https://codecov.io/gh/spotify/mobius/branch/master/graph/badge.svg)](https://codecov.io/gh/spotify/mobius)
 [![License](https://img.shields.io/github/license/spotify/mobius.svg)](LICENSE)
+[![Join the chat at https://gitter.im/spotify/mobius](https://badges.gitter.im/spotify/mobius.svg)](https://gitter.im/spotify/mobius)
 
 # Mobius
 
