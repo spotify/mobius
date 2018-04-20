@@ -21,6 +21,7 @@ package com.spotify.mobius;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
+import com.spotify.mobius.EffectRouter.Builder;
 import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Producer;
@@ -154,6 +155,11 @@ public final class Mobius {
   public static <M, E, F> MobiusLoop.Controller<M, E> controller(
       MobiusLoop.Factory<M, E, F> loopFactory, M defaultModel, WorkRunner modelRunner) {
     return new MobiusLoopController<>(loopFactory, defaultModel, modelRunner);
+  }
+
+  @Nonnull
+  public static <F, E> EffectRouterBuilder<F, E> subtypeEffectHandler() {
+    return new EffectRouter.Builder<>();
   }
 
   private static final class Builder<M, E, F> implements MobiusLoop.Builder<M, E, F> {
