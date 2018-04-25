@@ -255,6 +255,57 @@ public final class RxMobius {
     }
 
     /**
+     * Add a {@link Func1} for handling effects of a given type. The function will be invoked once
+     * for every received effect object that extend the given class. The returned event will be
+     * forwarded to the Mobius loop.
+     *
+     * <p>Adding handlers for two effect classes where one is a super-class of the other is
+     * considered a collision and is not allowed. Registering the same class twice is also
+     * considered a collision.
+     *
+     * @param effectClass the class to handle
+     * @param function the function that should be invoked for the effect
+     * @param <G> the effect class as a type parameter
+     * @return this builder
+     * @throws IllegalArgumentException if there is a handler collision
+     */
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
+        final Class<G> effectClass, final Func1<G, E> function) {
+      //noinspection ResultOfMethodCallIgnored
+      checkNotNull(effectClass);
+      //noinspection ResultOfMethodCallIgnored
+      checkNotNull(function);
+
+      return add(effectClass, Transformers.fromFunction(function));
+    }
+
+    /**
+     * Add a {@link Func1} for handling effects of a given type. The function will be invoked once
+     * for every received effect object that extend the given class. The returned event will be
+     * forwarded to the Mobius loop.
+     *
+     * <p>Adding handlers for two effect classes where one is a super-class of the other is
+     * considered a collision and is not allowed. Registering the same class twice is also
+     * considered a collision.
+     *
+     * @param effectClass the class to handle
+     * @param function the function that should be invoked for the effect
+     * @param scheduler the scheduler that should be used when invoking the function
+     * @param <G> the effect class as a type parameter
+     * @return this builder
+     * @throws IllegalArgumentException if there is a handler collision
+     */
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
+        final Class<G> effectClass, final Func1<G, E> function, Scheduler scheduler) {
+      //noinspection ResultOfMethodCallIgnored
+      checkNotNull(effectClass);
+      //noinspection ResultOfMethodCallIgnored
+      checkNotNull(function);
+
+      return add(effectClass, Transformers.fromFunction(function, scheduler));
+    }
+
+    /**
      * Optionally set a shared error handler in case a handler throws an uncaught exception.
      *
      * <p>The default is to use {@link RxJavaHooks#onError(Throwable)}. Note that any exception

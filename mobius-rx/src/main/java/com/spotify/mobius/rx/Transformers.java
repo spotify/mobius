@@ -20,6 +20,7 @@
 package com.spotify.mobius.rx;
 
 import com.spotify.mobius.rx.RxMobius.SubtypeEffectHandlerBuilder;
+import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 import rx.Completable;
 import rx.Observable;
@@ -28,6 +29,7 @@ import rx.Scheduler;
 import rx.exceptions.OnErrorThrowable;
 import rx.functions.Action0;
 import rx.functions.Action1;
+import rx.functions.Func1;
 
 /**
  * A {@link Transformer} factory that creates transformers from {@link Action0} and {@link Action1}.
@@ -118,5 +120,58 @@ class Transformers {
         return effectStream.compose(FlatMapCompletable.<F, E>createForAction(doEffect, scheduler));
       }
     };
+  }
+
+  /**
+   * Creates an {@link Observable.Transformer} that will flatten the provided {@link Func1} into the
+   * stream as an {@link Observable} every time it receives an effect from the upstream effects
+   * observable. This will result in calling the function on the specified scheduler, and passing it
+   * the requested effect object then emitting its returned value.
+   *
+   * @param function the {@link Func1} to be invoked every time the effect is requested
+   * @param scheduler the {@link Scheduler} to be used when invoking the function
+   * @param <F> the type of Effect this transformer handles
+   * @param <E> the type of Event this transformer emits
+   * @return an {@link Observable.Transformer} that can be used with a {@link
+   *     SubtypeEffectHandlerBuilder}.
+   */
+  static <F, E> Observable.Transformer<F, E> fromFunction(
+      final Func1<F, E> function, @Nullable final Scheduler scheduler) {
+    return new Observable.Transformer<F, E>() {
+      @Override
+      public Observable<E> call(Observable<F> effectStream) {
+        return effectStream.flatMap(
+            new Func1<F, Observable<E>>() {
+              @Override
+              public Observable<E> call(final F f) {
+                Observable<E> eventObservable =
+                    Observable.fromCallable(
+                        new Callable<E>() {
+                          @Override
+                          public E call() throws Exception {
+                            return function.call(f);
+                          }
+                        });
+                return scheduler == null ? eventObservable : eventObservable.subscribeOn(scheduler);
+              }
+            });
+      }
+    };
+  }
+
+  /**
+   * Creates an {@link Observable.Transformer} that will flatten the provided {@link Func1} into the
+   * stream as an {@link Observable} every time it receives an effect from the upstream effects
+   * observable. This will result in calling the function on the immediate scheduler, and passing it
+   * the requested effect object then emitting its returned value.
+   *
+   * @param function {@link Func1} to be invoked every time the effect is requested
+   * @param <F> the type of Effect this transformer handles
+   * @param <E> the type of Event this transformer emits
+   * @return an {@link Observable.Transformer} that can be used with a {@link
+   *     SubtypeEffectHandlerBuilder}.
+   */
+  static <F, E> Observable.Transformer<F, E> fromFunction(final Func1<F, E> function) {
+    return fromFunction(function, null);
   }
 }

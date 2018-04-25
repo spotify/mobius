@@ -26,6 +26,7 @@ import static org.hamcrest.Matchers.is;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
+import rx.functions.Func1;
 import rx.observers.AssertableSubscriber;
 import rx.schedulers.TestScheduler;
 import rx.subjects.PublishSubject;
@@ -99,5 +100,34 @@ public class TransformersTest {
 
     subscriber.awaitTerminalEvent(1, TimeUnit.SECONDS);
     subscriber.assertCompleted();
+  }
+
+  @Test
+  public void effectPerformerInvokesFunctionWithReceivedEffectAndEmitsReturnedEvents() {
+    PublishSubject<String> upstream = PublishSubject.create();
+    TestScheduler scheduler = new TestScheduler();
+    Func1<String, Integer> function = s -> s.length();
+    AssertableSubscriber<Integer> observer =
+        upstream.compose(Transformers.fromFunction(function, scheduler)).test();
+
+    upstream.onNext("Hello");
+    scheduler.triggerActions();
+    observer.assertValue(5);
+  }
+
+  @Test
+  public void effectPerformerInvokesFunctionWithReceivedEffectAndErrorsForUnhandledExceptions() {
+    PublishSubject<String> upstream = PublishSubject.create();
+    TestScheduler scheduler = new TestScheduler();
+    Func1<String, Integer> function =
+        s -> {
+          throw new RuntimeException("Something bad happened");
+        };
+    AssertableSubscriber<Integer> observer =
+        upstream.compose(Transformers.fromFunction(function, scheduler)).test();
+
+    upstream.onNext("Hello");
+    scheduler.triggerActions();
+    observer.assertError(RuntimeException.class);
   }
 }
