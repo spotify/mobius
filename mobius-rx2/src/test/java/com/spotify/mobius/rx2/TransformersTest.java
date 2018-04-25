@@ -23,6 +23,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
+import io.reactivex.functions.Function;
+import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.TestScheduler;
 import io.reactivex.subjects.PublishSubject;
 import org.junit.Test;
@@ -79,5 +81,34 @@ public class TransformersTest {
     assertThat(consumer.getCurrentValue(), is(equalTo(null)));
     scheduler.triggerActions();
     assertThat(consumer.getCurrentValue(), is("First Time"));
+  }
+
+  @Test
+  public void effectPerformerInvokesFunctionWithReceivedEffectAndEmitsReturnedEvents() {
+    PublishSubject<String> upstream = PublishSubject.create();
+    TestScheduler scheduler = new TestScheduler();
+    Function<String, Integer> function = s -> s.length();
+    TestObserver<Integer> observer =
+        upstream.compose(Transformers.fromFunction(function, scheduler)).test();
+
+    upstream.onNext("Hello");
+    scheduler.triggerActions();
+    observer.assertValue(5);
+  }
+
+  @Test
+  public void effectPerformerInvokesFunctionWithReceivedEffectAndErrorsForUnhandledExceptions() {
+    PublishSubject<String> upstream = PublishSubject.create();
+    TestScheduler scheduler = new TestScheduler();
+    Function<String, Integer> function =
+        s -> {
+          throw new RuntimeException("Something bad happened");
+        };
+    TestObserver<Integer> observer =
+        upstream.compose(Transformers.fromFunction(function, scheduler)).test();
+
+    upstream.onNext("Hello");
+    scheduler.triggerActions();
+    observer.assertError(RuntimeException.class);
   }
 }
