@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Before;
 import org.junit.Test;
 
-/** TODO: document! */
 public class ConnectablesTest {
 
   private TestConsumer<String> outputConsumer;

@@ -66,7 +66,7 @@ class MergedConnectable<I, O> implements Connectable<I, O> {
     final List<Connectable<I, O>> list = ImmutableUtil.immutableList(connectables);
 
     if (list.isEmpty()) {
-      throw new IllegalStateException("Connectables collection must be non-empty");
+      throw new IllegalArgumentException("Connectables collection must be non-empty");
     }
 
     return new MergedConnectable<>(list);

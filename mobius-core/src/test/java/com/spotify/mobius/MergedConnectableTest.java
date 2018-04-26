@@ -90,7 +90,7 @@ public class MergedConnectableTest {
   public void shouldDisallowEmptyConfig() throws Exception {
     assertThatThrownBy(
             () -> MergedConnectable.create(Collections.<Connectable<String, Integer>>emptyList()))
-        .isInstanceOf(IllegalStateException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

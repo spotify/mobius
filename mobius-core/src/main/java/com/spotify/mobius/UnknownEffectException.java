@@ -22,7 +22,7 @@ package com.spotify.mobius;
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 /**
- * Indicates that an {@link EffectRouter} has received an effect that it hasn't received
+ * Indicates that an {@link EffectRouterBuilderImpl} has received an effect that it hasn't received
  * configuration for. This is a programmer error.
  */
 public class UnknownEffectException extends RuntimeException {

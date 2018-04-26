@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
 
-/** TODO: document! */
 public class UnknownEffectReportingConnectableTest {
 
   private TestConsumer<Integer> consumer;

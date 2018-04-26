@@ -22,7 +22,6 @@ package com.spotify.mobius;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.spotify.mobius.EffectRouter.Builder;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,12 +30,12 @@ import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 
-public class EffectRouterTest {
+public class EffectRouterBuilderImplTest {
 
   private TestConsumer<Event> eventConsumer;
   private AtomicBoolean ranSimpleEffect;
 
-  private Builder<Effect, Event> builder;
+  private EffectRouterBuilderImpl<Effect, Event> builder;
   public static final Runnable DUMMY_ACTION =
       new Runnable() {
         @Override
@@ -47,7 +46,7 @@ public class EffectRouterTest {
   public void setUp() throws Exception {
     eventConsumer = new TestConsumer<>();
     ranSimpleEffect = new AtomicBoolean(false);
-    builder = EffectRouter.builder();
+    builder = new EffectRouterBuilderImpl<>();
   }
 
   @Test

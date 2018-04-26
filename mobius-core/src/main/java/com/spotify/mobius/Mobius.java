@@ -158,7 +158,7 @@ public final class Mobius {
 
   @Nonnull
   public static <F, E> EffectRouterBuilder<F, E> subtypeEffectHandler() {
-    return new EffectRouter.Builder<>();
+    return new EffectRouterBuilderImpl<>();
   }
 
   private static final class Builder<M, E, F> implements MobiusLoop.Builder<M, E, F> {
