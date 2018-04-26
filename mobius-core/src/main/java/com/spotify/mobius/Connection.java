@@ -31,7 +31,8 @@ import com.spotify.mobius.functions.Consumer;
 public interface Connection<I> extends Disposable, Consumer<I> {
 
   /**
-   * Send a value this connection.
+   * Send a value this connection. Implementations may receive values from different threads and are
+   * thus expected to be thread-safe.
    *
    * @param value the value that should be sent to the connection
    */
