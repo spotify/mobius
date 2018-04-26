@@ -1,9 +1,30 @@
+/*
+ * -\-\-
+ * Mobius
+ * --
+ * Copyright (c) 2017-2018 Spotify AB
+ * --
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * -/-/-
+ */
 package com.spotify.mobius;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.spotify.mobius.EffectRouter.Builder;
 import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.functions.Function;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nonnull;
@@ -12,127 +33,215 @@ import org.junit.Test;
 
 public class EffectRouterTest {
 
-  private Connectable<Effect, Event> connectable;
   private TestConsumer<Event> eventConsumer;
+  private AtomicBoolean ranSimpleEffect;
+
+  private Builder<Effect, Event> builder;
+  public static final Runnable DUMMY_ACTION =
+      new Runnable() {
+        @Override
+        public void run() {}
+      };
 
   @Before
   public void setUp() throws Exception {
     eventConsumer = new TestConsumer<>();
+    ranSimpleEffect = new AtomicBoolean(false);
+    builder = EffectRouter.builder();
   }
 
   @Test
-  public void shouldFroobish() throws Exception {
-    final AtomicBoolean ranSimpleEffect = new AtomicBoolean(false);
-    final AtomicReference<EffectWithParameter> ewpReference = new AtomicReference<>();
-    final AtomicReference<EffectWithEvent> eweReference = new AtomicReference<>();
+  public void integrationTest() throws Exception {
+    final AtomicReference<String> ewpReference = new AtomicReference<>();
+    final Event event = new Event();
 
-    connectable = Mobius.<Effect, Event>subtypeEffectHandler()
-        .add(EffectWithEvent.class, new Connectable<EffectWithEvent, Event>() {
-          @Nonnull
-          @Override
-          public Connection<EffectWithEvent> connect(final Consumer<Event> output)
-              throws ConnectionLimitExceededException {
-            return new Connection<EffectWithEvent>() {
-              @Override
-              public void accept(EffectWithEvent value) {
-                output.accept(new Event());
-              }
+    Connection<Effect> connection =
+        Mobius.<Effect, Event>subtypeEffectHandler()
+            .add(EffectWithEvent.class, eventEmitter(event))
+            .add(
+                SimpleEffect.class,
+                new Runnable() {
+                  @Override
+                  public void run() {
+                    ranSimpleEffect.set(true);
+                  }
+                })
+            .add(
+                EffectWithParameter.class,
+                new Consumer<EffectWithParameter>() {
+                  @Override
+                  public void accept(EffectWithParameter value) {
+                    ewpReference.set(value.param);
+                  }
+                })
+            .build()
+            .connect(eventConsumer);
 
-              @Override
-              public void dispose() {
+    connection.accept(new EffectWithEvent());
+    assertThat(eventConsumer.received).containsExactly(event);
 
-              }
-            };
-          }
-        })
-        .add(SimpleEffect.class, new Runnable() {
-          @Override
-          public void run() {
-            ranSimpleEffect.set(true);
-          }
-        })
-        .add(EffectWithParameter.class, new Consumer<EffectWithParameter>() {
-          @Override
-          public void accept(EffectWithParameter value) {
-            ewpReference.set(value);
-          }
-        })
-        .build();
+    connection.accept(new SimpleEffect());
+    assertThat(ranSimpleEffect.get()).isTrue();
+
+    connection.accept(new EffectWithParameter("heya froobish"));
+    assertThat(ewpReference.get()).isEqualTo("heya froobish");
   }
 
   @Test
   public void shouldSupportRunnables() throws Exception {
-    final AtomicBoolean ranSimpleEffect = new AtomicBoolean(false);
-
-    connectable = Mobius.<Effect, Event>subtypeEffectHandler()
-        .add(SimpleEffect.class, new Runnable() {
-          @Override
-          public void run() {
-            ranSimpleEffect.set(true);
-          }
-        }).build();
-
-    connectable.connect(eventConsumer).accept(new SimpleEffect());
-
-    assertThat(ranSimpleEffect.get()).isTrue();
+    verifySimpleEffectExecution(
+        builder ->
+            builder.add(
+                SimpleEffect.class,
+                new Runnable() {
+                  @Override
+                  public void run() {
+                    ranSimpleEffect.set(true);
+                  }
+                }));
   }
 
   @Test
   public void shouldSupportConsumers() throws Exception {
-    fail("not implemented");
+    verifySimpleEffectExecution(
+        builder ->
+            builder.add(
+                SimpleEffect.class,
+                new Consumer<SimpleEffect>() {
+                  @Override
+                  public void accept(SimpleEffect value) {
+                    ranSimpleEffect.set(true);
+                  }
+                }));
   }
 
   @Test
   public void shouldSupportConnectables() throws Exception {
-    fail("not implemented");
+    verifySimpleEffectExecution(
+        builder ->
+            builder.add(
+                SimpleEffect.class,
+                new Connectable<SimpleEffect, Event>() {
+                  @Nonnull
+                  @Override
+                  public Connection<SimpleEffect> connect(Consumer<Event> output)
+                      throws ConnectionLimitExceededException {
+                    return new Connection<SimpleEffect>() {
+                      @Override
+                      public void accept(SimpleEffect value) {
+                        ranSimpleEffect.set(true);
+                      }
+
+                      @Override
+                      public void dispose() {}
+                    };
+                  }
+                }));
   }
 
   @Test
   public void shouldPreventSubclassCollisionsAtConfigTime() throws Exception {
-    fail("not implemented");
+    builder.add(SimpleEffect.class, DUMMY_ACTION);
+
+    assertThatThrownBy(() -> builder.add(SubEffect.class, DUMMY_ACTION))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining(SimpleEffect.class.getName())
+        .hasMessageContaining(SubEffect.class.getName());
   }
 
   @Test
   public void shouldPreventSameClassCollisionsAtConfigTime() throws Exception {
-    fail("not implemented");
+    builder.add(SimpleEffect.class, DUMMY_ACTION);
+
+    assertThatThrownBy(() -> builder.add(SimpleEffect.class, DUMMY_ACTION))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining(SimpleEffect.class.getName());
   }
 
   @Test
   public void shouldPreventSuperClassCollisionsAtConfigTime() throws Exception {
-    fail("not implemented");
+    builder.add(SubEffect.class, DUMMY_ACTION);
+
+    assertThatThrownBy(() -> builder.add(SimpleEffect.class, DUMMY_ACTION))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining(SimpleEffect.class.getName())
+        .hasMessageContaining(SubEffect.class.getName());
   }
 
-  // TODO: this is
+  // TODO: maybe separate router tests from builder tests?
   @Test
   public void shouldReportUnhandledEffectsAtRuntime() throws Exception {
-    fail("not implemented");
+    final Connection<Effect> connection =
+        builder.add(SimpleEffect.class, DUMMY_ACTION).build().connect(eventConsumer);
+
+    assertThatThrownBy(() -> connection.accept(new UnhandledEffect()))
+        .isInstanceOf(UnknownEffectException.class);
   }
 
-  private static class Effect {
+  @Test
+  public void shouldNeverSendEventsAfterDispose() throws Exception {
+    Connection<Effect> connection =
+        builder
+            .add(EffectWithEvent.class, eventEmitter(new Event()))
+            .build()
+            .connect(eventConsumer);
 
+    connection.accept(new EffectWithEvent());
+
+    connection.dispose();
+
+    connection.accept(new EffectWithEvent());
+
+    assertThat(eventConsumer.received).hasSize(1);
   }
 
-  private static class SimpleEffect extends Effect {
+  private void verifySimpleEffectExecution(
+      Function<EffectRouterBuilder<Effect, Event>, EffectRouterBuilder<Effect, Event>>
+          buildConfig) {
+    final EffectRouterBuilder<Effect, Event> builder =
+        buildConfig.apply(Mobius.<Effect, Event>subtypeEffectHandler());
 
+    builder.build().connect(eventConsumer).accept(new SimpleEffect());
+
+    assertThat(ranSimpleEffect.get()).isTrue();
   }
+
+  private Connectable<EffectWithEvent, Event> eventEmitter(final Event event) {
+    return new Connectable<EffectWithEvent, Event>() {
+      @Nonnull
+      @Override
+      public Connection<EffectWithEvent> connect(final Consumer<Event> output)
+          throws ConnectionLimitExceededException {
+        return new Connection<EffectWithEvent>() {
+          @Override
+          public void accept(EffectWithEvent value) {
+            output.accept(event);
+          }
+
+          @Override
+          public void dispose() {}
+        };
+      }
+    };
+  }
+
+  private static class Effect {}
+
+  private static class SimpleEffect extends Effect {}
 
   private static class SubEffect extends SimpleEffect {}
 
   private static class EffectWithParameter extends Effect {
+    final String param;
 
+    private EffectWithParameter(String param) {
+      this.param = param;
+    }
   }
 
-  private static class EffectWithEvent extends Effect {
+  private static class EffectWithEvent extends Effect {}
 
-  }
+  private static class UnhandledEffect extends Effect {}
 
-  private static class UnhandledEffect extends Effect {
-
-  }
-
-
-
-  private static class Event {
-
-  }
+  private static class Event {}
 }

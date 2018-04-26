@@ -19,8 +19,10 @@
  */
 package com.spotify.mobius.internal_util;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -50,6 +52,17 @@ public final class ImmutableUtil {
     Preconditions.checkIterableNoNulls(set);
     Set<T> result = new HashSet<>(set);
     return Collections.unmodifiableSet(result);
+  }
+
+  public static <T> List<T> immutableList(Iterable<? extends T> collection) {
+    Preconditions.checkIterableNoNulls(collection);
+    List<T> list = new ArrayList<>();
+
+    for (T item : collection) {
+      list.add(item);
+    }
+
+    return Collections.unmodifiableList(list);
   }
 
   @SafeVarargs

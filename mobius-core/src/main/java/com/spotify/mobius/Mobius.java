@@ -21,7 +21,6 @@ package com.spotify.mobius;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
-import com.spotify.mobius.EffectRouter.Builder;
 import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Producer;
