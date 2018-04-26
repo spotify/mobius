@@ -52,15 +52,13 @@ public class MobiusEffectRouterTest {
   public void setUp() throws Exception {
     cConsumer = new TestConsumer<>();
     dAction = new TestAction();
-    Transformer<A, TestEvent> aHandler = as -> as.map(a -> AEvent.create(a.id()));
-    Transformer<B, TestEvent> bHandler = bs -> bs.map(b -> BEvent.create(b.id()));
     Transformer<TestEffect, TestEvent> router =
         RxMobius.<TestEffect, TestEvent>subtypeEffectHandler()
-            .add(A.class, aHandler)
-            .add(B.class, bHandler)
+            .add(A.class, (Transformer<A, TestEvent>) as -> as.map(a -> AEvent.create(a.id())))
+            .add(B.class, (Transformer<B, TestEvent>) bs -> bs.map(b -> BEvent.create(b.id())))
             .add(C.class, cConsumer)
             .add(D.class, dAction)
-            .add(E.class, eFunction)
+            .addFunction(E.class, eFunction)
             .build();
 
     publishSubject = PublishSubject.create();
@@ -118,28 +116,26 @@ public class MobiusEffectRouterTest {
 
   @Test
   public void shouldReportEffectClassCollisionWhenAddingSuperclass() throws Exception {
-    Transformer<Child, TestEvent> handler1 = childObservable -> null;
     RxMobius.SubtypeEffectHandlerBuilder<TestEffect, TestEvent> builder =
-        RxMobius.<TestEffect, TestEvent>subtypeEffectHandler().add(Child.class, handler1);
+        RxMobius.<TestEffect, TestEvent>subtypeEffectHandler()
+            .add(Child.class, childObservable -> null);
 
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("collision");
 
-    Transformer<Parent, TestEvent> handler2 = parentObservable -> null;
-    builder.add(Parent.class, handler2);
+    builder.add(Parent.class, parentObservable -> null);
   }
 
   @Test
   public void shouldReportEffectClassCollisionWhenAddingSubclass() throws Exception {
-    Transformer<Parent, TestEvent> handler1 = observable -> null;
     RxMobius.SubtypeEffectHandlerBuilder<TestEffect, TestEvent> builder =
-        RxMobius.<TestEffect, TestEvent>subtypeEffectHandler().add(Parent.class, handler1);
+        RxMobius.<TestEffect, TestEvent>subtypeEffectHandler()
+            .add(Parent.class, observable -> null);
 
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("collision");
 
-    Transformer<Child, TestEvent> handler2 = observable -> null;
-    builder.add(Child.class, handler2);
+    builder.add(Child.class, observable -> null);
   }
 
   @Test
@@ -148,15 +144,14 @@ public class MobiusEffectRouterTest {
     publishSubject = PublishSubject.create();
     testSubscriber = TestSubscriber.create();
 
-    Transformer<A, TestEvent> aHandler = as -> as.map(a -> AEvent.create(a.id()));
     RxMobius.SubtypeEffectHandlerBuilder<TestEffect, TestEvent> builder =
-        RxMobius.<TestEffect, TestEvent>subtypeEffectHandler().add(A.class, aHandler);
+        RxMobius.<TestEffect, TestEvent>subtypeEffectHandler()
+            .add(A.class, (Transformer<A, TestEvent>) as -> as.map(a -> AEvent.create(a.id())));
 
     Transformer<TestEffect, TestEvent> router = builder.build();
 
     // this should not lead to the effects router being capable of handling B effects
-    Transformer<B, TestEvent> bHandler = bs -> bs.map(b -> BEvent.create(b.id()));
-    builder.add(B.class, bHandler);
+    builder.add(B.class, (Transformer<B, TestEvent>) bs -> bs.map(b -> BEvent.create(b.id())));
 
     publishSubject.compose(router).subscribe(testSubscriber);
 
@@ -177,13 +172,13 @@ public class MobiusEffectRouterTest {
     final RuntimeException expectedException = new RuntimeException("expected!");
     final AtomicBoolean gotRightException = new AtomicBoolean(false);
 
-    Func1<A, TestEvent> aHandler =
-        a -> {
-          throw expectedException;
-        };
     RxMobius.SubtypeEffectHandlerBuilder<TestEffect, TestEvent> builder =
         RxMobius.<TestEffect, TestEvent>subtypeEffectHandler()
-            .add(A.class, aHandler)
+            .addFunction(
+                A.class,
+                a -> {
+                  throw expectedException;
+                })
             .withFatalErrorHandler(
                 new Func1<
                     Observable.Transformer<? extends TestEffect, TestEvent>, Action1<Throwable>>() {

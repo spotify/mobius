@@ -276,7 +276,7 @@ public final class RxMobius {
      * @return this builder
      * @throws IllegalArgumentException if there is a handler collision
      */
-    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> addFunction(
         final Class<G> effectClass, final Function<G, E> function) {
       //noinspection ResultOfMethodCallIgnored
       checkNotNull(effectClass);
@@ -302,7 +302,7 @@ public final class RxMobius {
      * @return this builder
      * @throws IllegalArgumentException if there is a handler collision
      */
-    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> addFunction(
         final Class<G> effectClass, final Function<G, E> function, Scheduler scheduler) {
       //noinspection ResultOfMethodCallIgnored
       checkNotNull(effectClass);
