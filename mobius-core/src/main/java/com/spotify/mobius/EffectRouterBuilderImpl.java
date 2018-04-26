@@ -19,6 +19,8 @@
  */
 package com.spotify.mobius;
 
+import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
+
 import com.spotify.mobius.functions.Consumer;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +52,7 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
       Class<G> klazz, Connectable<G, E> connectable) {
     validateAndTrackClass(klazz);
 
-    connectables.add(new FilteredConnectable<F, G, E>(klazz, connectable));
+    connectables.add(new ClassFilteringConnectable<F, G, E>(klazz, connectable));
 
     return this;
   }
@@ -59,7 +61,7 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
     for (Class<?> existing : classes) {
       if (klazz.isAssignableFrom(existing) || existing.isAssignableFrom(klazz)) {
         throw new IllegalArgumentException(
-            "Effect classes may not be assignable to each other, "
+            "Effect classes must not be assignable to each other, "
                 + klazz.getName()
                 + " collides with existing: "
                 + existing.getName());
@@ -76,11 +78,11 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
     return new SafeConnectable<>(MergedConnectable.create(connectables));
   }
 
-  private static class FilteredConnectable<I, J extends I, O> implements Connectable<I, O> {
+  private static class ClassFilteringConnectable<I, J extends I, O> implements Connectable<I, O> {
     private final Class<J> klazz;
     private final Connectable<J, O> delegate;
 
-    FilteredConnectable(Class<J> klazz, Connectable<J, O> delegate) {
+    ClassFilteringConnectable(Class<J> klazz, Connectable<J, O> delegate) {
       this.klazz = klazz;
       this.delegate = delegate;
     }
@@ -88,7 +90,7 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
     @Nonnull
     @Override
     public Connection<I> connect(Consumer<O> output) throws ConnectionLimitExceededException {
-      final Connection<J> delegateConnection = delegate.connect(output);
+      final Connection<J> delegateConnection = delegate.connect(checkNotNull(output));
 
       return new Connection<I>() {
         @Override

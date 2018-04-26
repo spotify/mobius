@@ -19,6 +19,8 @@
  */
 package com.spotify.mobius;
 
+import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
+
 import com.spotify.mobius.functions.Consumer;
 import javax.annotation.Nonnull;
 
@@ -29,6 +31,8 @@ public final class Connectables {
   }
 
   public static <I, O> Connectable<I, O> fromRunnable(final Runnable action) {
+    checkNotNull(action);
+
     return new Connectable<I, O>() {
       @Nonnull
       @Override
@@ -47,6 +51,8 @@ public final class Connectables {
   }
 
   public static <I, O> Connectable<I, O> fromConsumer(final Consumer<I> consumer) {
+    checkNotNull(consumer);
+
     return new Connectable<I, O>() {
       @Nonnull
       @Override

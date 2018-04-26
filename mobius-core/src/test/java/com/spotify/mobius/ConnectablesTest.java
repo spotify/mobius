@@ -20,6 +20,7 @@
 package com.spotify.mobius;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Before;
@@ -60,5 +61,17 @@ public class ConnectablesTest {
 
     assertThat(consumer.received).containsOnly(8735);
     assertThat(outputConsumer.received).isEmpty();
+  }
+
+  @Test
+  public void shouldThrowNpeForNullRunnable() throws Exception {
+    assertThatThrownBy(() -> Connectables.fromRunnable(null))
+        .isInstanceOf(NullPointerException.class);
+  }
+
+  @Test
+  public void shouldThrowNpeForNullConsumer() throws Exception {
+    assertThatThrownBy(() -> Connectables.fromConsumer(null))
+        .isInstanceOf(NullPointerException.class);
   }
 }
