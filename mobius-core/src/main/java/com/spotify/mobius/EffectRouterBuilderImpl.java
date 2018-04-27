@@ -22,6 +22,7 @@ package com.spotify.mobius;
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.functions.Function;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -45,6 +46,12 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
   @Override
   public <G extends F> EffectRouterBuilder<F, E> addConsumer(Class<G> klazz, Consumer<G> consumer) {
     return addConnectable(klazz, Connectables.<G, E>fromConsumer(consumer));
+  }
+
+  @Override
+  public <G extends F> EffectRouterBuilder<F, E> addFunction(
+      Class<G> klazz, Function<G, E> function) {
+    return addConnectable(klazz, Connectables.fromFunction(function));
   }
 
   @Override

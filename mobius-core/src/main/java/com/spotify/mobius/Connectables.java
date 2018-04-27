@@ -22,6 +22,7 @@ package com.spotify.mobius;
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.functions.Function;
 import javax.annotation.Nonnull;
 
 /** TODO: document! */
@@ -61,6 +62,27 @@ public final class Connectables {
           @Override
           public void accept(I value) {
             consumer.accept(value);
+          }
+
+          @Override
+          public void dispose() {}
+        };
+      }
+    };
+  }
+
+  public static <I, O> Connectable<I, O> fromFunction(final Function<I, O> function) {
+    checkNotNull(function);
+
+    return new Connectable<I, O>() {
+      @Nonnull
+      @Override
+      public Connection<I> connect(final Consumer<O> output)
+          throws ConnectionLimitExceededException {
+        return new Connection<I>() {
+          @Override
+          public void accept(I value) {
+            output.accept(function.apply(value));
           }
 
           @Override

@@ -20,6 +20,7 @@
 package com.spotify.mobius;
 
 import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.functions.Function;
 
 /** TODO: document! */
 public interface EffectRouterBuilder<F, E> {
@@ -27,6 +28,8 @@ public interface EffectRouterBuilder<F, E> {
   <G extends F> EffectRouterBuilder<F, E> addRunnable(Class<G> klazz, Runnable action);
 
   <G extends F> EffectRouterBuilder<F, E> addConsumer(Class<G> klazz, Consumer<G> consumer);
+
+  <G extends F> EffectRouterBuilder<F, E> addFunction(Class<G> klazz, Function<G, E> function);
 
   <G extends F> EffectRouterBuilder<F, E> addConnectable(
       Class<G> klazz, Connectable<G, E> connectable);

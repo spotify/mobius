@@ -89,29 +89,26 @@ public class EffectRouterBuilderImplTest {
   @Test
   public void shouldSupportRunnables() throws Exception {
     verifySimpleEffectExecution(
-        builder ->
-            builder.addRunnable(
-                SimpleEffect.class,
-                new Runnable() {
-                  @Override
-                  public void run() {
-                    ranSimpleEffect.set(true);
-                  }
-                }));
+        builder -> builder.addRunnable(SimpleEffect.class, () -> ranSimpleEffect.set(true)));
   }
 
   @Test
   public void shouldSupportConsumers() throws Exception {
     verifySimpleEffectExecution(
-        builder ->
-            builder.addConsumer(
-                SimpleEffect.class,
-                new Consumer<SimpleEffect>() {
-                  @Override
-                  public void accept(SimpleEffect value) {
-                    ranSimpleEffect.set(true);
-                  }
-                }));
+        builder -> builder.addConsumer(SimpleEffect.class, value -> ranSimpleEffect.set(true)));
+  }
+
+  @Test
+  public void shouldSupportFunctions() throws Exception {
+    verifySimpleEffectExecution(
+        builder -> {
+          return builder.addFunction(
+              SimpleEffect.class,
+              value -> {
+                ranSimpleEffect.set(true);
+                return new Event();
+              });
+        });
   }
 
   @Test

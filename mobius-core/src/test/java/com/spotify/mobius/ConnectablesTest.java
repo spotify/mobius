@@ -22,7 +22,9 @@ package com.spotify.mobius;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.spotify.mobius.functions.Function;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -64,6 +66,23 @@ public class ConnectablesTest {
   }
 
   @Test
+  public void fromFunctionShouldApplyGivenFunctionAndPropagateEvents() throws Exception {
+
+    Connectables.fromFunction(
+            new Function<Integer, String>() {
+              @Nonnull
+              @Override
+              public String apply(Integer value) {
+                return String.valueOf(value);
+              }
+            })
+        .connect(outputConsumer)
+        .accept(8735);
+
+    assertThat(outputConsumer.received).containsExactly("8735");
+  }
+
+  @Test
   public void shouldThrowNpeForNullRunnable() throws Exception {
     assertThatThrownBy(() -> Connectables.fromRunnable(null))
         .isInstanceOf(NullPointerException.class);
@@ -72,6 +91,12 @@ public class ConnectablesTest {
   @Test
   public void shouldThrowNpeForNullConsumer() throws Exception {
     assertThatThrownBy(() -> Connectables.fromConsumer(null))
+        .isInstanceOf(NullPointerException.class);
+  }
+
+  @Test
+  public void shouldThrowNpeForNullFunction() throws Exception {
+    assertThatThrownBy(() -> Connectables.fromFunction(null))
         .isInstanceOf(NullPointerException.class);
   }
 }
