@@ -25,6 +25,7 @@ import com.spotify.mobius.ConnectionException;
 import com.spotify.mobius.Mobius;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.Update;
+import com.spotify.mobius.functions.Function;
 import java.util.HashMap;
 import java.util.Map;
 import rx.Observable;
@@ -123,8 +124,166 @@ public final class RxMobius {
      * @param <G> the effect class as a type parameter
      * @return this builder
      * @throws IllegalArgumentException if there is a handler collision
+     * @deprecated use {@link #addTransformer(Class, Transformer)}
      */
+    @Deprecated
     public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
+        final Class<G> effectClass, final Transformer<G, E> effectHandler) {
+      return addTransformer(effectClass, effectHandler);
+    }
+
+    /**
+     * Add an {@link Action0} for handling effects of a given type. The action will be invoked once
+     * for every received effect object that extend the given class.
+     *
+     * <p>Adding handlers for two effect classes where one is a super-class of the other is
+     * considered a collision and is not allowed. Registering the same class twice is also
+     * considered a collision.
+     *
+     * @param effectClass the class to handle
+     * @param action the action that should be invoked for the effect
+     * @param <G> the effect class as a type parameter
+     * @return this builder
+     * @throws IllegalArgumentException if there is a handler collision
+     * @deprecated use {@link #addAction(Class, Action0)}
+     */
+    @Deprecated
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
+        final Class<G> effectClass, final Action0 action) {
+      return addAction(effectClass, action);
+    }
+
+    /**
+     * Add an {@link Action0} for handling effects of a given type. The action will be invoked once
+     * for every received effect object that extend the given class.
+     *
+     * <p>Adding handlers for two effect classes where one is a super-class of the other is
+     * considered a collision and is not allowed. Registering the same class twice is also
+     * considered a collision.
+     *
+     * @param effectClass the class to handle
+     * @param action the action that should be invoked for the effect
+     * @param scheduler the scheduler that should be used to invoke the action
+     * @param <G> the effect class as a type parameter
+     * @return this builder
+     * @throws IllegalArgumentException if there is a handler collision
+     * @deprecated use {@link #addAction(Class, Action0, Scheduler)}
+     */
+    @Deprecated
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
+        final Class<G> effectClass, final Action0 action, Scheduler scheduler) {
+      return addAction(effectClass, action, scheduler);
+    }
+
+    /**
+     * Add an {@link Action1} for handling effects of a given type. The action will be invoked once
+     * for every received effect object that extend the given class.
+     *
+     * <p>Adding handlers for two effect classes where one is a super-class of the other is
+     * considered a collision and is not allowed. Registering the same class twice is also
+     * considered a collision.
+     *
+     * @param effectClass the class to handle
+     * @param action the action that should be invoked for the effect
+     * @param <G> the effect class as a type parameter
+     * @return this builder
+     * @throws IllegalArgumentException if there is a handler collision
+     * @deprecated use {@link #addConsumer(Class, Action1)}
+     */
+    @Deprecated
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
+        final Class<G> effectClass, final Action1<G> action) {
+      return addConsumer(effectClass, action);
+    }
+
+    /**
+     * Add an {@link Action1} for handling effects of a given type. The action will be invoked once
+     * for every received effect object that extend the given class.
+     *
+     * <p>Adding handlers for two effect classes where one is a super-class of the other is
+     * considered a collision and is not allowed. Registering the same class twice is also
+     * considered a collision.
+     *
+     * @param effectClass the class to handle
+     * @param action the action that should be invoked for the effect
+     * @param scheduler the scheduler that should be used to invoke the action
+     * @param <G> the effect class as a type parameter
+     * @return this builder
+     * @throws IllegalArgumentException if there is a handler collision
+     * @deprecated use {@link #addConsumer(Class, Action1, Scheduler)}
+     */
+    @Deprecated
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
+        final Class<G> effectClass, final Action1<G> action, Scheduler scheduler) {
+      return addConsumer(effectClass, action, scheduler);
+    }
+
+    /**
+     * Add a {@link Func1} for handling effects of a given type. The function will be invoked once
+     * for every received effect object that extend the given class. The returned event will be
+     * forwarded to the Mobius loop.
+     *
+     * <p>Adding handlers for two effect classes where one is a super-class of the other is
+     * considered a collision and is not allowed. Registering the same class twice is also
+     * considered a collision.
+     *
+     * @param effectClass the class to handle
+     * @param function the function that should be invoked for the effect
+     * @param <G> the effect class as a type parameter
+     * @return this builder
+     * @throws IllegalArgumentException if there is a handler collision
+     */
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> addFunction(
+        final Class<G> effectClass, final Function<G, E> function) {
+      //noinspection ResultOfMethodCallIgnored
+      checkNotNull(effectClass);
+      //noinspection ResultOfMethodCallIgnored
+      checkNotNull(function);
+
+      return addTransformer(effectClass, Transformers.fromFunction(function));
+    }
+
+    /**
+     * Add a {@link Func1} for handling effects of a given type. The function will be invoked once
+     * for every received effect object that extend the given class. The returned event will be
+     * forwarded to the Mobius loop.
+     *
+     * <p>Adding handlers for two effect classes where one is a super-class of the other is
+     * considered a collision and is not allowed. Registering the same class twice is also
+     * considered a collision.
+     *
+     * @param effectClass the class to handle
+     * @param function the function that should be invoked for the effect
+     * @param scheduler the scheduler that should be used when invoking the function
+     * @param <G> the effect class as a type parameter
+     * @return this builder
+     * @throws IllegalArgumentException if there is a handler collision
+     */
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> addFunction(
+        final Class<G> effectClass, final Function<G, E> function, Scheduler scheduler) {
+      //noinspection ResultOfMethodCallIgnored
+      checkNotNull(effectClass);
+      //noinspection ResultOfMethodCallIgnored
+      checkNotNull(function);
+
+      return addTransformer(effectClass, Transformers.fromFunction(function, scheduler));
+    }
+
+    /**
+     * Add an {@link Observable.Transformer} for handling effects of a given type. The handler will
+     * receive all effect objects that extend the given class.
+     *
+     * <p>Adding handlers for two effect classes where one is a super-class of the other is
+     * considered a collision and is not allowed. Registering the same class twice is also
+     * considered a collision.
+     *
+     * @param effectClass the effect class to handle
+     * @param effectHandler the effect handler for the given effect class
+     * @param <G> the effect class as a type parameter
+     * @return this builder
+     * @throws IllegalArgumentException if there is a handler collision
+     */
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> addTransformer(
         final Class<G> effectClass, final Transformer<G, E> effectHandler) {
       //noinspection ResultOfMethodCallIgnored
       checkNotNull(effectClass);
@@ -170,14 +329,14 @@ public final class RxMobius {
      * @return this builder
      * @throws IllegalArgumentException if there is a handler collision
      */
-    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> addAction(
         final Class<G> effectClass, final Action0 action) {
       //noinspection ResultOfMethodCallIgnored
       checkNotNull(effectClass);
       //noinspection ResultOfMethodCallIgnored
       checkNotNull(action);
 
-      return add(effectClass, Transformers.<G, E>fromAction(action));
+      return addTransformer(effectClass, Transformers.<G, E>fromAction(action));
     }
 
     /**
@@ -195,14 +354,14 @@ public final class RxMobius {
      * @return this builder
      * @throws IllegalArgumentException if there is a handler collision
      */
-    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> addAction(
         final Class<G> effectClass, final Action0 action, Scheduler scheduler) {
       //noinspection ResultOfMethodCallIgnored
       checkNotNull(effectClass);
       //noinspection ResultOfMethodCallIgnored
       checkNotNull(action);
 
-      return add(effectClass, Transformers.<G, E>fromAction(action, scheduler));
+      return addTransformer(effectClass, Transformers.<G, E>fromAction(action, scheduler));
     }
 
     /**
@@ -214,19 +373,19 @@ public final class RxMobius {
      * considered a collision.
      *
      * @param effectClass the class to handle
-     * @param action the action that should be invoked for the effect
+     * @param consumer the consumer that should be invoked for the effect
      * @param <G> the effect class as a type parameter
      * @return this builder
      * @throws IllegalArgumentException if there is a handler collision
      */
-    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
-        final Class<G> effectClass, final Action1<G> action) {
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> addConsumer(
+        final Class<G> effectClass, final Action1<G> consumer) {
       //noinspection ResultOfMethodCallIgnored
       checkNotNull(effectClass);
       //noinspection ResultOfMethodCallIgnored
-      checkNotNull(action);
+      checkNotNull(consumer);
 
-      return add(effectClass, Transformers.<G, E>fromConsumer(action));
+      return addTransformer(effectClass, Transformers.<G, E>fromConsumer(consumer));
     }
 
     /**
@@ -238,71 +397,20 @@ public final class RxMobius {
      * considered a collision.
      *
      * @param effectClass the class to handle
-     * @param action the action that should be invoked for the effect
+     * @param consumer the consumer that should be invoked for the effect
      * @param scheduler the scheduler that should be used to invoke the action
      * @param <G> the effect class as a type parameter
      * @return this builder
      * @throws IllegalArgumentException if there is a handler collision
      */
-    public <G extends F> SubtypeEffectHandlerBuilder<F, E> add(
-        final Class<G> effectClass, final Action1<G> action, Scheduler scheduler) {
+    public <G extends F> SubtypeEffectHandlerBuilder<F, E> addConsumer(
+        final Class<G> effectClass, final Action1<G> consumer, Scheduler scheduler) {
       //noinspection ResultOfMethodCallIgnored
       checkNotNull(effectClass);
       //noinspection ResultOfMethodCallIgnored
-      checkNotNull(action);
+      checkNotNull(consumer);
 
-      return add(effectClass, Transformers.<G, E>fromConsumer(action, scheduler));
-    }
-
-    /**
-     * Add a {@link Func1} for handling effects of a given type. The function will be invoked once
-     * for every received effect object that extend the given class. The returned event will be
-     * forwarded to the Mobius loop.
-     *
-     * <p>Adding handlers for two effect classes where one is a super-class of the other is
-     * considered a collision and is not allowed. Registering the same class twice is also
-     * considered a collision.
-     *
-     * @param effectClass the class to handle
-     * @param function the function that should be invoked for the effect
-     * @param <G> the effect class as a type parameter
-     * @return this builder
-     * @throws IllegalArgumentException if there is a handler collision
-     */
-    public <G extends F> SubtypeEffectHandlerBuilder<F, E> addFunction(
-        final Class<G> effectClass, final Func1<G, E> function) {
-      //noinspection ResultOfMethodCallIgnored
-      checkNotNull(effectClass);
-      //noinspection ResultOfMethodCallIgnored
-      checkNotNull(function);
-
-      return add(effectClass, Transformers.fromFunction(function));
-    }
-
-    /**
-     * Add a {@link Func1} for handling effects of a given type. The function will be invoked once
-     * for every received effect object that extend the given class. The returned event will be
-     * forwarded to the Mobius loop.
-     *
-     * <p>Adding handlers for two effect classes where one is a super-class of the other is
-     * considered a collision and is not allowed. Registering the same class twice is also
-     * considered a collision.
-     *
-     * @param effectClass the class to handle
-     * @param function the function that should be invoked for the effect
-     * @param scheduler the scheduler that should be used when invoking the function
-     * @param <G> the effect class as a type parameter
-     * @return this builder
-     * @throws IllegalArgumentException if there is a handler collision
-     */
-    public <G extends F> SubtypeEffectHandlerBuilder<F, E> addFunction(
-        final Class<G> effectClass, final Func1<G, E> function, Scheduler scheduler) {
-      //noinspection ResultOfMethodCallIgnored
-      checkNotNull(effectClass);
-      //noinspection ResultOfMethodCallIgnored
-      checkNotNull(function);
-
-      return add(effectClass, Transformers.fromFunction(function, scheduler));
+      return addTransformer(effectClass, Transformers.<G, E>fromConsumer(consumer, scheduler));
     }
 
     /**

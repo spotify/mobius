@@ -23,10 +23,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
+import com.spotify.mobius.functions.Function;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
-import rx.functions.Func1;
 import rx.observers.AssertableSubscriber;
 import rx.schedulers.TestScheduler;
 import rx.subjects.PublishSubject;
@@ -106,7 +106,7 @@ public class TransformersTest {
   public void effectPerformerInvokesFunctionWithReceivedEffectAndEmitsReturnedEvents() {
     PublishSubject<String> upstream = PublishSubject.create();
     TestScheduler scheduler = new TestScheduler();
-    Func1<String, Integer> function = s -> s.length();
+    Function<String, Integer> function = s -> s.length();
     AssertableSubscriber<Integer> observer =
         upstream.compose(Transformers.fromFunction(function, scheduler)).test();
 
@@ -119,7 +119,7 @@ public class TransformersTest {
   public void effectPerformerInvokesFunctionWithReceivedEffectAndErrorsForUnhandledExceptions() {
     PublishSubject<String> upstream = PublishSubject.create();
     TestScheduler scheduler = new TestScheduler();
-    Func1<String, Integer> function =
+    Function<String, Integer> function =
         s -> {
           throw new RuntimeException("Something bad happened");
         };

@@ -19,6 +19,7 @@
  */
 package com.spotify.mobius.rx;
 
+import com.spotify.mobius.functions.Function;
 import com.spotify.mobius.rx.RxMobius.SubtypeEffectHandlerBuilder;
 import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
@@ -136,7 +137,7 @@ class Transformers {
    *     SubtypeEffectHandlerBuilder}.
    */
   static <F, E> Observable.Transformer<F, E> fromFunction(
-      final Func1<F, E> function, @Nullable final Scheduler scheduler) {
+      final Function<F, E> function, @Nullable final Scheduler scheduler) {
     return new Observable.Transformer<F, E>() {
       @Override
       public Observable<E> call(Observable<F> effectStream) {
@@ -149,7 +150,7 @@ class Transformers {
                         new Callable<E>() {
                           @Override
                           public E call() throws Exception {
-                            return function.call(f);
+                            return function.apply(f);
                           }
                         });
                 return scheduler == null ? eventObservable : eventObservable.subscribeOn(scheduler);
@@ -171,7 +172,7 @@ class Transformers {
    * @return an {@link Observable.Transformer} that can be used with a {@link
    *     SubtypeEffectHandlerBuilder}.
    */
-  static <F, E> Observable.Transformer<F, E> fromFunction(final Func1<F, E> function) {
+  static <F, E> Observable.Transformer<F, E> fromFunction(final Function<F, E> function) {
     return fromFunction(function, null);
   }
 }
