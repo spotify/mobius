@@ -31,66 +31,68 @@ import javax.annotation.Nonnull;
 class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
 
   private final List<Connectable<F, E>> connectables;
-  private final List<Class<?>> classes;
+  private final List<Class<?>> registeredClasses;
 
   EffectRouterBuilderImpl() {
     connectables = new ArrayList<>();
-    classes = new ArrayList<>();
+    registeredClasses = new ArrayList<>();
   }
 
   @Override
-  public <G extends F> EffectRouterBuilder<F, E> addRunnable(Class<G> klazz, Runnable action) {
-    return addConnectable(klazz, Connectables.<G, E>fromRunnable(action));
+  public <G extends F> EffectRouterBuilder<F, E> addRunnable(
+      Class<G> effectClass, Runnable action) {
+    return addConnectable(effectClass, Connectables.<G, E>fromRunnable(action));
   }
 
   @Override
-  public <G extends F> EffectRouterBuilder<F, E> addConsumer(Class<G> klazz, Consumer<G> consumer) {
-    return addConnectable(klazz, Connectables.<G, E>fromConsumer(consumer));
+  public <G extends F> EffectRouterBuilder<F, E> addConsumer(
+      Class<G> effectClass, Consumer<G> consumer) {
+    return addConnectable(effectClass, Connectables.<G, E>fromConsumer(consumer));
   }
 
   @Override
   public <G extends F> EffectRouterBuilder<F, E> addFunction(
-      Class<G> klazz, Function<G, E> function) {
-    return addConnectable(klazz, Connectables.fromFunction(function));
+      Class<G> effectClass, Function<G, E> function) {
+    return addConnectable(effectClass, Connectables.fromFunction(function));
   }
 
   @Override
   public <G extends F> EffectRouterBuilder<F, E> addConnectable(
-      Class<G> klazz, Connectable<G, E> connectable) {
-    validateAndTrackClass(klazz);
+      Class<G> effectClass, Connectable<G, E> connectable) {
+    validateAndTrackeffectClass(effectClass);
 
-    connectables.add(new ClassFilteringConnectable<F, G, E>(klazz, connectable));
+    connectables.add(new ClassFilteringConnectable<F, G, E>(effectClass, connectable));
 
     return this;
   }
 
-  private <G extends F> void validateAndTrackClass(Class<G> klazz) {
-    for (Class<?> existing : classes) {
-      if (klazz.isAssignableFrom(existing) || existing.isAssignableFrom(klazz)) {
+  private <G extends F> void validateAndTrackeffectClass(Class<G> effectClass) {
+    for (Class<?> existing : registeredClasses) {
+      if (effectClass.isAssignableFrom(existing) || existing.isAssignableFrom(effectClass)) {
         throw new IllegalArgumentException(
             "Effect classes must not be assignable to each other, "
-                + klazz.getName()
+                + effectClass.getName()
                 + " collides with existing: "
                 + existing.getName());
       }
     }
 
-    classes.add(klazz);
+    registeredClasses.add(effectClass);
   }
 
   @Override
   public Connectable<F, E> build() {
-    connectables.add(new UnknownEffectReportingConnectable<F, E>(classes));
+    connectables.add(new UnknownEffectReportingConnectable<F, E>(registeredClasses));
 
     return new SafeConnectable<>(MergedConnectable.create(connectables));
   }
 
   private static class ClassFilteringConnectable<I, J extends I, O> implements Connectable<I, O> {
-    private final Class<J> klazz;
+    private final Class<J> handledClass;
     private final Connectable<J, O> delegate;
 
-    ClassFilteringConnectable(Class<J> klazz, Connectable<J, O> delegate) {
-      this.klazz = klazz;
+    ClassFilteringConnectable(Class<J> handledClass, Connectable<J, O> delegate) {
+      this.handledClass = handledClass;
       this.delegate = delegate;
     }
 
@@ -102,8 +104,8 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
       return new Connection<I>() {
         @Override
         public void accept(I value) {
-          if (klazz.isInstance(value)) {
-            delegateConnection.accept(klazz.cast(value));
+          if (handledClass.isInstance(value)) {
+            delegateConnection.accept(handledClass.cast(value));
           }
           // ignore
         }
