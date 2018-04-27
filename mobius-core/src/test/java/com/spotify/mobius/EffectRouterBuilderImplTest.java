@@ -56,8 +56,8 @@ public class EffectRouterBuilderImplTest {
 
     Connection<Effect> connection =
         Mobius.<Effect, Event>subtypeEffectHandler()
-            .add(EffectWithEvent.class, eventEmitter(event))
-            .add(
+            .addConnectable(EffectWithEvent.class, eventEmitter(event))
+            .addRunnable(
                 SimpleEffect.class,
                 new Runnable() {
                   @Override
@@ -65,7 +65,7 @@ public class EffectRouterBuilderImplTest {
                     ranSimpleEffect.set(true);
                   }
                 })
-            .add(
+            .addConsumer(
                 EffectWithParameter.class,
                 new Consumer<EffectWithParameter>() {
                   @Override
@@ -90,7 +90,7 @@ public class EffectRouterBuilderImplTest {
   public void shouldSupportRunnables() throws Exception {
     verifySimpleEffectExecution(
         builder ->
-            builder.add(
+            builder.addRunnable(
                 SimpleEffect.class,
                 new Runnable() {
                   @Override
@@ -104,7 +104,7 @@ public class EffectRouterBuilderImplTest {
   public void shouldSupportConsumers() throws Exception {
     verifySimpleEffectExecution(
         builder ->
-            builder.add(
+            builder.addConsumer(
                 SimpleEffect.class,
                 new Consumer<SimpleEffect>() {
                   @Override
@@ -118,7 +118,7 @@ public class EffectRouterBuilderImplTest {
   public void shouldSupportConnectables() throws Exception {
     verifySimpleEffectExecution(
         builder ->
-            builder.add(
+            builder.addConnectable(
                 SimpleEffect.class,
                 new Connectable<SimpleEffect, Event>() {
                   @Nonnull
@@ -140,9 +140,9 @@ public class EffectRouterBuilderImplTest {
 
   @Test
   public void shouldPreventSubclassCollisionsAtConfigTime() throws Exception {
-    builder.add(SimpleEffect.class, DUMMY_ACTION);
+    builder.addRunnable(SimpleEffect.class, DUMMY_ACTION);
 
-    assertThatThrownBy(() -> builder.add(SubEffect.class, DUMMY_ACTION))
+    assertThatThrownBy(() -> builder.addRunnable(SubEffect.class, DUMMY_ACTION))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(SimpleEffect.class.getName())
         .hasMessageContaining(SubEffect.class.getName());
@@ -150,18 +150,18 @@ public class EffectRouterBuilderImplTest {
 
   @Test
   public void shouldPreventSameClassCollisionsAtConfigTime() throws Exception {
-    builder.add(SimpleEffect.class, DUMMY_ACTION);
+    builder.addRunnable(SimpleEffect.class, DUMMY_ACTION);
 
-    assertThatThrownBy(() -> builder.add(SimpleEffect.class, DUMMY_ACTION))
+    assertThatThrownBy(() -> builder.addRunnable(SimpleEffect.class, DUMMY_ACTION))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(SimpleEffect.class.getName());
   }
 
   @Test
   public void shouldPreventSuperClassCollisionsAtConfigTime() throws Exception {
-    builder.add(SubEffect.class, DUMMY_ACTION);
+    builder.addRunnable(SubEffect.class, DUMMY_ACTION);
 
-    assertThatThrownBy(() -> builder.add(SimpleEffect.class, DUMMY_ACTION))
+    assertThatThrownBy(() -> builder.addRunnable(SimpleEffect.class, DUMMY_ACTION))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(SimpleEffect.class.getName())
         .hasMessageContaining(SubEffect.class.getName());
@@ -171,7 +171,7 @@ public class EffectRouterBuilderImplTest {
   @Test
   public void shouldReportUnhandledEffectsAtRuntime() throws Exception {
     final Connection<Effect> connection =
-        builder.add(SimpleEffect.class, DUMMY_ACTION).build().connect(eventConsumer);
+        builder.addRunnable(SimpleEffect.class, DUMMY_ACTION).build().connect(eventConsumer);
 
     assertThatThrownBy(() -> connection.accept(new UnhandledEffect()))
         .isInstanceOf(UnknownEffectException.class);
@@ -181,7 +181,7 @@ public class EffectRouterBuilderImplTest {
   public void shouldNeverSendEventsAfterDispose() throws Exception {
     Connection<Effect> connection =
         builder
-            .add(EffectWithEvent.class, eventEmitter(new Event()))
+            .addConnectable(EffectWithEvent.class, eventEmitter(new Event()))
             .build()
             .connect(eventConsumer);
 

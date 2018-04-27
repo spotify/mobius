@@ -38,17 +38,17 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
   }
 
   @Override
-  public <G extends F> EffectRouterBuilder<F, E> add(Class<G> klazz, Runnable action) {
-    return add(klazz, Connectables.<G, E>fromRunnable(action));
+  public <G extends F> EffectRouterBuilder<F, E> addRunnable(Class<G> klazz, Runnable action) {
+    return addConnectable(klazz, Connectables.<G, E>fromRunnable(action));
   }
 
   @Override
-  public <G extends F> EffectRouterBuilder<F, E> add(Class<G> klazz, Consumer<G> consumer) {
-    return add(klazz, Connectables.<G, E>fromConsumer(consumer));
+  public <G extends F> EffectRouterBuilder<F, E> addConsumer(Class<G> klazz, Consumer<G> consumer) {
+    return addConnectable(klazz, Connectables.<G, E>fromConsumer(consumer));
   }
 
   @Override
-  public <G extends F> EffectRouterBuilder<F, E> add(
+  public <G extends F> EffectRouterBuilder<F, E> addConnectable(
       Class<G> klazz, Connectable<G, E> connectable) {
     validateAndTrackClass(klazz);
 
