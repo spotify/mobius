@@ -19,11 +19,13 @@
  */
 package com.spotify.mobius.rx2;
 
+import static com.google.common.collect.Lists.transform;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
+import io.reactivex.Observable;
 import io.reactivex.functions.Function;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.Schedulers;
@@ -121,15 +123,16 @@ public class TransformersTest {
 
   @Test
   public void processingLongEffectsDoesNotBlockProcessingShorterEffects() {
+    final List<String> effects = Arrays.asList("Hello", "Rx2");
+
     PublishSubject<String> upstream = PublishSubject.create();
     Function<String, Integer> sleepyFunction =
         s -> {
-          int length = s.length();
           try {
-            Thread.sleep(length * 1000);
+            Thread.sleep(duration(s));
           } catch (InterruptedException ie) {
           }
-          return length;
+          return s.length();
         };
 
     final List<Integer> results = new ArrayList<>();
@@ -137,18 +140,29 @@ public class TransformersTest {
         .compose(Transformers.fromFunction(sleepyFunction, Schedulers.io()))
         .subscribe(results::add);
 
-    String f1 = "Hello";
-    String f2 = "Rx2";
+    Observable.fromIterable(effects).subscribe(upstream);
 
-    upstream.onNext(f1); // Will take 5 seconds to process
-    upstream.onNext(f2); // Will take 3 seconds to process
+    await().atMost(durationForEffects(effects)).until(() -> results.equals(expected(effects)));
+  }
 
+  private Duration durationForEffects(List<String> effects) {
+    int maxDuration = -1;
+    for (String f : effects) {
+      if (duration(f) > maxDuration) maxDuration = duration(f);
+    }
     // Since effects are processed in parallel thanks to FlatMap
-    // Therefore we only wait the max time and add a second to
+    // we only wait the max time and add 100 milliseconds to
     // avoid test flakiness thanks to time
-    int delay = Math.max(f1.length(), f2.length()) + 1;
-    await()
-        .atMost(new Duration(delay, TimeUnit.SECONDS))
-        .until(() -> results.equals(Arrays.asList(3, 5)));
+    return new Duration(maxDuration + 100, TimeUnit.MILLISECONDS);
+  }
+
+  private int duration(String f) {
+    return f.length() * 100;
+  }
+
+  private List<Integer> expected(List<String> effects) {
+    List<Integer> lengths = new ArrayList<>(transform(effects, s -> s == null ? 0 : s.length()));
+    lengths.sort(Integer::compare);
+    return lengths;
   }
 }
