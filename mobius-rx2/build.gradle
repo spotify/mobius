@@ -19,6 +19,7 @@ dependencies {
     testImplementation "com.google.auto.value:auto-value:${versions.autoValue}"
     testImplementation "org.hamcrest:hamcrest-library:${versions.hamcrestLibrary}"
     testImplementation "ch.qos.logback:logback-classic:${versions.logback}"
+    testImplementation "org.awaitility:awaitility:${versions.awaitility}"
 
     apt "com.google.auto.value:auto-value:${versions.autoValue}"
 }
