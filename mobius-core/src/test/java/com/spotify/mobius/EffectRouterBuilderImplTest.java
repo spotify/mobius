@@ -55,7 +55,7 @@ public class EffectRouterBuilderImplTest {
     final Event event = new Event();
 
     Connection<Effect> connection =
-        Mobius.<Effect, Event>subtypeEffectHandler()
+        Mobius.<Effect, Event>effectRouter()
             .addConnectable(EffectWithEvent.class, eventEmitter(event))
             .addRunnable(
                 SimpleEffect.class,
@@ -195,7 +195,7 @@ public class EffectRouterBuilderImplTest {
       Function<EffectRouterBuilder<Effect, Event>, EffectRouterBuilder<Effect, Event>>
           buildConfig) {
     final EffectRouterBuilder<Effect, Event> builder =
-        buildConfig.apply(Mobius.<Effect, Event>subtypeEffectHandler());
+        buildConfig.apply(Mobius.<Effect, Event>effectRouter());
 
     builder.build().connect(eventConsumer).accept(new SimpleEffect());
 

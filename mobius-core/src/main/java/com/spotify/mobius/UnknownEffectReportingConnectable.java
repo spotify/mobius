@@ -24,12 +24,11 @@ import com.spotify.mobius.internal_util.ImmutableUtil;
 import java.util.List;
 import javax.annotation.Nonnull;
 
-/** TODO: document! */
 class UnknownEffectReportingConnectable<F, E> implements Connectable<F, E> {
 
   private final List<Class<?>> handledClasses;
 
-  public UnknownEffectReportingConnectable(List<Class<?>> classes) {
+  UnknownEffectReportingConnectable(List<Class<?>> classes) {
     this.handledClasses = ImmutableUtil.immutableList(classes);
   }
 
