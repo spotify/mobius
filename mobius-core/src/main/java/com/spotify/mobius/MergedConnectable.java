@@ -25,7 +25,17 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 
-/** TODO: document! */
+/**
+ * A connectable that combines a number of sub-connectables. On {@link #connect(Consumer)}, all
+ * sub-connectables are connected to the output {@link Consumer} and the {@link Connection} returned
+ * by this connectable forwards all inputs to each of the sub-connections.
+ *
+ * <p>NOTE: this class is a potential candidate for making into a part of the public API of Mobius.
+ * That would require some more understanding of what the implications are, and probably some more
+ * thought about the name. 'Merged' is maybe a bit too general for what this does, although it's
+ * hard to think of a better name. 'Branching', 'Splitting', 'Broadcast', 'FanOutFanIn',
+ * 'SplitAndMerge' come to mind as ideas.
+ */
 class MergedConnectable<I, O> implements Connectable<I, O> {
 
   private final List<Connectable<I, O>> connectables;
@@ -34,6 +44,13 @@ class MergedConnectable<I, O> implements Connectable<I, O> {
     this.connectables = connectables;
   }
 
+  /**
+   * @param output the consumer that the new connection should use to emit values
+   * @return a new {@link Connection} that sends each input value to all connections resulting from
+   *     invoking {@link Connectable#connect(Consumer)} on the sub-connectables with {@code output}
+   *     parameter.
+   * @throws ConnectionLimitExceededException if any sub-connectable does
+   */
   @Nonnull
   @Override
   public synchronized Connection<I> connect(final Consumer<O> output)
@@ -62,7 +79,8 @@ class MergedConnectable<I, O> implements Connectable<I, O> {
     };
   }
 
-  public static <I, O> MergedConnectable<I, O> create(Iterable<Connectable<I, O>> connectables) {
+  public static <I, O> MergedConnectable<I, O> create(
+      Iterable<? extends Connectable<I, O>> connectables) {
     final List<Connectable<I, O>> list = ImmutableUtil.immutableList(connectables);
 
     if (list.isEmpty()) {
