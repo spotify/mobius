@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 
-/** TODO: document! */
 class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
 
   private final List<Connectable<F, E>> connectables;
