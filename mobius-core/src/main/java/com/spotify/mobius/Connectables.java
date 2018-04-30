@@ -25,12 +25,20 @@ import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
 import javax.annotation.Nonnull;
 
-/** TODO: document! */
+/** Contains utility functions for working with {@link Connectable}s. */
 public final class Connectables {
   private Connectables() {
     // prevent instantiation
   }
 
+  /**
+   * Create a {@link Connectable} that runs the supplied {@link Runnable} for each incoming value.
+   * This connectable never creates output items.
+   *
+   * @param action the action to run for each input value
+   * @param <I> the input type
+   * @param <O> the output type, which is ignored
+   */
   public static <I, O> Connectable<I, O> fromRunnable(final Runnable action) {
     checkNotNull(action);
 
@@ -51,6 +59,14 @@ public final class Connectables {
     };
   }
 
+  /**
+   * Create a {@link Connectable} that applies the supplied {@link Consumer} to each incoming value.
+   * This connectable never creates output items.
+   *
+   * @param consumer the consumer for each input value
+   * @param <I> the input type
+   * @param <O> the output type, which is ignored
+   */
   public static <I, O> Connectable<I, O> fromConsumer(final Consumer<I> consumer) {
     checkNotNull(consumer);
 
@@ -71,6 +87,14 @@ public final class Connectables {
     };
   }
 
+  /**
+   * Create a {@link Connectable} that applies the supplied {@link Function} to each incoming value
+   * and forwards the result as an output value.
+   *
+   * @param function the function used to create outputs for each input
+   * @param <I> the input type
+   * @param <O> the output type
+   */
   public static <I, O> Connectable<I, O> fromFunction(final Function<I, O> function) {
     checkNotNull(function);
 
