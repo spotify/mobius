@@ -186,7 +186,7 @@ public final class RxMobius {
 
     /**
      * Add an {@link Action} for handling effects of a given type. The action will be invoked once
-     * for every received effect object that extend the given class.
+     * for every received effect object that extends the given class.
      *
      * <p>Adding handlers for two effect classes where one is a super-class of the other is
      * considered a collision and is not allowed. Registering the same class twice is also
@@ -207,7 +207,7 @@ public final class RxMobius {
 
     /**
      * Add an {@link Action} for handling effects of a given type. The action will be invoked once
-     * for every received effect object that extend the given class.
+     * for every received effect object that extends the given class.
      *
      * <p>Adding handlers for two effect classes where one is a super-class of the other is
      * considered a collision and is not allowed. Registering the same class twice is also
@@ -229,7 +229,7 @@ public final class RxMobius {
 
     /**
      * Add an {@link Consumer} for handling effects of a given type. The consumer will be invoked
-     * once for every received effect object that extend the given class.
+     * once for every received effect object that extends the given class.
      *
      * <p>Adding handlers for two effect classes where one is a super-class of the other is
      * considered a collision and is not allowed. Registering the same class twice is also
@@ -250,7 +250,7 @@ public final class RxMobius {
 
     /**
      * Add an {@link Consumer} for handling effects of a given type. The consumer will be invoked
-     * once for every received effect object that extend the given class.
+     * once for every received effect object that extends the given class.
      *
      * <p>Adding handlers for two effect classes where one is a super-class of the other is
      * considered a collision and is not allowed. Registering the same class twice is also
@@ -272,8 +272,8 @@ public final class RxMobius {
 
     /**
      * Add a {@link Function} for handling effects of a given type. The function will be invoked
-     * once for every received effect object that extend the given class. The returned event will be
-     * forwarded to the Mobius loop.
+     * once for every received effect object that extends the given class. The returned event will
+     * be forwarded to the Mobius loop.
      *
      * <p>Adding handlers for two effect classes where one is a super-class of the other is
      * considered a collision and is not allowed. Registering the same class twice is also
@@ -297,8 +297,8 @@ public final class RxMobius {
 
     /**
      * Add a {@link Function} for handling effects of a given type. The function will be invoked
-     * once for every received effect object that extend the given class. The returned event will be
-     * forwarded to the Mobius loop.
+     * once for every received effect object that extends the given class. The returned event will
+     * be forwarded to the Mobius loop.
      *
      * <p>Adding handlers for two effect classes where one is a super-class of the other is
      * considered a collision and is not allowed. Registering the same class twice is also
@@ -323,7 +323,7 @@ public final class RxMobius {
 
     /**
      * Add an {@link Action} for handling effects of a given type. The action will be invoked once
-     * for every received effect object that extend the given class.
+     * for every received effect object that extends the given class.
      *
      * <p>Adding handlers for two effect classes where one is a super-class of the other is
      * considered a collision and is not allowed. Registering the same class twice is also
@@ -347,7 +347,7 @@ public final class RxMobius {
 
     /**
      * Add an {@link Action} for handling effects of a given type. The action will be invoked once
-     * for every received effect object that extend the given class.
+     * for every received effect object that extends the given class.
      *
      * <p>Adding handlers for two effect classes where one is a super-class of the other is
      * considered a collision and is not allowed. Registering the same class twice is also
@@ -372,7 +372,7 @@ public final class RxMobius {
 
     /**
      * Add an {@link Consumer} for handling effects of a given type. The consumer will be invoked
-     * once for every received effect object that extend the given class.
+     * once for every received effect object that extends the given class.
      *
      * <p>Adding handlers for two effect classes where one is a super-class of the other is
      * considered a collision and is not allowed. Registering the same class twice is also
@@ -396,7 +396,7 @@ public final class RxMobius {
 
     /**
      * Add an {@link Consumer} for handling effects of a given type. The consumer will be invoked
-     * once for every received effect object that extend the given class.
+     * once for every received effect object that extends the given class.
      *
      * <p>Adding handlers for two effect classes where one is a super-class of the other is
      * considered a collision and is not allowed. Registering the same class twice is also
