@@ -1,10 +1,10 @@
-package com.spotify.mobius.extras;
+package com.spotify.mobius;
 
-import com.spotify.mobius.EventSource;
+import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
+
 import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -17,10 +17,13 @@ public class MergedEventSource<E> implements EventSource<E> {
   private final List<EventSource<E>> eventSources;
 
   @SafeVarargs
-  public static <E> EventSource<E> from(EventSource<E> source, EventSource<E>... sources) {
+  public static <E> EventSource<E> from(
+      EventSource<E> eventSource, EventSource<E>... eventSources) {
     List<EventSource<E>> allSources = new ArrayList<>();
-    allSources.add(source);
-    Collections.addAll(allSources, sources);
+    allSources.add(checkNotNull(eventSource));
+    for (EventSource<E> es : eventSources) {
+      allSources.add(checkNotNull(es));
+    }
     return new MergedEventSource<>(allSources);
   }
 

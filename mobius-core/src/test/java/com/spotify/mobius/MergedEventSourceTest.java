@@ -1,9 +1,8 @@
-package com.spotify.mobius.extras;
+package com.spotify.mobius;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
-import com.spotify.mobius.EventSource;
 import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.test.RecordingConsumer;
