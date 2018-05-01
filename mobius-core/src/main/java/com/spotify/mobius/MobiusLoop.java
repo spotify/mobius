@@ -213,14 +213,16 @@ public class MobiusLoop<M, E, F> implements Disposable {
 
     /**
      * @return a new {@link Builder} with the supplied {@link EventSource}, and the same values as
-     *     the current one for the other fields.
+     *     the current one for the other fields. NOTE: Invoking this method will replace the current
+     *     {@link EventSource} with the supplied one. If you want to pass multiple event sources,
+     *     please use {@link #eventSources(EventSource, EventSource[])}.
      */
     @Nonnull
     Builder<M, E, F> eventSource(EventSource<E> eventSource);
 
     /**
-     * @return a new {@link Builder} with the supplied {@link EventSource}s, and the same values as
-     *     the current one for the other fields.
+     * @return a new {@link Builder} with the an {@link EventSource} that merges the supplied event
+     *     sources, and the same values as the current one for the other fields.
      */
     @Nonnull
     Builder<M, E, F> eventSources(EventSource<E> eventSource, EventSource<E>... eventSources);
