@@ -19,14 +19,23 @@
  */
 package com.spotify.mobius.rx;
 
+import static com.google.common.collect.Lists.transform;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
+import com.spotify.mobius.functions.Function;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.awaitility.Duration;
 import org.junit.Before;
 import org.junit.Test;
+import rx.Observable;
 import rx.observers.AssertableSubscriber;
+import rx.schedulers.Schedulers;
 import rx.schedulers.TestScheduler;
 import rx.subjects.PublishSubject;
 
@@ -99,5 +108,79 @@ public class TransformersTest {
 
     subscriber.awaitTerminalEvent(1, TimeUnit.SECONDS);
     subscriber.assertCompleted();
+  }
+
+  @Test
+  public void effectPerformerInvokesFunctionWithReceivedEffectAndEmitsReturnedEvents() {
+    PublishSubject<String> upstream = PublishSubject.create();
+    TestScheduler scheduler = new TestScheduler();
+    Function<String, Integer> function = s -> s.length();
+    AssertableSubscriber<Integer> observer =
+        upstream.compose(Transformers.fromFunction(function, scheduler)).test();
+
+    upstream.onNext("Hello");
+    scheduler.triggerActions();
+    observer.assertValue(5);
+  }
+
+  @Test
+  public void effectPerformerInvokesFunctionWithReceivedEffectAndErrorsForUnhandledExceptions() {
+    PublishSubject<String> upstream = PublishSubject.create();
+    TestScheduler scheduler = new TestScheduler();
+    Function<String, Integer> function =
+        s -> {
+          throw new RuntimeException("Something bad happened");
+        };
+    AssertableSubscriber<Integer> observer =
+        upstream.compose(Transformers.fromFunction(function, scheduler)).test();
+
+    upstream.onNext("Hello");
+    scheduler.triggerActions();
+    observer.assertError(RuntimeException.class);
+  }
+
+  @Test
+  public void processingLongEffectsDoesNotBlockProcessingShorterEffects() {
+    final List<String> effects = Arrays.asList("Hello", "Rx1");
+
+    PublishSubject<String> upstream = PublishSubject.create();
+    Function<String, Integer> sleepyFunction =
+        s -> {
+          try {
+            Thread.sleep(duration(s));
+          } catch (InterruptedException ie) {
+          }
+          return s.length();
+        };
+
+    final List<Integer> results = new ArrayList<>();
+    upstream
+        .compose(Transformers.fromFunction(sleepyFunction, Schedulers.io()))
+        .subscribe(results::add);
+
+    Observable.from(effects).subscribe(upstream);
+
+    await().atMost(durationForEffects(effects)).until(() -> results.equals(expected(effects)));
+  }
+
+  private Duration durationForEffects(List<String> effects) {
+    int maxDuration = -1;
+    for (String f : effects) {
+      if (duration(f) > maxDuration) maxDuration = duration(f);
+    }
+    // Since effects are processed in parallel thanks to FlatMap
+    // we only wait the max time and add 100 milliseconds to
+    // avoid test flakiness thanks to time
+    return new Duration(maxDuration + 100, TimeUnit.MILLISECONDS);
+  }
+
+  private int duration(String f) {
+    return f.length() * 100;
+  }
+
+  private List<Integer> expected(List<String> effects) {
+    List<Integer> lengths = new ArrayList<>(transform(effects, s -> s == null ? 0 : s.length()));
+    lengths.sort(Integer::compare);
+    return lengths;
   }
 }

@@ -29,12 +29,13 @@ import io.reactivex.Scheduler;
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
+import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 
 /**
- * An {@link ObservableTransformer} factory to that creates transformers from {@link Action} and
- * {@link Consumer}. These transformers are useful when performing effects that do not result in
- * events.
+ * An {@link ObservableTransformer} factory to that creates transformers from {@link Action}, {@link
+ * Consumer} and {@link Function}. These transformers are useful when performing simple effects that
+ * do not require a full transformer.
  */
 class Transformers {
 
@@ -46,7 +47,7 @@ class Transformers {
    * observable. This will result in calling the provided Action every time an effect is dispatched
    * to the created effect transformer.
    *
-   * @param doEffect {@link Action} to be run every time the effect is requested
+   * @param doEffect the {@link Action} to be run every time the effect is requested
    * @param <F> the type of Effect this transformer handles
    * @param <E> these transformers are for effects that do not result in any events; however, they
    *     still need to share the same Event type
@@ -64,7 +65,7 @@ class Transformers {
    * result in calling the provided Action on the specified scheduler every time an effect is
    * dispatched to the created effect transformer.
    *
-   * @param doEffect {@link Action} to be run every time the effect is requested
+   * @param doEffect the {@link Action} to be run every time the effect is requested
    * @param scheduler the {@link Scheduler} that the action should be run on
    * @param <F> the type of Effect this transformer handles
    * @param <E> these transformers are for effects that do not result in any events; however, they
@@ -98,7 +99,7 @@ class Transformers {
    * observable. This will result in calling the consumer and and passing it the requested effect
    * object.
    *
-   * @param doEffect {@link Consumer} to be run every time the effect is requested
+   * @param doEffect the {@link Consumer} to be run every time the effect is requested
    * @param <F> the type of Effect this transformer handles
    * @param <E> these transformers are for effects that do not result in any events; however, they
    *     still need to share the same Event type
@@ -115,7 +116,8 @@ class Transformers {
    * observable. This will result in calling the consumer on the specified scheduler, and passing it
    * the requested effect object.
    *
-   * @param doEffect {@link Consumer} to be run every time the effect is requested
+   * @param doEffect the {@link Consumer} to be run every time the effect is requested
+   * @param scheduler the {@link Scheduler} to be used when invoking the consumer
    * @param <F> the type of Effect this transformer handles
    * @param <E> these transformers are for effects that do not result in any events; however, they
    *     still need to share the same Event type
@@ -146,5 +148,58 @@ class Transformers {
             .toObservable();
       }
     };
+  }
+
+  /**
+   * Creates an {@link ObservableTransformer} that will flatten the provided {@link Function} into
+   * the stream as an {@link Observable} every time it receives an effect from the upstream effects
+   * observable. This will result in calling the function on the specified scheduler, and passing it
+   * the requested effect object then emitting its returned value.
+   *
+   * @param function the {@link Function} to be invoked every time the effect is requested
+   * @param scheduler the {@link Scheduler} to be used when invoking the function
+   * @param <F> the type of Effect this transformer handles
+   * @param <E> the type of Event this transformer emits
+   * @return an {@link ObservableTransformer} that can be used with a {@link
+   *     SubtypeEffectHandlerBuilder}.
+   */
+  static <F, E> ObservableTransformer<F, E> fromFunction(
+      final Function<F, E> function, @Nullable final Scheduler scheduler) {
+    return new ObservableTransformer<F, E>() {
+      @Override
+      public ObservableSource<E> apply(Observable<F> effectStream) {
+        return effectStream.flatMap(
+            new Function<F, ObservableSource<E>>() {
+              @Override
+              public ObservableSource<E> apply(final F f) {
+                Observable<E> eventObservable =
+                    Observable.fromCallable(
+                        new Callable<E>() {
+                          @Override
+                          public E call() throws Exception {
+                            return function.apply(f);
+                          }
+                        });
+                return scheduler == null ? eventObservable : eventObservable.subscribeOn(scheduler);
+              }
+            });
+      }
+    };
+  }
+
+  /**
+   * Creates an {@link ObservableTransformer} that will flatten the provided {@link Function} into
+   * the stream as an {@link Observable} every time it receives an effect from the upstream effects
+   * observable. This will result in calling the function on the immediate scheduler, and passing it
+   * the requested effect object then emitting its returned value.
+   *
+   * @param function {@link Function} to be invoked every time the effect is requested
+   * @param <F> the type of Effect this transformer handles
+   * @param <E> the type of Event this transformer emits
+   * @return an {@link ObservableTransformer} that can be used with a {@link
+   *     SubtypeEffectHandlerBuilder}.
+   */
+  static <F, E> ObservableTransformer<F, E> fromFunction(final Function<F, E> function) {
+    return fromFunction(function, null);
   }
 }
