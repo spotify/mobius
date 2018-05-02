@@ -60,7 +60,7 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
       Class<G> effectClass, Connectable<G, E> connectable) {
     validateAndTrackeffectClass(effectClass);
 
-    connectables.add(new ClassFilteringConnectable<F, G, E>(effectClass, connectable));
+    connectables.add(new SubtypeFilteringConnectable<F, G, E>(effectClass, connectable));
 
     return this;
   }
@@ -86,11 +86,11 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
     return new SafeConnectable<>(MergedConnectable.create(connectables));
   }
 
-  private static class ClassFilteringConnectable<I, J extends I, O> implements Connectable<I, O> {
+  private static class SubtypeFilteringConnectable<I, J extends I, O> implements Connectable<I, O> {
     private final Class<J> handledClass;
     private final Connectable<J, O> delegate;
 
-    ClassFilteringConnectable(Class<J> handledClass, Connectable<J, O> delegate) {
+    SubtypeFilteringConnectable(Class<J> handledClass, Connectable<J, O> delegate) {
       this.handledClass = handledClass;
       this.delegate = delegate;
     }
