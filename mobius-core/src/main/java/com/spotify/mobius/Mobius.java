@@ -199,6 +199,15 @@ public final class Mobius {
           update, effectHandler, init, eventSource, logger, eventRunner, effectRunner);
     }
 
+    @Nonnull
+    @Override
+    public MobiusLoop.Builder<M, E, F> eventSources(
+        EventSource<E> eventSource, EventSource<E>... eventSources) {
+      EventSource<E> mergedSource = MergedEventSource.from(eventSource, eventSources);
+      return new Builder<>(
+          update, effectHandler, init, mergedSource, logger, eventRunner, effectRunner);
+    }
+
     @Override
     @Nonnull
     public MobiusLoop.Builder<M, E, F> logger(MobiusLoop.Logger<M, E, F> logger) {
