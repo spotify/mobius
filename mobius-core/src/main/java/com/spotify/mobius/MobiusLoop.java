@@ -221,7 +221,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
     Builder<M, E, F> eventSource(EventSource<E> eventSource);
 
     /**
-     * @return a new {@link Builder} with the an {@link EventSource} that merges the supplied event
+     * @return a new {@link Builder} with an {@link EventSource} that merges the supplied event
      *     sources, and the same values as the current one for the other fields.
      */
     @Nonnull
