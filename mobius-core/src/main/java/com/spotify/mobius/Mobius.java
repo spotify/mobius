@@ -156,6 +156,19 @@ public final class Mobius {
     return new MobiusLoopController<>(loopFactory, defaultModel, modelRunner);
   }
 
+  /**
+   * Create an {@link EffectRouterBuilder} that allows you to create a combined effect handlers
+   * based on handlers for each effect sub-type.
+   *
+   * @param <F> the effect super-type
+   * @param <E> the event super-type
+   * @return a new builder
+   */
+  @Nonnull
+  public static <F, E> EffectRouterBuilder<F, E> effectRouter() {
+    return new EffectRouterBuilderImpl<>();
+  }
+
   private static final class Builder<M, E, F> implements MobiusLoop.Builder<M, E, F> {
 
     private static final MyThreadFactory THREAD_FACTORY = new MyThreadFactory();
