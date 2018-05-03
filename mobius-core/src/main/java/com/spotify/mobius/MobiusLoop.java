@@ -351,6 +351,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
      * same thread as the init function.
      *
      * @param model the model that was passed to init
+     * @param result the {@link First} that init returned
      */
     void afterInit(M model, First<M, F> result);
 
