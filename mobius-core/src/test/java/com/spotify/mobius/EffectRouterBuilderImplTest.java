@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
+import com.spotify.mobius.test.SimpleConnection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nonnull;
@@ -189,6 +190,92 @@ public class EffectRouterBuilderImplTest {
     connection.accept(new EffectWithEvent());
 
     assertThat(eventConsumer.received).hasSize(1);
+  }
+
+  @Test
+  public void shouldPropagateExceptionByDefault() throws Exception {
+    final RuntimeException exception = new RuntimeException("Always crashing..");
+
+    final Connection<Effect> connection =
+        builder
+            .addConnectable(SimpleEffect.class, connectableThrowing(exception))
+            .build()
+            .connect(eventConsumer);
+
+    assertThatThrownBy(() -> connection.accept(new SimpleEffect())).isEqualTo(exception);
+  }
+
+  @Test
+  public void shouldAllowSettingErrorHandler() throws Exception {
+    final RuntimeException exception = new RuntimeException("Always crashing..");
+    final Connectable<SimpleEffect, Event> connectable = connectableThrowing(exception);
+
+    final AtomicReference<Connectable<? extends Effect, Event>> actualConnectable =
+        new AtomicReference<>();
+    final AtomicReference<Throwable> actualThrowable = new AtomicReference<>();
+
+    final Connection<Effect> connection =
+        builder
+            .addConnectable(SimpleEffect.class, connectable)
+            .withFatalErrorHandler(
+                new Function<Connectable<? extends Effect, Event>, Consumer<Throwable>>() {
+                  @Nonnull
+                  @Override
+                  public Consumer<Throwable> apply(
+                      final Connectable<? extends Effect, Event> value) {
+                    return new Consumer<Throwable>() {
+                      @Override
+                      public void accept(Throwable throwable) {
+                        actualConnectable.set(value);
+                        actualThrowable.set(throwable);
+                      }
+                    };
+                  }
+                })
+            .build()
+            .connect(eventConsumer);
+
+    connection.accept(new SimpleEffect());
+
+    assertThat(actualConnectable.get()).isEqualTo(connectable);
+    assertThat(actualThrowable.get()).isEqualTo(exception);
+  }
+
+  @Test
+  public void defaultShouldSupportNonRuntimeExceptions() throws Exception {
+    final Exception checked = new Exception("Always crashing..");
+
+    final Connection<Effect> connection =
+        builder
+            .addConnectable(SimpleEffect.class, connectableThrowing(checked))
+            .build()
+            .connect(eventConsumer);
+
+    assertThatThrownBy(() -> connection.accept(new SimpleEffect())).hasCause(checked);
+  }
+
+  private Connectable<SimpleEffect, Event> connectableThrowing(final Exception exception) {
+    return new Connectable<SimpleEffect, Event>() {
+      @Nonnull
+      @Override
+      public Connection<SimpleEffect> connect(Consumer<Event> output)
+          throws ConnectionLimitExceededException {
+        return new SimpleConnection<SimpleEffect>() {
+          @Override
+          public void accept(SimpleEffect value) {
+            EffectRouterBuilderImplTest.<RuntimeException>throwException(exception, null);
+          }
+        };
+      }
+    };
+  }
+
+  // hack to get compiler to permit throwing a checked exception from a method that doesn't declare it
+  // taken from https://stackoverflow.com/a/18408831
+  @SuppressWarnings("unchecked")
+  private static <T extends Throwable> void throwException(Throwable exception, Object dummy)
+      throws T {
+    throw (T) exception;
   }
 
   private void verifySimpleEffectExecution(

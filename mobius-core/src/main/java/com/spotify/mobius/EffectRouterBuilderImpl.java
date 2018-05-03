@@ -31,6 +31,23 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
 
   private final List<Connectable<F, E>> connectables;
   private final List<Class<?>> registeredClasses;
+  private Function<Connectable<? extends F, E>, Consumer<Throwable>> errorHandler =
+      new Function<Connectable<? extends F, E>, Consumer<Throwable>>() {
+        @Nonnull
+        @Override
+        public Consumer<Throwable> apply(Connectable<? extends F, E> value) {
+          return new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable value) {
+              if (value instanceof RuntimeException) {
+                throw (RuntimeException) value;
+              }
+
+              throw new RuntimeException(value);
+            }
+          };
+        }
+      };
 
   EffectRouterBuilderImpl() {
     connectables = new ArrayList<>();
@@ -115,8 +132,16 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
       Class<G> effectClass, Connectable<G, E> connectable) {
     validateAndTrackeffectClass(effectClass);
 
-    connectables.add(new SubtypeFilteringConnectable<F, G, E>(effectClass, connectable));
+    connectables.add(new SubtypeFilteringConnectable<>(effectClass, connectable, errorHandler));
 
+    return this;
+  }
+
+  @Override
+  public EffectRouterBuilder<F, E> withFatalErrorHandler(
+      Function<Connectable<? extends F, E>, Consumer<Throwable>> errorHandler) {
+
+    this.errorHandler = checkNotNull(errorHandler);
     return this;
   }
 
@@ -141,25 +166,32 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
     return new SafeConnectable<>(MergedConnectable.create(connectables));
   }
 
-  private static class SubtypeFilteringConnectable<I, J extends I, O> implements Connectable<I, O> {
-    private final Class<J> handledClass;
-    private final Connectable<J, O> delegate;
+  private class SubtypeFilteringConnectable<G extends F> implements Connectable<F, E> {
+    private final Class<G> handledClass;
+    private final Connectable<G, E> delegate;
 
-    SubtypeFilteringConnectable(Class<J> handledClass, Connectable<J, O> delegate) {
+    SubtypeFilteringConnectable(
+        Class<G> handledClass,
+        Connectable<G, E> delegate,
+        Function<Connectable<? extends F, E>, Consumer<Throwable>> errorHandler) {
       this.handledClass = handledClass;
       this.delegate = delegate;
     }
 
     @Nonnull
     @Override
-    public Connection<I> connect(Consumer<O> output) throws ConnectionLimitExceededException {
-      final Connection<J> delegateConnection = delegate.connect(checkNotNull(output));
+    public Connection<F> connect(Consumer<E> output) throws ConnectionLimitExceededException {
+      final Connection<G> delegateConnection = delegate.connect(checkNotNull(output));
 
-      return new Connection<I>() {
+      return new Connection<F>() {
         @Override
-        public void accept(I value) {
+        public void accept(F value) {
           if (handledClass.isInstance(value)) {
-            delegateConnection.accept(handledClass.cast(value));
+            try {
+              delegateConnection.accept(handledClass.cast(value));
+            } catch (Exception e) {
+              errorHandler.apply(delegate).accept(e);
+            }
           }
           // ignore
         }

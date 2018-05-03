@@ -114,6 +114,19 @@ public interface EffectRouterBuilder<F, E> {
       Class<G> effectClass, Connectable<G, E> connectable);
 
   /**
+   * Optionally set a shared error handler in case a handler throws an uncaught exception.
+   *
+   * <p>The default is to simply propagate the exception (and probably crash). Note that any
+   * exception thrown by a handler is a fatal error and this method doesn't enable safe error
+   * handling, only configurable crash reporting.
+   *
+   * @param errorHandler a function that gets told which sub-connectable failed and should return an
+   *     appropriate handler for exceptions thrown.
+   */
+  EffectRouterBuilder<F, E> withFatalErrorHandler(
+      Function<Connectable<? extends F, E>, Consumer<Throwable>> errorHandler);
+
+  /**
    * Builds an effect router {@link Connectable} based on this configuration.
    *
    * @return a new {@link Connectable}
