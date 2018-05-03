@@ -39,20 +39,75 @@ class EffectRouterBuilderImpl<F, E> implements EffectRouterBuilder<F, E> {
 
   @Override
   public <G extends F> EffectRouterBuilder<F, E> addRunnable(
-      Class<G> effectClass, Runnable action) {
-    return addConnectable(effectClass, Connectables.<G, E>fromRunnable(action));
+      Class<G> effectClass, final Runnable action) {
+    checkNotNull(action);
+
+    return addConnectable(
+        effectClass,
+        new Connectable<G, E>() {
+          @Nonnull
+          @Override
+          public Connection<G> connect(Consumer<E> output) throws ConnectionLimitExceededException {
+            return new Connection<G>() {
+              @Override
+              public void accept(G value) {
+                action.run();
+              }
+
+              @Override
+              public void dispose() {}
+            };
+          }
+        });
   }
 
   @Override
   public <G extends F> EffectRouterBuilder<F, E> addConsumer(
-      Class<G> effectClass, Consumer<G> consumer) {
-    return addConnectable(effectClass, Connectables.<G, E>fromConsumer(consumer));
+      Class<G> effectClass, final Consumer<G> consumer) {
+    checkNotNull(consumer);
+
+    return addConnectable(
+        effectClass,
+        new Connectable<G, E>() {
+          @Nonnull
+          @Override
+          public Connection<G> connect(Consumer<E> output) throws ConnectionLimitExceededException {
+            return new Connection<G>() {
+              @Override
+              public void accept(G value) {
+                consumer.accept(value);
+              }
+
+              @Override
+              public void dispose() {}
+            };
+          }
+        });
   }
 
   @Override
   public <G extends F> EffectRouterBuilder<F, E> addFunction(
-      Class<G> effectClass, Function<G, E> function) {
-    return addConnectable(effectClass, Connectables.fromFunction(function));
+      Class<G> effectClass, final Function<G, E> function) {
+    checkNotNull(function);
+
+    return addConnectable(
+        effectClass,
+        new Connectable<G, E>() {
+          @Nonnull
+          @Override
+          public Connection<G> connect(final Consumer<E> output)
+              throws ConnectionLimitExceededException {
+            return new Connection<G>() {
+              @Override
+              public void accept(G value) {
+                output.accept(function.apply(value));
+              }
+
+              @Override
+              public void dispose() {}
+            };
+          }
+        });
   }
 
   @Override
