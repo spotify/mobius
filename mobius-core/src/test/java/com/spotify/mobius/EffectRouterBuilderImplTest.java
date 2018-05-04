@@ -22,6 +22,7 @@ package com.spotify.mobius;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.spotify.mobius.functions.BiConsumer;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
 import com.spotify.mobius.test.SimpleConnection;
@@ -33,15 +34,16 @@ import org.junit.Test;
 
 public class EffectRouterBuilderImplTest {
 
-  private TestConsumer<Event> eventConsumer;
-  private AtomicBoolean ranSimpleEffect;
-
-  private EffectRouterBuilderImpl<Effect, Event> builder;
-  public static final Runnable DUMMY_ACTION =
+  private static final Runnable DUMMY_ACTION =
       new Runnable() {
         @Override
         public void run() {}
       };
+
+  private TestConsumer<Event> eventConsumer;
+  private AtomicBoolean ranSimpleEffect;
+
+  private EffectRouterBuilderImpl<Effect, Event> builder;
 
   @Before
   public void setUp() throws Exception {
@@ -165,7 +167,6 @@ public class EffectRouterBuilderImplTest {
         .hasMessageContaining(SubEffect.class.getName());
   }
 
-  // TODO: maybe separate router tests from builder tests?
   @Test
   public void shouldReportUnhandledEffectsAtRuntime() throws Exception {
     final Connection<Effect> connection =
@@ -202,43 +203,9 @@ public class EffectRouterBuilderImplTest {
             .build()
             .connect(eventConsumer);
 
-    assertThatThrownBy(() -> connection.accept(new SimpleEffect())).isEqualTo(exception);
-  }
-
-  @Test
-  public void shouldAllowSettingErrorHandler() throws Exception {
-    final RuntimeException exception = new RuntimeException("Always crashing..");
-    final Connectable<SimpleEffect, Event> connectable = connectableThrowing(exception);
-
-    final AtomicReference<Connectable<? extends Effect, Event>> actualConnectable =
-        new AtomicReference<>();
-    final AtomicReference<Throwable> actualThrowable = new AtomicReference<>();
-
-    final Connection<Effect> connection =
-        builder
-            .addConnectable(SimpleEffect.class, connectable)
-            .withFatalErrorHandler(
-                new Function<Connectable<? extends Effect, Event>, Consumer<Throwable>>() {
-                  @Nonnull
-                  @Override
-                  public Consumer<Throwable> apply(
-                      final Connectable<? extends Effect, Event> value) {
-                    return new Consumer<Throwable>() {
-                      @Override
-                      public void accept(Throwable throwable) {
-                        actualConnectable.set(value);
-                        actualThrowable.set(throwable);
-                      }
-                    };
-                  }
-                })
-            .build()
-            .connect(eventConsumer);
-
-    connection.accept(new SimpleEffect());
-
-    assertThat(actualConnectable.get()).isEqualTo(connectable);
-    assertThat(actualThrowable.get()).isEqualTo(exception);
+    assertThatThrownBy(() -> connection.accept(new SimpleEffect()))
+        .isInstanceOf(ConnectionException.class);
+    assertThatThrownBy(() -> connection.accept(new SimpleEffect())).hasCause(exception);
   }
 
   @Test
@@ -252,6 +219,31 @@ public class EffectRouterBuilderImplTest {
             .connect(eventConsumer);
 
     assertThatThrownBy(() -> connection.accept(new SimpleEffect())).hasCause(checked);
+  }
+
+  @Test
+  public void shouldAllowSettingErrorHandler() throws Exception {
+    final RuntimeException exception = new RuntimeException("Always crashing..");
+    final Connectable<SimpleEffect, Event> connectable = connectableThrowing(exception);
+
+    final AtomicReference<Throwable> actualThrowable = new AtomicReference<>();
+
+    final Connection<Effect> connection =
+        builder
+            .addConnectable(SimpleEffect.class, connectable)
+            .withFatalErrorHandler(
+                new BiConsumer<Effect, Throwable>() {
+                  @Override
+                  public void accept(Effect effect, Throwable throwable) {
+                    actualThrowable.set(throwable);
+                  }
+                })
+            .build()
+            .connect(eventConsumer);
+
+    connection.accept(new SimpleEffect());
+
+    assertThat(actualThrowable.get()).isEqualTo(exception);
   }
 
   private Connectable<SimpleEffect, Event> connectableThrowing(final Exception exception) {

@@ -19,6 +19,7 @@
  */
 package com.spotify.mobius;
 
+import com.spotify.mobius.functions.BiConsumer;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
 
@@ -116,15 +117,14 @@ public interface EffectRouterBuilder<F, E> {
   /**
    * Optionally set a shared error handler in case a handler throws an uncaught exception.
    *
-   * <p>The default is to simply propagate the exception (and probably crash). Note that any
-   * exception thrown by a handler is a fatal error and this method doesn't enable safe error
-   * handling, only configurable crash reporting.
+   * <p>The default is to wrap the exception and value in a {@link ConnectionException} (and
+   * probably crash). Note that any exception thrown by a handler is a fatal error and this method
+   * doesn't enable safe error handling, only configurable crash reporting.
    *
-   * @param errorHandler a function that gets told which sub-connectable failed and should return an
-   *     appropriate handler for exceptions thrown.
+   * @param errorHandler a {@link BiConsumer} that will receive the effect and throwable from a
+   *     failure.
    */
-  EffectRouterBuilder<F, E> withFatalErrorHandler(
-      Function<Connectable<? extends F, E>, Consumer<Throwable>> errorHandler);
+  EffectRouterBuilder<F, E> withFatalErrorHandler(BiConsumer<F, Throwable> errorHandler);
 
   /**
    * Builds an effect router {@link Connectable} based on this configuration.
