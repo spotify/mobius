@@ -22,8 +22,10 @@ package com.spotify.mobius;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.spotify.mobius.functions.BiConsumer;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
+import com.spotify.mobius.test.SimpleConnection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nonnull;
@@ -32,15 +34,16 @@ import org.junit.Test;
 
 public class EffectRouterBuilderImplTest {
 
-  private TestConsumer<Event> eventConsumer;
-  private AtomicBoolean ranSimpleEffect;
-
-  private EffectRouterBuilderImpl<Effect, Event> builder;
-  public static final Runnable DUMMY_ACTION =
+  private static final Runnable DUMMY_ACTION =
       new Runnable() {
         @Override
         public void run() {}
       };
+
+  private TestConsumer<Event> eventConsumer;
+  private AtomicBoolean ranSimpleEffect;
+
+  private EffectRouterBuilderImpl<Effect, Event> builder;
 
   @Before
   public void setUp() throws Exception {
@@ -164,7 +167,6 @@ public class EffectRouterBuilderImplTest {
         .hasMessageContaining(SubEffect.class.getName());
   }
 
-  // TODO: maybe separate router tests from builder tests?
   @Test
   public void shouldReportUnhandledEffectsAtRuntime() throws Exception {
     final Connection<Effect> connection =
@@ -189,6 +191,83 @@ public class EffectRouterBuilderImplTest {
     connection.accept(new EffectWithEvent());
 
     assertThat(eventConsumer.received).hasSize(1);
+  }
+
+  @Test
+  public void shouldPropagateExceptionByDefault() throws Exception {
+    final RuntimeException exception = new RuntimeException("Always crashing..");
+
+    final Connection<Effect> connection =
+        builder
+            .addConnectable(SimpleEffect.class, connectableThrowing(exception))
+            .build()
+            .connect(eventConsumer);
+
+    assertThatThrownBy(() -> connection.accept(new SimpleEffect()))
+        .isInstanceOf(ConnectionException.class);
+    assertThatThrownBy(() -> connection.accept(new SimpleEffect())).hasCause(exception);
+  }
+
+  @Test
+  public void defaultShouldSupportNonRuntimeExceptions() throws Exception {
+    final Exception checked = new Exception("Always crashing..");
+
+    final Connection<Effect> connection =
+        builder
+            .addConnectable(SimpleEffect.class, connectableThrowing(checked))
+            .build()
+            .connect(eventConsumer);
+
+    assertThatThrownBy(() -> connection.accept(new SimpleEffect())).hasCause(checked);
+  }
+
+  @Test
+  public void shouldAllowSettingErrorHandler() throws Exception {
+    final RuntimeException exception = new RuntimeException("Always crashing..");
+    final Connectable<SimpleEffect, Event> connectable = connectableThrowing(exception);
+
+    final AtomicReference<Throwable> actualThrowable = new AtomicReference<>();
+
+    final Connection<Effect> connection =
+        builder
+            .addConnectable(SimpleEffect.class, connectable)
+            .withFatalErrorHandler(
+                new BiConsumer<Effect, Throwable>() {
+                  @Override
+                  public void accept(Effect effect, Throwable throwable) {
+                    actualThrowable.set(throwable);
+                  }
+                })
+            .build()
+            .connect(eventConsumer);
+
+    connection.accept(new SimpleEffect());
+
+    assertThat(actualThrowable.get()).isEqualTo(exception);
+  }
+
+  private Connectable<SimpleEffect, Event> connectableThrowing(final Exception exception) {
+    return new Connectable<SimpleEffect, Event>() {
+      @Nonnull
+      @Override
+      public Connection<SimpleEffect> connect(Consumer<Event> output)
+          throws ConnectionLimitExceededException {
+        return new SimpleConnection<SimpleEffect>() {
+          @Override
+          public void accept(SimpleEffect value) {
+            EffectRouterBuilderImplTest.<RuntimeException>throwException(exception, null);
+          }
+        };
+      }
+    };
+  }
+
+  // hack to get compiler to permit throwing a checked exception from a method that doesn't declare it
+  // taken from https://stackoverflow.com/a/18408831
+  @SuppressWarnings("unchecked")
+  private static <T extends Throwable> void throwException(Throwable exception, Object dummy)
+      throws T {
+    throw (T) exception;
   }
 
   private void verifySimpleEffectExecution(
