@@ -19,13 +19,13 @@
  */
 package com.spotify.mobius.test;
 
-import com.google.common.collect.Lists;
 import com.spotify.mobius.runners.WorkRunner;
+import java.util.LinkedList;
 import java.util.Queue;
 
 public class TestWorkRunner implements WorkRunner {
 
-  private final Queue<Runnable> queue = Lists.newLinkedList();
+  private final Queue<Runnable> queue = new LinkedList<>();
 
   @Override
   public void post(Runnable runnable) {
