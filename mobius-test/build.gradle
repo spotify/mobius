@@ -13,14 +13,14 @@ dependencies {
 
     apt "com.google.auto.value:auto-value:${versions.autoValue}"
 
-    implementation "com.google.guava:guava:${versions.guava}"
+    api "com.google.code.findbugs:jsr305:${versions.jsr305}"
+
     implementation "junit:junit:${versions.junit}"
     implementation "org.hamcrest:hamcrest-library:${versions.hamcrestLibrary}"
 
     testImplementation project(':mobius-core')
     testImplementation "junit:junit:${versions.junit}"
     testImplementation "org.assertj:assertj-core:${versions.assertjcore}"
-    testImplementation "com.google.guava:guava-testlib:${versions.guava}"
     testImplementation "org.awaitility:awaitility:${versions.awaitility}"
 }
 

@@ -23,14 +23,14 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 
-import com.google.common.collect.Lists;
 import com.spotify.mobius.functions.Consumer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class RecordingConsumer<V> implements Consumer<V> {
 
-  private final List<V> values = Lists.newArrayList();
+  private final List<V> values = new ArrayList<>();
   private final Object lock = new Object();
 
   @Override
