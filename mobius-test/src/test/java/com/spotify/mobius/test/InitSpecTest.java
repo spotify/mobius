@@ -63,6 +63,25 @@ public class InitSpecTest {
   }
 
   @Test
+  public void whenAndWhenModelYieldsSameResults() throws Exception {
+    InitSpec.Assert<String, Integer> successAssertion =
+        first -> {
+          assertThat(first.model(), is("Hello WorldHello World"));
+          assertThat(first.effects(), contains(1, 2, 3));
+        };
+
+    initSpec.when("Hello World").then(successAssertion);
+
+    initSpec.whenInit("Hello World").then(successAssertion);
+
+    InitSpec.AssertError failureAssertion =
+        error -> assertThat(error, instanceOf(IllegalStateException.class));
+    initSpec.when("bad model").thenError(failureAssertion);
+
+    initSpec.whenInit("bad model").thenError(failureAssertion);
+  }
+
+  @Test
   public void shouldFailIfExpectedErrorDoesntHappen() throws Exception {
     assertThatThrownBy(
             () ->

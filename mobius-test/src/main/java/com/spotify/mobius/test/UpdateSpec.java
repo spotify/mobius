@@ -68,6 +68,30 @@ public class UpdateSpec<M, E, F> {
     public final Then<M, F> when(E event, E... events) {
       return new ThenImpl(model, event, events);
     }
+
+    /**
+     * Defines the event that should be executed when the test is run. Events are executed in the
+     * order supplied. This method is just an alias to {@link #when(E, E...)} for use with Kotlin
+     *
+     * @param event the first events
+     * @return a {@link Then} instance for the remainder of the spec
+     */
+    public final Then<M, F> whenEvent(E event) {
+      return when(event);
+    }
+
+    /**
+     * Defines the event(s) that should be executed when the test is run. Events are executed in the
+     * order supplied. This method is just an alias to {@link #when(E, E...)} for use with Kotlin
+     *
+     * @param event the first events
+     * @param events the following events, possibly none
+     * @return a {@link Then} instance for the remainder of the spec
+     */
+    @SafeVarargs
+    public final Then<M, F> whenEvents(E event, E... events) {
+      return when(event, events);
+    }
   }
 
   /**

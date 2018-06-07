@@ -65,6 +65,11 @@ public class InitSpec<M, F> {
     };
   }
 
+  /** An alias for {@link #when(M)} to be used with Kotlin */
+  public Then<M, F> whenInit(M model) {
+    return when(model);
+  }
+
   /**
    * The final step in a behavior test. Instances of this class will call your function under test
    * with the previously provided values (i.e. given and when) and will pass the result of the

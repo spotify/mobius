@@ -71,6 +71,16 @@ public class UpdateSpecTest {
   }
 
   @Test
+  public void whenAndWhenEventYieldSameResult() {
+    UpdateSpec.Assert<String, Integer> assertion =
+        assertThatNext(hasModel("HELLO"), hasEffects(1, 2));
+
+    updateSpec.given("HELLO").when("anything").then(assertion);
+
+    updateSpec.given("HELLO").whenEvent("anything").then(assertion);
+  }
+
+  @Test
   public void shouldSupportWhenMultipleEvents() throws Exception {
     updateSpec =
         new UpdateSpec<>(
@@ -81,6 +91,15 @@ public class UpdateSpecTest {
     updateSpec
         .given("init")
         .when("one", "two", "three")
+        .then(
+            result -> {
+              assertThat(result.model(), is("init - one - two - three"));
+              assertThat(result.lastNext(), hasEffects(7, 8, 4));
+            });
+
+    updateSpec
+        .given("init")
+        .whenEvents("one", "two", "three")
         .then(
             result -> {
               assertThat(result.model(), is("init - one - two - three"));
