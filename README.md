@@ -18,7 +18,7 @@ we may keep making changes relatively quickly.
 
 Mobius is currently built for Java 7 (because Java 8 is not fully supported on all versions of Android), hence the duplication of some concepts defined in `java.util.function` (see `com.spotify.mobius.functions`).
 
-When using Mobius, we do however recommend using Java 8 or later, primarily because of the improved type inference and because using lambdas greatly improves readability and conciseness of code.
+When using Mobius, we recommend using Kotlin or Java 8 or later, primarily because of the improved type inference and because using lambdas greatly improves readability and conciseness of code.
 
 ## Using it in your project
 
