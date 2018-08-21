@@ -13,8 +13,7 @@ watch a [talk from Android @Scale introducing Mobius](https://www.facebook.com/a
 
 ## Status
 
-Mobius is in Beta status, meaning it is used in production in Spotify Android applications, but
-we may keep making changes relatively quickly.
+Mobius is in Production status, meaning it is used in production in Spotify Android applications, and that we consider the APIs to be stable and the implementation bug-free. We will not make backwards-compatibility-breaking changes.
 
 Mobius is currently built for Java 7 (because Java 8 is not fully supported on all versions of Android), hence the duplication of some concepts defined in `java.util.function` (see `com.spotify.mobius.functions`).
 
