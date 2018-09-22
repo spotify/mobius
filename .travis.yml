@@ -12,7 +12,7 @@ cache:
     - $HOME/.gradle/caches/
 
 script:
-  - ./gradlew check jacocoTestReport
+  - ./gradlew check jacocoTestReport japicmp
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
