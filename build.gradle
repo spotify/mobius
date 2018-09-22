@@ -74,6 +74,7 @@ subprojects {
                 variant.javaCompiler.dependsOn(rootProject.tasks.format)
             }
         } else if (proj.plugins.findPlugin('java-library')) {
+            proj.apply from: rootProject.file('gradle/binary_compatibility.gradle')
             // for Java (which is easier than android because AGP), ensure compilation is run before
             // formatting, since the compiler has much better error messages for syntax errors.
             rootProject.tasks.format.dependsOn(proj.tasks.compileTestJava)
