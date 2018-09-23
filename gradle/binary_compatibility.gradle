@@ -1,0 +1,42 @@
+// code from: https://github.com/Visistema/Groovy1/blob/ba5eb9b2f19ca0cc8927359ce414c4e1974b7016/gradle/binarycompatibility.gradle#L48
+import me.champeau.gradle.japicmp.JapicmpTask
+
+buildscript {
+    repositories {
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+    }
+    dependencies {
+        classpath 'me.champeau.gradle:japicmp-gradle-plugin:0.2.6'
+    }
+}
+
+File baselineJar = null
+def baselineVersion = "1.2.0"
+def projectGroup = project.group
+def projectName = project.name
+
+try {
+    String dependency = "$projectGroup:$projectName:$baselineVersion@jar"
+    String jarFile = "$projectName-${baselineVersion}.jar"
+    project.group = 'group_that_does_not_exist'
+
+    baselineJar = files(configurations.detachedConfiguration(
+        dependencies.create(dependency)
+    ).files).filter {
+      it.name.equals(jarFile)
+    }.singleFile
+} finally {
+    project.group = projectGroup
+}
+
+task japicmp(type: JapicmpTask, dependsOn: jar) {
+    oldClasspath = files(baselineJar)
+    newArchives = files(jar.archivePath)
+    newClasspath = configurations.runtimeClasspath
+    onlyModified = true
+    failOnModification = true
+    ignoreMissingClasses = true
+    htmlOutputFile = file("$buildDir/reports/japi.html")
+}

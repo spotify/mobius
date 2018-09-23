@@ -4,3 +4,5 @@ Copyright 2017-2018 Spotify AB
 This project uses gradle/gradle-mvn-push.gradle from LeakCanary:
 https://github.com/square/leakcanary
 
+This project uses gradle/binary_compatibility.gradle from Groovy1:
+https://github.com/Visistema/Groovy1/
