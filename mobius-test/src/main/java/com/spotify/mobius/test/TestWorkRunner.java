@@ -26,10 +26,14 @@ import java.util.Queue;
 public class TestWorkRunner implements WorkRunner {
 
   private final Queue<Runnable> queue = new LinkedList<>();
+  private boolean disposed;
 
   @Override
   public void post(Runnable runnable) {
     synchronized (queue) {
+      if (disposed) {
+        throw new IllegalStateException("this WorkRunner has already been disposed");
+      }
       queue.add(runnable);
     }
   }
@@ -55,7 +59,12 @@ public class TestWorkRunner implements WorkRunner {
   @Override
   public void dispose() {
     synchronized (queue) {
+      disposed = true;
       queue.clear();
     }
+  }
+
+  public boolean isDisposed() {
+    return disposed;
   }
 }
