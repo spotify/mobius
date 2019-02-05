@@ -183,15 +183,26 @@ public class MobiusLoop<M, E, F> implements Disposable {
   }
 
   @Override
-  public void dispose() {
+  public synchronized void dispose() {
     synchronized (modelObservers) {
-      eventDispatcher.dispose();
-      effectDispatcher.dispose();
-      effectConsumer.dispose();
-      eventSourceDisposable.dispose();
+      // Remove model observers so that they receive no further model changes.
       modelObservers.clear();
-      disposed = true;
     }
+
+    // Disable the event and effect dispatchers. This will cause any further
+    // events or effects posted to the dispatchers to be ignored and logged.
+    eventDispatcher.disable();
+    effectDispatcher.disable();
+
+    // Stop the event source and effect handler.
+    eventSourceDisposable.dispose();
+    effectConsumer.dispose();
+
+    // Finally clean up the dispatchers that now no longer are needed.
+    eventDispatcher.dispose();
+    effectDispatcher.dispose();
+
+    disposed = true;
   }
 
   /**

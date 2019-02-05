@@ -40,6 +40,8 @@ class MessageDispatcher<M> implements Consumer<M>, Disposable {
   @Nonnull private final WorkRunner runner;
   @Nonnull private final Consumer<M> consumer;
 
+  private volatile boolean disabled = false;
+
   MessageDispatcher(WorkRunner runner, Consumer<M> consumer) {
     this.runner = checkNotNull(runner);
     this.consumer = checkNotNull(consumer);
@@ -51,12 +53,17 @@ class MessageDispatcher<M> implements Consumer<M>, Disposable {
         new Runnable() {
           @Override
           public void run() {
-            try {
-              consumer.accept(message);
+            if (disabled) {
+              LOGGER.warn("Message ignored because the dispatcher is disabled: {}", message);
 
-            } catch (Throwable throwable) {
-              LOGGER.error(
-                  "Consumer threw an exception when accepting message: {}", message, throwable);
+            } else {
+              try {
+                consumer.accept(message);
+
+              } catch (Throwable throwable) {
+                LOGGER.error(
+                    "Consumer threw an exception when accepting message: {}", message, throwable);
+              }
             }
           }
         });
@@ -65,5 +72,9 @@ class MessageDispatcher<M> implements Consumer<M>, Disposable {
   @Override
   public void dispose() {
     runner.dispose();
+  }
+
+  void disable() {
+    disabled = true;
   }
 }

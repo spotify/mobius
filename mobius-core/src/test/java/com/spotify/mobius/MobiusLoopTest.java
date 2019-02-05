@@ -20,8 +20,11 @@
 package com.spotify.mobius;
 
 import static com.spotify.mobius.Effects.effects;
+import static com.spotify.mobius.internal_util.Throwables.propagate;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.util.concurrent.SettableFuture;
 import com.spotify.mobius.disposables.Disposable;
@@ -29,11 +32,15 @@ import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.runners.ExecutorServiceWorkRunner;
 import com.spotify.mobius.runners.ImmediateWorkRunner;
 import com.spotify.mobius.runners.WorkRunner;
+import com.spotify.mobius.test.RecordingConsumer;
 import com.spotify.mobius.test.RecordingModelObserver;
 import com.spotify.mobius.test.SimpleConnection;
 import com.spotify.mobius.test.TestWorkRunner;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
 import org.awaitility.Duration;
 import org.junit.Before;
@@ -62,6 +69,7 @@ public class MobiusLoopTest {
       };
 
   private RecordingModelObserver<String> observer;
+  private RecordingConsumer<TestEffect> effectObserver;
   private Update<String, TestEvent, TestEffect> update;
 
   @Before
@@ -100,6 +108,9 @@ public class MobiusLoopTest {
             new SimpleConnection<TestEffect>() {
               @Override
               public void accept(TestEffect effect) {
+                if (effectObserver != null) {
+                  effectObserver.accept(effect);
+                }
                 if (effect instanceof Crash) {
                   throw new RuntimeException("Crashing!");
                 }
@@ -268,6 +279,20 @@ public class MobiusLoopTest {
   }
 
   @Test
+  public void disposingTheLoopDisposesTheWorkRunners() throws Exception {
+    TestWorkRunner eventRunner = new TestWorkRunner();
+    TestWorkRunner effectRunner = new TestWorkRunner();
+
+    mobiusLoop =
+        MobiusLoop.create(mobiusStore, effectHandler, eventSource, eventRunner, effectRunner);
+
+    mobiusLoop.dispose();
+
+    assertTrue("expecting event WorkRunner to be disposed", eventRunner.isDisposed());
+    assertTrue("expecting effect WorkRunner to be disposed", effectRunner.isDisposed());
+  }
+
+  @Test
   public void shouldSupportUnregisteringObserver() throws Exception {
     observer = new RecordingModelObserver<>();
 
@@ -374,6 +399,96 @@ public class MobiusLoopTest {
     observer.assertStates("Firstinit->1");
   }
 
+  @Test
+  public void eventsFromEventSourceDuringDisposeAreIgnored() throws Exception {
+    // Events emitted by the event source during dispose should be ignored.
+
+    AtomicBoolean updateWasCalled = new AtomicBoolean();
+
+    final MobiusLoop.Builder<String, TestEvent, TestEffect> builder =
+        Mobius.loop(
+            (model, event) -> {
+              updateWasCalled.set(true);
+              return Next.noChange();
+            },
+            effectHandler);
+
+    builder
+        .eventSource(new EmitDuringDisposeEventSource(new TestEvent("bar")))
+        .startFrom("foo")
+        .dispose();
+
+    assertFalse(updateWasCalled.get());
+  }
+
+  @Test
+  public void eventsFromEffectHandlerDuringDisposeAreIgnored() throws Exception {
+    // Events emitted by the effect handler during dispose should be ignored.
+
+    AtomicBoolean updateWasCalled = new AtomicBoolean();
+
+    final MobiusLoop.Builder<String, TestEvent, TestEffect> builder =
+        Mobius.loop(
+            (model, event) -> {
+              updateWasCalled.set(true);
+              return Next.noChange();
+            },
+            new EmitDuringDisposeEffectHandler());
+
+    builder.startFrom("foo").dispose();
+
+    assertFalse(updateWasCalled.get());
+  }
+
+  @Test
+  public void modelsFromUpdateDuringDisposeAreIgnored() throws Exception {
+    // Model changes emitted from the update function during dispose should be ignored.
+
+    observer = new RecordingModelObserver<>();
+    Semaphore lock = new Semaphore(0);
+
+    final MobiusLoop.Builder<String, TestEvent, TestEffect> builder =
+        Mobius.loop(
+            (model, event) -> {
+              lock.acquireUninterruptibly();
+              return Next.next("baz");
+            },
+            effectHandler);
+
+    mobiusLoop = builder.startFrom("foo");
+    mobiusLoop.observe(observer);
+
+    mobiusLoop.dispatchEvent(new TestEvent("bar"));
+    releaseLockAfterDelay(lock, 30);
+    mobiusLoop.dispose();
+
+    observer.assertStates();
+  }
+
+  @Test
+  public void effectsFromUpdateDuringDisposeAreIgnored() throws Exception {
+    // Effects emitted from the update function during dispose should be ignored.
+
+    effectObserver = new RecordingConsumer<>();
+    Semaphore lock = new Semaphore(0);
+
+    final MobiusLoop.Builder<String, TestEvent, TestEffect> builder =
+        Mobius.loop(
+            (model, event) -> {
+              lock.acquireUninterruptibly();
+              return Next.dispatch(effects(new SafeEffect("baz")));
+            },
+            effectHandler);
+
+    mobiusLoop = builder.startFrom("foo");
+
+    mobiusLoop.dispatchEvent(new TestEvent("bar"));
+    releaseLockAfterDelay(lock, 30);
+    mobiusLoop.dispose();
+
+    effectObserver.assertValues();
+  }
+
   private void setupWithEffects(
       Connectable<TestEffect, TestEvent> effectHandler, WorkRunner effectRunner) {
     observer = new RecordingModelObserver<>();
@@ -382,6 +497,20 @@ public class MobiusLoopTest {
         MobiusLoop.create(mobiusStore, effectHandler, eventSource, immediateRunner, effectRunner);
 
     mobiusLoop.observe(observer);
+  }
+
+  private void releaseLockAfterDelay(Semaphore lock, int delay) {
+    new Thread(
+            () -> {
+              try {
+                Thread.sleep(delay);
+              } catch (InterruptedException e) {
+                throw propagate(e);
+              }
+
+              lock.release();
+            })
+        .start();
   }
 
   private static class TestEvent {
@@ -460,6 +589,114 @@ public class MobiusLoopTest {
           // do nothing
         }
       };
+    }
+  }
+
+  private static class EmitDuringDisposeEventSource implements EventSource<TestEvent> {
+
+    private final TestEvent event;
+
+    public EmitDuringDisposeEventSource(TestEvent event) {
+      this.event = event;
+    }
+
+    @Nonnull
+    @Override
+    public Disposable subscribe(Consumer<TestEvent> eventConsumer) {
+      return () -> eventConsumer.accept(event);
+    }
+  }
+
+  private static class EmitDuringDisposeEffectHandler
+      implements Connectable<MobiusLoopTest.TestEffect, TestEvent> {
+
+    @Nonnull
+    @Override
+    public Connection<TestEffect> connect(Consumer<TestEvent> eventConsumer) {
+      return new Connection<TestEffect>() {
+        @Override
+        public void accept(TestEffect value) {
+          // ignored
+        }
+
+        @Override
+        public void dispose() {
+          eventConsumer.accept(new TestEvent("bar"));
+        }
+      };
+    }
+  }
+
+  @Test
+  public void shouldDisposeMultiThreadedEventSourceSafely() throws Exception {
+    // event source that just pushes stuff every X ms on a thread.
+
+    RecurringEventSource source = new RecurringEventSource();
+
+    final MobiusLoop.Builder<String, TestEvent, TestEffect> builder =
+        Mobius.loop(update, effectHandler).eventSource(source);
+
+    Random random = new Random();
+
+    for (int i = 0; i < 100; i++) {
+      mobiusLoop = builder.startFrom("foo");
+
+      Thread.sleep(random.nextInt(30));
+
+      mobiusLoop.dispose();
+    }
+  }
+
+  private static class RecurringEventSource implements EventSource<TestEvent> {
+
+    final SettableFuture<Void> completion = SettableFuture.create();
+
+    @Nonnull
+    @Override
+    public Disposable subscribe(Consumer<TestEvent> eventConsumer) {
+      if (completion.isDone()) {
+        try {
+          completion.get(); // should throw since the only way it can complete is exceptionally
+        } catch (InterruptedException | ExecutionException e) {
+          throw new RuntimeException("handle this", e);
+        }
+      }
+
+      final Generator generator = new Generator(eventConsumer);
+
+      Thread t = new Thread(generator);
+      t.start();
+
+      return () -> {
+        generator.generate = false;
+        try {
+          t.join();
+        } catch (InterruptedException e) {
+          throw propagate(e);
+        }
+      };
+    }
+
+    private class Generator implements Runnable {
+
+      private volatile boolean generate = true;
+      private final Consumer<TestEvent> consumer;
+
+      private Generator(Consumer<TestEvent> consumer) {
+        this.consumer = consumer;
+      }
+
+      @Override
+      public void run() {
+        while (generate) {
+          try {
+            consumer.accept(new TestEvent("hi"));
+            Thread.sleep(15);
+          } catch (Exception e) {
+            completion.setException(e);
+          }
+        }
+      }
     }
   }
 }
