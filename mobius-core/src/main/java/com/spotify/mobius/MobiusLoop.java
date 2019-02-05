@@ -190,7 +190,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
     }
 
     // Disable the event and effect dispatchers. This will cause any further
-    // events or effects posted to the dispatchers to silently be ignored.
+    // events or effects posted to the dispatchers to be ignored and logged.
     eventDispatcher.disable();
     effectDispatcher.disable();
 
