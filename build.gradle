@@ -34,7 +34,7 @@ static def isAndroidProject(Project p) {
 
 ext {
     minSdkVersion = 14
-    compileSdkVersion = 25
+    compileSdkVersion = 26
     targetSdkVersion = compileSdkVersion
 
     versions = [
