@@ -54,7 +54,7 @@ class MessageDispatcher<M> implements Consumer<M>, Disposable {
           @Override
           public void run() {
             if (disabled) {
-              LOGGER.error("Message ignored because the dispatcher is disabled: {}", message);
+              LOGGER.warn("Message ignored because the dispatcher is disabled: {}", message);
 
             } else {
               try {
