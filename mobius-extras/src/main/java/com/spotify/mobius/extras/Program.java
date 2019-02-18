@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
 /**
  * This class defines a Mobius program. It holds you your {@link Init}, {@link Update}, {@link
  * EventSource}, and {@link Connectable} definitions, as well as the tag you would like to use for
- * identifying your program in logs. It is primarily meant to used for composing programs, in most
+ * identifying your program in logs. It is primarily meant to be used for composing programs, in most
  * cases you should prefer to use {@link Mobius#loop(Update, Connectable)}.
  */
 @AutoValue
