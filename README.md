@@ -1,3 +1,5 @@
+![Mobius Logo](https://github.com/spotify/mobius/wiki/mobius-logo.png)
+
 [![Maven Central](https://img.shields.io/maven-central/v/com.spotify.mobius/mobius-core.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.spotify.mobius%22)
 [![Build Status](https://travis-ci.org/spotify/mobius.svg?branch=master)](https://travis-ci.org/spotify/mobius)
 [![Code Coverage](https://codecov.io/gh/spotify/mobius/branch/master/graph/badge.svg)](https://codecov.io/gh/spotify/mobius)
