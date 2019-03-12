@@ -6,8 +6,6 @@
 [![License](https://img.shields.io/github/license/spotify/mobius.svg)](LICENSE)
 [![Join the chat at https://gitter.im/spotify/mobius](https://badges.gitter.im/spotify/mobius.svg)](https://gitter.im/spotify/mobius)
 
-# Mobius
-
 Mobius is a functional reactive framework for managing state evolution and side-effects, with add-ons for connecting to Android UIs and RxJava Observables. It emphasizes separation of concerns, testability, and isolating stateful parts of the code.
 
 To learn more, see the [wiki](https://github.com/spotify/mobius/wiki) for a user guide. To see Mobius in action, check out the [sample TODO](https://github.com/spotify/mobius-android-sample) app based on the app from [Android Architecture Blueprints](https://github.com/googlesamples/android-architecture). You can also
