@@ -32,6 +32,7 @@ import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.runners.ExecutorServiceWorkRunner;
 import com.spotify.mobius.runners.ImmediateWorkRunner;
 import com.spotify.mobius.runners.WorkRunner;
+import com.spotify.mobius.runners.WorkRunners;
 import com.spotify.mobius.test.RecordingConsumer;
 import com.spotify.mobius.test.RecordingModelObserver;
 import com.spotify.mobius.test.SimpleConnection;
@@ -441,19 +442,50 @@ public class MobiusLoopTest {
   }
 
   @Test
+  public void modelsFromInitDuringDisposeAreIgnored() throws Exception {
+    // Model changes emitted from the init function during dispose should be ignored.
+
+    observer = new RecordingModelObserver<>();
+    Semaphore lock = new Semaphore(0);
+
+    final Update<String, TestEvent, TestEffect> update = (model, event) -> Next.noChange();
+    final MobiusLoop.Builder<String, TestEvent, TestEffect> builder =
+        Mobius.loop(update, effectHandler)
+            .init(
+                m -> {
+                  lock.acquireUninterruptibly();
+                  return First.first(m);
+                });
+
+    mobiusLoop = builder.startFrom("foo");
+    mobiusLoop.observe(observer);
+    releaseLockAfterDelay(lock, 30);
+    mobiusLoop.dispose();
+
+    observer.assertStates();
+  }
+
+  @Test
   public void modelsFromUpdateDuringDisposeAreIgnored() throws Exception {
     // Model changes emitted from the update function during dispose should be ignored.
 
     observer = new RecordingModelObserver<>();
     Semaphore lock = new Semaphore(0);
 
+    final Update<String, TestEvent, TestEffect> update =
+        (model, event) -> {
+          lock.acquireUninterruptibly();
+          return Next.next("baz");
+        };
+
     final MobiusLoop.Builder<String, TestEvent, TestEffect> builder =
-        Mobius.loop(
-            (model, event) -> {
-              lock.acquireUninterruptibly();
-              return Next.next("baz");
-            },
-            effectHandler);
+        Mobius.loop(update, effectHandler)
+            .eventRunner(
+                () -> {
+                  final WorkRunner eventRunner =
+                      WorkRunners.from(Executors.newSingleThreadExecutor());
+                  return InitImmediatelyThenUpdateConcurrentlyWorkRunner.create(eventRunner);
+                });
 
     mobiusLoop = builder.startFrom("foo");
     mobiusLoop.observe(observer);
@@ -462,7 +494,7 @@ public class MobiusLoopTest {
     releaseLockAfterDelay(lock, 30);
     mobiusLoop.dispose();
 
-    observer.assertStates();
+    observer.assertStates("foo");
   }
 
   @Test
@@ -499,7 +531,7 @@ public class MobiusLoopTest {
     mobiusLoop.observe(observer);
   }
 
-  private void releaseLockAfterDelay(Semaphore lock, int delay) {
+  private static void releaseLockAfterDelay(Semaphore lock, int delay) {
     new Thread(
             () -> {
               try {
@@ -697,6 +729,36 @@ public class MobiusLoopTest {
           }
         }
       }
+    }
+  }
+
+  private static class InitImmediatelyThenUpdateConcurrentlyWorkRunner implements WorkRunner {
+    private final WorkRunner delegate;
+
+    private boolean ranOnce;
+
+    private InitImmediatelyThenUpdateConcurrentlyWorkRunner(WorkRunner delegate) {
+      this.delegate = delegate;
+    }
+
+    public static WorkRunner create(WorkRunner eventRunner) {
+      return new InitImmediatelyThenUpdateConcurrentlyWorkRunner(eventRunner);
+    }
+
+    @Override
+    public void post(Runnable runnable) {
+      if (ranOnce) {
+        delegate.post(runnable);
+        return;
+      }
+
+      ranOnce = true;
+      runnable.run();
+    }
+
+    @Override
+    public void dispose() {
+      delegate.dispose();
     }
   }
 }
