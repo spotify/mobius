@@ -33,6 +33,98 @@ implementation 'com.spotify.mobius:mobius-android:LATEST_RELEASE'  // only for A
 implementation 'com.spotify.mobius:mobius-extras:LATEST_RELEASE'   // utilities for common patterns
 ```
 
+## Mobius in Action - Building a Counter
+
+The goal of Mobius is to give you better control over your application state. You can think of your state as a snapshot of all the current values of the variables in your application. In Mobius, we encapsulate all of the state in a data-structure which we call the *Model*.
+
+The *Model* can be represented by whatever type you like. In this example we'll be building a simple counter, so all of our state can be contained in an `Integer`:
+
+Mobius does not let you manipulate the state directly. In order to change the state, you have to send the framework messages saying what you want to do. We call these messages *Events*. In our case, we'll want to increment and decrement our counter. Let's use an `enum` to define these cases:
+```java
+enum CounterEvent {
+  INCREMENT,
+  DECREMENT,
+}
+```
+
+Now that we have a *Model* and some *Event*s, we'll need to give Mobius a set of rules which it can use to update the state on our behalf. We do this by giving the framework a function which will be sequentially called with every incoming *Event* and the most recent *Model*, in order to generate the next *Model*:
+```java
+class CounterLogic {
+  static Integer update(Integer model, CounterEvent event) {
+    switch (event) {
+      case INCREMENT: return model + 1;
+      case DECREMENT: return model - 1;
+    }
+  }
+}
+```
+
+With these building blocks, we can start to think about our applications as transitions between discrete states in response to events. But we believe there still one piece missing from the puzzle - namely the side-effects which are associated with moving between states. For instance, pressing a "refresh" button might put our application into a "loading" state, with the side-effect of also fetching the latest data from our backend.
+
+In Mobius, we aptly call these side-effects *Effect*s. In the case of our counter, let's say that when the user tries to decrement below 0, we play a sound effect instead. Let's create an `enum` that represents all the possible effects (which in this case is only one):
+```java
+enum CounterEffect {
+  PLAY_SOUND,
+}
+```
+
+We'll now need to augment our `update` function to also return a set of effects associated with certain state transitions. To do this we'll implement the `Update` interface like so:
+
+```java
+class CounterLogic implements Update<Integer, CounterEvent, CounterEffect> {
+  public Next<Integer, CounterEffect> update(Integer model, CounterEvent event) {
+    switch (event) {
+      case INCREMENT:
+        return next(model + 1);
+      case DECREMENT:
+        if (model == 0) {
+          Set<CounterEffect> soundEffect = effects(CounterEffect.PLAY_SOUND);
+          return dispatch(soundEffect);
+        } else {
+          return next(model - 1);
+        }
+    }
+    throw new IllegalStateException("Unhandled event: " + event);
+  }
+}
+```
+
+Mobius sends each of the effects you return in any state transition to something called an *Effect Handler*. Let's make one of those now by implementing the `Connectable` interface:
+```java
+class CounterEffectHandler implements Connectable<CounterEffect, CounterEvent> {
+  public Connection<CounterEffect> connect(Consumer<CounterEvent> output) {
+    return new Connection<CounterEffect>() {
+      @Override
+      public void accept(CounterEffect effect) {
+        if (effect == CounterEffect.PLAY_SOUND) {
+          Toolkit.getDefaultToolkit().beep();
+        }
+      }
+
+      @Override
+      public void dispose() {}
+    };
+  }
+}
+```
+
+Now that we have all the pieces in place, let's tie it all together:
+```java
+public static void main(String[] args) {
+  // Let's make a Mobius Loop
+  MobiusLoop<Integer, CounterEvent, CounterEffect> application = Mobius
+      .loop(new CounterLogic(), new CounterEffectHandler())
+      .startFrom(0);
+
+  // And start using our loop
+  application.dispatchEvent(CounterEvent.INCREMENT); // Model is now 1
+  application.dispatchEvent(CounterEvent.DECREMENT); // Model is now 0
+  application.dispatchEvent(CounterEvent.DECREMENT); // Sound effect plays! Model is still 0
+}
+```
+
+This covers the fundamentals of Mobius. To learn more, head on over to our [wiki](/../../wiki).
+
 ## Building
 
 ### Formatting
