@@ -112,14 +112,14 @@ Now that we have all the pieces in place, let's tie it all together:
 ```java
 public static void main(String[] args) {
   // Let's make a Mobius Loop
-  MobiusLoop<Integer, CounterEvent, CounterEffect> application = Mobius
+  MobiusLoop<Integer, CounterEvent, CounterEffect> loop = Mobius
       .loop(new CounterLogic(), new CounterEffectHandler())
       .startFrom(0);
 
   // And start using our loop
-  application.dispatchEvent(CounterEvent.INCREMENT); // Model is now 1
-  application.dispatchEvent(CounterEvent.DECREMENT); // Model is now 0
-  application.dispatchEvent(CounterEvent.DECREMENT); // Sound effect plays! Model is still 0
+  loop.dispatchEvent(CounterEvent.INCREMENT); // Model is now 1
+  loop.dispatchEvent(CounterEvent.DECREMENT); // Model is now 0
+  loop.dispatchEvent(CounterEvent.DECREMENT); // Sound effect plays! Model is still 0
 }
 ```
 
