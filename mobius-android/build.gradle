@@ -5,6 +5,10 @@ apply from: rootProject.file('gradle/java_8_sources.gradle')
 
 ext.compileUnitTestsAsJava8()
 
+repositories {
+    google()
+}
+
 dependencies {
     api project(':mobius-core')
 
