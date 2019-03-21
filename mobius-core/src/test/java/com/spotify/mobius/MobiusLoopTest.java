@@ -444,6 +444,20 @@ public class MobiusLoopTest {
   public void disposingLoopWhileInitIsRunningDoesNotEmitNewState() throws Exception {
     // Model changes emitted from the init function during dispose should be ignored.
 
+    // This test sets up the following scenario:
+    // 1. The loop is created and initialized but the Init function is blocked
+    // 2. The loop is created with an EventSource that returns a Disposable that blocks whenever invoked
+    // this is so we can block the loop's dispose call and unblock it on demand
+    // 3. Starts a new thread that attempts to dispose of the loop
+    //
+    // Once loop.dispose() is invoked, the loop will attempt to dispose of its EventSource disposable
+    // which will block. At this point, both Init and loop.dispose() are blocked.
+    // We wait until we know that both dispose and init are blocked, then we unblock init.
+    // Init will then in turn unblock dispose, then return the First value.
+    // We then request 2 permits to block the test until both dispose and Init have finished.
+    // We release the first permit after loop.dispose() returns, and the second after the
+    // initialization runnable runs. By now, both initialization and disposal have been completed
+    // and we can proceed to inspect our observer.
     observer = new RecordingModelObserver<>();
     Semaphore initLock = new Semaphore(0);
     Semaphore awaitDisposalRequest = new Semaphore(0);
@@ -455,10 +469,29 @@ public class MobiusLoopTest {
         Mobius.loop(update, effectHandler)
             .init(
                 m -> {
+                  awaitDisposalRequest.release();
                   initLock.acquireUninterruptibly();
+                  disposeLock.release();
                   return First.first(m);
                 })
-            .eventSource(c -> disposeLock::acquireUninterruptibly);
+            .eventSource(c -> disposeLock::acquireUninterruptibly)
+            .eventRunner(
+                () ->
+                    new WorkRunner() {
+                      @Override
+                      public void post(Runnable runnable) {
+                        backgroundRunner.post(
+                            () -> {
+                              runnable.run();
+                              disposalCompleted.release();
+                            });
+                      }
+
+                      @Override
+                      public void dispose() {
+                        backgroundRunner.dispose();
+                      }
+                    });
 
     mobiusLoop = builder.startFrom("foo");
     mobiusLoop.observe(observer);
@@ -471,16 +504,21 @@ public class MobiusLoopTest {
             })
         .start();
 
-    awaitDisposalRequest.acquireUninterruptibly();
+    awaitDisposalRequest.acquireUninterruptibly(2);
     initLock.release();
-    disposeLock.release();
-    disposalCompleted.acquireUninterruptibly();
+    disposalCompleted.acquireUninterruptibly(2);
     observer.assertStates();
   }
 
   @Test
   public void disposingLoopBeforeInitRunsIgnoresModelFromInit() throws Exception {
     // Model changes emitted from the init function during dispose should be ignored.
+    // This test sets up the following scenario:
+    // 1. The loop is created and initialized on a separate thread
+    // 2. The loop is configured with an event runner that will block before executing the init function
+    // 3. The test will then dispose of the loop
+    // 4. Once the loop is disposed, the test will proceed to unblock the initialization runnable
+    // 5. Once the initialization is completed, the test will proceed to examine the observer
 
     observer = new RecordingModelObserver<>();
 
