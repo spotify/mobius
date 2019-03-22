@@ -444,37 +444,31 @@ public class MobiusLoopTest {
   public void disposingLoopWhileInitIsRunningDoesNotEmitNewState() throws Exception {
     // Model changes emitted from the init function during dispose should be ignored.
 
-    // This test sets up the following scenario:
-    // 1. The loop is created and initialized but the Init function is blocked
-    // 2. The loop is created with an EventSource that returns a Disposable that blocks whenever invoked
-    // this is so we can block the loop's dispose call and unblock it on demand
-    // 3. Starts a new thread that attempts to dispose of the loop
-    //
-    // Once loop.dispose() is invoked, the loop will attempt to dispose of its EventSource disposable
-    // which will block. At this point, both Init and loop.dispose() are blocked.
-    // We wait until we know that both dispose and init are blocked, then we unblock init.
-    // Init will then in turn unblock dispose, then return the First value.
-    // We then request 2 permits to block the test until both dispose and Init have finished.
-    // We release the first permit after loop.dispose() returns, and the second after the
-    // initialization runnable runs. By now, both initialization and disposal have been completed
-    // and we can proceed to inspect our observer.
+    // This test will start a loop and wait until (using the initRequested semaphore) the runnable
+    // that runs Init is posted to the event runner. The init function will then be blocked using
+    // the initLock semaphore. At this point, we proceed to add the observer then dispose of the
+    // loop. The loop is setup with an event source that returns a disposable that will unlock
+    // init when it is disposed. So when we dispose of the loop, that will unblock init as part of
+    // the disposal procedure. The test then waits until the init runnable has completed running.
+    // Completion of the init runnable means:
+    // a) init has returned a First
+    // b) that first has been unpacked and the model has been set on the store
+    // c) that model has been passed back to the loop to be emitted to any state observers
+    // Since we're in the process of disposing of the loop, we should see no states in our observer
     observer = new RecordingModelObserver<>();
     Semaphore initLock = new Semaphore(0);
-    Semaphore awaitDisposalRequest = new Semaphore(0);
-    Semaphore disposeLock = new Semaphore(0);
-    Semaphore disposalCompleted = new Semaphore(0);
+    Semaphore initRequested = new Semaphore(0);
+    Semaphore initFinished = new Semaphore(0);
 
     final Update<String, TestEvent, TestEffect> update = (model, event) -> Next.noChange();
     final MobiusLoop.Builder<String, TestEvent, TestEffect> builder =
         Mobius.loop(update, effectHandler)
             .init(
                 m -> {
-                  awaitDisposalRequest.release();
                   initLock.acquireUninterruptibly();
-                  disposeLock.release();
                   return First.first(m);
                 })
-            .eventSource(c -> disposeLock::acquireUninterruptibly)
+            .eventSource(c -> initLock::release)
             .eventRunner(
                 () ->
                     new WorkRunner() {
@@ -482,8 +476,9 @@ public class MobiusLoopTest {
                       public void post(Runnable runnable) {
                         backgroundRunner.post(
                             () -> {
+                              initRequested.release();
                               runnable.run();
-                              disposalCompleted.release();
+                              initFinished.release();
                             });
                       }
 
@@ -494,19 +489,10 @@ public class MobiusLoopTest {
                     });
 
     mobiusLoop = builder.startFrom("foo");
+    initRequested.acquireUninterruptibly();
     mobiusLoop.observe(observer);
-
-    new Thread(
-            () -> {
-              awaitDisposalRequest.release();
-              mobiusLoop.dispose();
-              disposalCompleted.release();
-            })
-        .start();
-
-    awaitDisposalRequest.acquireUninterruptibly(2);
-    initLock.release();
-    disposalCompleted.acquireUninterruptibly(2);
+    mobiusLoop.dispose();
+    initFinished.acquireUninterruptibly(1);
     observer.assertStates();
   }
 
