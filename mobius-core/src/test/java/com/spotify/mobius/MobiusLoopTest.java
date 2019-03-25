@@ -43,6 +43,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
 import org.awaitility.Duration;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -118,6 +119,11 @@ public class MobiusLoopTest {
             };
 
     setupWithEffects(effectHandler, immediateRunner);
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    backgroundRunner.dispose();
   }
 
   @Test
@@ -498,7 +504,7 @@ public class MobiusLoopTest {
 
   @Test
   public void disposingLoopBeforeInitRunsIgnoresModelFromInit() throws Exception {
-    // Model changes emitted from the init function during dispose should be ignored.
+    // Model changes emitted from the init function after dispose should be ignored.
     // This test sets up the following scenario:
     // 1. The loop is created and initialized on a separate thread
     // 2. The loop is configured with an event runner that will block before executing the init function
