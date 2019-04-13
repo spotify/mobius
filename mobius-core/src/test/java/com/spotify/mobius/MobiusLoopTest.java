@@ -606,6 +606,28 @@ public class MobiusLoopTest {
     effectObserver.assertValues();
   }
 
+  @Test
+  public void shouldSupportDisposingInObservable() throws Exception {
+    RecordingModelObserver<String> secondObserver = new RecordingModelObserver<>();
+
+    // ensure there are some observers to iterate over, and that one of them modifies the
+    // observer list.
+    // ConcurrentModificationException only triggered if three observers added, for some reason
+    Disposable disposable = mobiusLoop.observe(s -> {});
+    mobiusLoop.observe(
+        s -> {
+          if (s.contains("heyho")) {
+            disposable.dispose();
+          }
+        });
+    mobiusLoop.observe(s -> {});
+    mobiusLoop.observe(secondObserver);
+
+    mobiusLoop.dispatchEvent(new TestEvent("heyho"));
+
+    secondObserver.assertStates("init", "init->heyho");
+  }
+
   private void setupWithEffects(
       Connectable<TestEffect, TestEvent> effectHandler, WorkRunner effectRunner) {
     observer = new RecordingModelObserver<>();

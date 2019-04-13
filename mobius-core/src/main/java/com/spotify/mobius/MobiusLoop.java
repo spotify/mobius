@@ -25,9 +25,8 @@ import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Producer;
 import com.spotify.mobius.runners.WorkRunner;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -46,9 +45,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
   @Nonnull private final Connection<F> effectConsumer;
   @Nonnull private final Disposable eventSourceDisposable;
 
-  @Nonnull
-  private final List<Consumer<M>> modelObservers =
-      Collections.synchronizedList(new LinkedList<Consumer<M>>());
+  @Nonnull private final List<Consumer<M>> modelObservers = new CopyOnWriteArrayList<>();
 
   @Nullable private volatile M mostRecentModel;
 
@@ -100,11 +97,9 @@ public class MobiusLoop<M, E, F> implements Disposable {
         new Consumer<M>() {
           @Override
           public void accept(M model) {
-            synchronized (modelObservers) {
-              mostRecentModel = model;
-              for (Consumer<M> observer : modelObservers) {
-                observer.accept(model);
-              }
+            mostRecentModel = model;
+            for (Consumer<M> observer : modelObservers) {
+              observer.accept(model);
             }
           }
         };
@@ -158,36 +153,30 @@ public class MobiusLoop<M, E, F> implements Disposable {
    * @throws IllegalStateException if the loop has been disposed
    */
   public Disposable observe(final Consumer<M> observer) {
-    synchronized (modelObservers) {
-      if (disposed)
-        throw new IllegalStateException(
-            "This loop has already been disposed. You cannot observe a disposed loop");
+    if (disposed)
+      throw new IllegalStateException(
+          "This loop has already been disposed. You cannot observe a disposed loop");
 
-      modelObservers.add(checkNotNull(observer));
+    modelObservers.add(checkNotNull(observer));
 
-      final M currentModel = mostRecentModel;
-      if (currentModel != null) {
-        // Start by emitting the most recently received model.
-        observer.accept(currentModel);
-      }
+    final M currentModel = mostRecentModel;
+    if (currentModel != null) {
+      // Start by emitting the most recently received model.
+      observer.accept(currentModel);
     }
 
     return new Disposable() {
       @Override
       public void dispose() {
-        synchronized (modelObservers) {
-          modelObservers.remove(observer);
-        }
+        modelObservers.remove(observer);
       }
     };
   }
 
   @Override
   public synchronized void dispose() {
-    synchronized (modelObservers) {
-      // Remove model observers so that they receive no further model changes.
-      modelObservers.clear();
-    }
+    // Remove model observers so that they receive no further model changes.
+    modelObservers.clear();
 
     // Disable the event and effect dispatchers. This will cause any further
     // events or effects posted to the dispatchers to be ignored and logged.
