@@ -21,16 +21,16 @@ package com.spotify.mobius.extras;
 
 import static com.spotify.mobius.Next.next;
 import static java.util.Collections.singleton;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.auto.value.AutoValue;
 import com.spotify.mobius.First;
 import com.spotify.mobius.MobiusLoop;
+import com.spotify.mobius.MobiusLoop.Logger;
 import com.spotify.mobius.Next;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,6 +41,9 @@ public class CompositeLoggerTest {
   private RecordingLogger<String, Integer, String> logger2;
   private RecordingLogger<String, Integer, String> logger3;
   private MobiusLoop.Logger<String, Integer, String> underTest;
+  private List<String> logEntries;
+  private TaggingLogger<String, Integer, String> taggingLogger1;
+  private TaggingLogger<String, Integer, String> taggingLogger2;
 
   @Before
   public void setUp() {
@@ -48,6 +51,9 @@ public class CompositeLoggerTest {
     logger2 = new RecordingLogger<>();
     logger3 = new RecordingLogger<>();
     underTest = CompositeLogger.from(logger1, logger2, logger3);
+    logEntries = Collections.synchronizedList(new LinkedList<>());
+    taggingLogger1 = new TaggingLogger<>("1", logEntries);
+    taggingLogger2 = new TaggingLogger<>("2", logEntries);
   }
 
   @Test
@@ -97,6 +103,60 @@ public class CompositeLoggerTest {
     assertTestCaseLogged(testCase);
   }
 
+  @Test
+  public void callsLoggersInFifoOrderForBeforeInit() throws Exception {
+    underTest = CompositeLogger.from(taggingLogger1, taggingLogger2);
+
+    underTest.beforeInit("moo");
+
+    assertThat(logEntries).containsExactly("1: beforeInit", "2: beforeInit");
+  }
+
+  @Test
+  public void callsLoggersInLifoOrderForAfterInit() throws Exception {
+    underTest = CompositeLogger.from(taggingLogger1, taggingLogger2);
+
+    underTest.afterInit("moo", First.first("!!"));
+
+    assertThat(logEntries).containsExactly("2: afterInit", "1: afterInit");
+  }
+
+  @Test
+  public void callsLoggersInLifoOrderForExceptionDuringInit() throws Exception {
+    underTest = CompositeLogger.from(taggingLogger1, taggingLogger2);
+
+    underTest.exceptionDuringInit("moo", new RuntimeException("bark"));
+
+    assertThat(logEntries).containsExactly("2: exceptionDuringInit", "1: exceptionDuringInit");
+  }
+
+  @Test
+  public void callsLoggersInFifoOrderForBeforeUpdate() throws Exception {
+    underTest = CompositeLogger.from(taggingLogger1, taggingLogger2);
+
+    underTest.beforeUpdate("moo", 1);
+
+    assertThat(logEntries).containsExactly("1: beforeUpdate", "2: beforeUpdate");
+  }
+
+  @Test
+  public void callsLoggersInLifoOrderForAfterUpdate() throws Exception {
+    underTest = CompositeLogger.from(taggingLogger1, taggingLogger2);
+
+    underTest.afterUpdate("moo", 1, Next.next("!!"));
+
+    assertThat(logEntries).containsExactly("2: afterUpdate", "1: afterUpdate");
+  }
+
+  @Test
+  public void callsLoggersInLifoOrderForExceptionDuringUpdate() throws Exception {
+    underTest = CompositeLogger.from(taggingLogger1, taggingLogger2);
+
+    underTest.exceptionDuringUpdate("moo", 1, new RuntimeException("bark"));
+
+    assertThat(logEntries).containsExactly("2: exceptionDuringUpdate", "1: exceptionDuringUpdate");
+  }
+
   private void assertTestCaseLogged(LogEvent testCase) {
     logger1.assertLogEvents(testCase);
     logger2.assertLogEvents(testCase);
@@ -107,8 +167,8 @@ public class CompositeLoggerTest {
 
     private final List<LogEvent> events = new ArrayList<>();
 
-    public void assertLogEvents(LogEvent... events) {
-      assertThat(this.events, is(equalTo(Arrays.asList(events))));
+    void assertLogEvents(LogEvent... events) {
+      assertThat(this.events).containsExactly(events);
     }
 
     @Override
@@ -139,6 +199,46 @@ public class CompositeLoggerTest {
     @Override
     public void exceptionDuringUpdate(M model, E event, Throwable exception) {
       events.add(ExceptionDuringUpdate.create(model, event, exception.getClass()));
+    }
+  }
+
+  private static class TaggingLogger<M, E, F> implements MobiusLoop.Logger<M, E, F> {
+    private final String tag;
+    private final List<String> logEntries;
+
+    private TaggingLogger(String tag, List<String> logEntries) {
+      this.tag = tag;
+      this.logEntries = logEntries;
+    }
+
+    @Override
+    public void beforeInit(M model) {
+      logEntries.add(String.format("%s: beforeInit", tag));
+    }
+
+    @Override
+    public void afterInit(M model, First<M, F> result) {
+      logEntries.add(String.format("%s: afterInit", tag));
+    }
+
+    @Override
+    public void exceptionDuringInit(M model, Throwable exception) {
+      logEntries.add(String.format("%s: exceptionDuringInit", tag));
+    }
+
+    @Override
+    public void beforeUpdate(M model, E event) {
+      logEntries.add(String.format("%s: beforeUpdate", tag));
+    }
+
+    @Override
+    public void afterUpdate(M model, E event, Next<M, F> result) {
+      logEntries.add(String.format("%s: afterUpdate", tag));
+    }
+
+    @Override
+    public void exceptionDuringUpdate(M model, E event, Throwable exception) {
+      logEntries.add(String.format("%s: exceptionDuringUpdate", tag));
     }
   }
 

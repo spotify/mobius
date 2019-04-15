@@ -19,6 +19,7 @@ dependencies {
     testImplementation "com.google.guava:guava:${versions.guava}"
     testImplementation "org.awaitility:awaitility:${versions.awaitility}"
     testImplementation "com.google.auto.value:auto-value:${versions.autoValue}"
+    testImplementation "org.assertj:assertj-core:${versions.assertjcore}"
     testImplementation "org.hamcrest:hamcrest-library:${versions.hamcrestLibrary}"
 }
 

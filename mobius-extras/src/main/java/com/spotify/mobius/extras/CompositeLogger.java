@@ -25,6 +25,8 @@ import com.spotify.mobius.First;
 import com.spotify.mobius.MobiusLoop.Logger;
 import com.spotify.mobius.Next;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -49,9 +51,12 @@ public class CompositeLogger<M, E, F> implements Logger<M, E, F> {
   }
 
   private final List<Logger<M, E, F>> loggers;
+  private final List<Logger<M, E, F>> loggersReversed;
 
   private CompositeLogger(List<Logger<M, E, F>> loggers) {
     this.loggers = loggers;
+    this.loggersReversed = new LinkedList<>(loggers);
+    Collections.reverse(loggersReversed);
   }
 
   @Override
@@ -63,14 +68,14 @@ public class CompositeLogger<M, E, F> implements Logger<M, E, F> {
 
   @Override
   public void afterInit(M model, First<M, F> result) {
-    for (Logger<M, E, F> logger : loggers) {
+    for (Logger<M, E, F> logger : loggersReversed) {
       logger.afterInit(model, result);
     }
   }
 
   @Override
   public void exceptionDuringInit(M model, Throwable exception) {
-    for (Logger<M, E, F> logger : loggers) {
+    for (Logger<M, E, F> logger : loggersReversed) {
       logger.exceptionDuringInit(model, exception);
     }
   }
@@ -84,14 +89,14 @@ public class CompositeLogger<M, E, F> implements Logger<M, E, F> {
 
   @Override
   public void afterUpdate(M model, E event, Next<M, F> result) {
-    for (Logger<M, E, F> logger : loggers) {
+    for (Logger<M, E, F> logger : loggersReversed) {
       logger.afterUpdate(model, event, result);
     }
   }
 
   @Override
   public void exceptionDuringUpdate(M model, E event, Throwable exception) {
-    for (Logger<M, E, F> logger : loggers) {
+    for (Logger<M, E, F> logger : loggersReversed) {
       logger.exceptionDuringUpdate(model, event, exception);
     }
   }
