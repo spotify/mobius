@@ -29,7 +29,7 @@ class MobiusStore<M, E, F> {
   @Nonnull private final Init<M, F> init;
   @Nonnull private final Update<M, E, F> update;
 
-  @Nonnull private volatile M currentModel;
+  @Nonnull private M currentModel;
 
   private MobiusStore(Init<M, F> init, Update<M, E, F> update, M startModel) {
     this.init = checkNotNull(init);
