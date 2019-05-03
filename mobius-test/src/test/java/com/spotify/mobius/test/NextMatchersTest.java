@@ -73,10 +73,6 @@ public class NextMatchersTest {
     matcher = hasModel();
 
     assertTrue(matcher.matches(next));
-
-    matcher.describeMismatch(next, desc);
-
-    assertEquals("has a model", desc.toString());
   }
 
   @Test
@@ -88,7 +84,7 @@ public class NextMatchersTest {
 
     matcher.describeMismatch(next, desc);
 
-    assertEquals("no model", desc.toString());
+    assertEquals("it had no model", desc.toString());
   }
 
   @Test
@@ -97,10 +93,6 @@ public class NextMatchersTest {
     matcher = hasNoModel();
 
     assertTrue(matcher.matches(next));
-
-    matcher.describeMismatch(next, desc);
-
-    assertEquals("no model", desc.toString());
   }
 
   @Test
@@ -112,7 +104,7 @@ public class NextMatchersTest {
 
     matcher.describeMismatch(next, desc);
 
-    assertEquals("has a model", desc.toString());
+    assertEquals("it had a model: a", desc.toString());
   }
 
   @Test
@@ -121,10 +113,6 @@ public class NextMatchersTest {
     matcher = hasModel(equalTo("a"));
 
     assertTrue(matcher.matches(next));
-
-    matcher.describeMismatch(next, desc);
-
-    assertEquals("has a model: was \"a\"", desc.toString());
   }
 
   @Test
@@ -133,10 +121,6 @@ public class NextMatchersTest {
     matcher = hasModel("a");
 
     assertTrue(matcher.matches(next));
-
-    matcher.describeMismatch(next, desc);
-
-    assertEquals("has a model: was \"a\"", desc.toString());
   }
 
   @Test
@@ -148,7 +132,7 @@ public class NextMatchersTest {
 
     matcher.describeMismatch(next, desc);
 
-    assertEquals("bad model: was \"b\"", desc.toString());
+    assertEquals("the model was \"b\"", desc.toString());
   }
 
   @Test
@@ -160,7 +144,7 @@ public class NextMatchersTest {
 
     matcher.describeMismatch(next, desc);
 
-    assertEquals("no model", desc.toString());
+    assertEquals("it had no model", desc.toString());
   }
 
   @Test
@@ -169,10 +153,6 @@ public class NextMatchersTest {
     matcher = hasNoEffects();
 
     assertTrue(matcher.matches(next));
-
-    matcher.describeMismatch(next, desc);
-
-    assertEquals("no effects", desc.toString());
   }
 
   @Test
@@ -184,7 +164,7 @@ public class NextMatchersTest {
 
     matcher.describeMismatch(next, desc);
 
-    assertEquals("has effects", desc.toString());
+    assertEquals("it had effects: [1, 2, 3]", desc.toString());
   }
 
   @Test
@@ -193,10 +173,6 @@ public class NextMatchersTest {
     matcher = hasEffects(hasItems(1, 2, 3));
 
     assertTrue(matcher.matches(next));
-
-    matcher.describeMismatch(next, desc);
-
-    assertEquals("has effects: ", desc.toString());
   }
 
   @Test
@@ -208,7 +184,7 @@ public class NextMatchersTest {
 
     matcher.describeMismatch(next, desc);
 
-    assertEquals("bad effects: a collection containing <2> was <1>", desc.toString());
+    assertEquals("the effects were a collection containing <2> was <1>", desc.toString());
   }
 
   @Test
@@ -220,7 +196,7 @@ public class NextMatchersTest {
 
     matcher.describeMismatch(next, desc);
 
-    assertEquals("no effects", desc.toString());
+    assertEquals("it had no effects", desc.toString());
   }
 
   @Test

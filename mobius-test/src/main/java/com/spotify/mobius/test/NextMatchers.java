@@ -45,18 +45,17 @@ public final class NextMatchers {
       @Override
       protected boolean matchesSafely(Next<M, F> item, Description mismatchDescription) {
         if (item.hasModel()) {
-          mismatchDescription.appendText("has a model");
+          mismatchDescription.appendText("it had a model: " + item.modelUnsafe());
           return false;
 
         } else {
-          mismatchDescription.appendText("no model");
           return true;
         }
       }
 
       @Override
       public void describeTo(Description description) {
-        description.appendText("has no model");
+        description.appendText("Next without model");
       }
     };
   }
@@ -71,19 +70,17 @@ public final class NextMatchers {
     return new TypeSafeDiagnosingMatcher<Next<M, F>>() {
       @Override
       protected boolean matchesSafely(Next<M, F> item, Description mismatchDescription) {
-        if (item.hasModel()) {
-          mismatchDescription.appendText("has a model");
-          return true;
-
-        } else {
-          mismatchDescription.appendText("no model");
+        if (!item.hasModel()) {
+          mismatchDescription.appendText("it had no model");
           return false;
         }
+
+        return true;
       }
 
       @Override
       public void describeTo(Description description) {
-        description.appendText("has a model");
+        description.appendText("Next with any model");
       }
     };
   }
@@ -113,24 +110,22 @@ public final class NextMatchers {
       @Override
       protected boolean matchesSafely(Next<M, F> item, Description mismatchDescription) {
         if (!item.hasModel()) {
-          mismatchDescription.appendText("no model");
+          mismatchDescription.appendText("it had no model");
           return false;
 
         } else if (!matcher.matches(item.modelUnsafe())) {
-          mismatchDescription.appendText("bad model: ");
+          mismatchDescription.appendText("the model ");
           matcher.describeMismatch(item.modelUnsafe(), mismatchDescription);
           return false;
 
         } else {
-          mismatchDescription.appendText("has a model: ");
-          matcher.describeMismatch(item.modelUnsafe(), mismatchDescription);
           return true;
         }
       }
 
       @Override
       public void describeTo(Description description) {
-        description.appendText("has a model: ").appendDescriptionOf(matcher);
+        description.appendText("Next with model ").appendDescriptionOf(matcher);
       }
     };
   }
@@ -146,18 +141,16 @@ public final class NextMatchers {
       @Override
       protected boolean matchesSafely(Next<M, F> item, Description mismatchDescription) {
         if (item.hasEffects()) {
-          mismatchDescription.appendText("has effects");
+          mismatchDescription.appendText("it had effects: " + item.effects());
           return false;
-
         } else {
-          mismatchDescription.appendText("no effects");
           return true;
         }
       }
 
       @Override
       public void describeTo(Description description) {
-        description.appendText("has no effects");
+        description.appendText("Next without effects");
       }
     };
   }
@@ -175,24 +168,20 @@ public final class NextMatchers {
       @Override
       protected boolean matchesSafely(Next<M, F> item, Description mismatchDescription) {
         if (!item.hasEffects()) {
-          mismatchDescription.appendText("no effects");
+          mismatchDescription.appendText("it had no effects");
           return false;
 
         } else if (!matcher.matches(item.effects())) {
-          mismatchDescription.appendText("bad effects: ");
+          mismatchDescription.appendText("the effects were ");
           matcher.describeMismatch(item.effects(), mismatchDescription);
           return false;
-
-        } else {
-          mismatchDescription.appendText("has effects: ");
-          matcher.describeMismatch(item.effects(), mismatchDescription);
-          return true;
         }
+        return true;
       }
 
       @Override
       public void describeTo(Description description) {
-        description.appendText("has effects: ").appendDescriptionOf(matcher);
+        description.appendText("Next with effects ").appendDescriptionOf(matcher);
       }
     };
   }
