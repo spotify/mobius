@@ -37,7 +37,12 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
     TestWorkRunner effectRunner = new TestWorkRunner();
 
     mobiusLoop =
-        MobiusLoop.create(mobiusStore, effectHandler, eventSource, eventRunner, effectRunner);
+        MobiusLoop.create(
+            mobiusStore,
+            effectHandler,
+            EventSourceConnectable.create(eventSource),
+            eventRunner,
+            effectRunner);
 
     mobiusLoop.dispose();
 
@@ -51,7 +56,11 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
 
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore, effectHandler, eventSource, immediateRunner, immediateRunner);
+            mobiusStore,
+            effectHandler,
+            EventSourceConnectable.create(eventSource),
+            immediateRunner,
+            immediateRunner);
 
     observer = new RecordingModelObserver<>(); // to clear out the init from the previous setup
     mobiusLoop.observe(observer);

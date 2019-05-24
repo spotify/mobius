@@ -43,7 +43,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
 
   @Nonnull private final EventProcessor<M, E, F> eventProcessor;
   @Nonnull private final Connection<F> effectConsumer;
-  @Nonnull private final Disposable eventSourceDisposable;
+  @Nonnull private final Connection<M> eventSourceModelConsumer;
 
   @Nonnull private final List<Consumer<M>> modelObservers = new CopyOnWriteArrayList<>();
 
@@ -54,7 +54,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
   static <M, E, F> MobiusLoop<M, E, F> create(
       MobiusStore<M, E, F> store,
       Connectable<F, E> effectHandler,
-      EventSource<E> eventSource,
+      Connectable<M, E> eventSource,
       WorkRunner eventRunner,
       WorkRunner effectRunner) {
 
@@ -69,7 +69,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
   private MobiusLoop(
       EventProcessor.Factory<M, E, F> eventProcessorFactory,
       Connectable<F, E> effectHandler,
-      EventSource<E> eventSource,
+      Connectable<M, E> eventSource,
       WorkRunner eventRunner,
       WorkRunner effectRunner) {
 
@@ -98,6 +98,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
           @Override
           public void accept(M model) {
             mostRecentModel = model;
+            eventSourceModelConsumer.accept(model);
             for (Consumer<M> observer : modelObservers) {
               observer.accept(model);
             }
@@ -118,7 +119,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
         };
 
     this.effectConsumer = effectHandler.connect(eventConsumer);
-    this.eventSourceDisposable = eventSource.subscribe(eventConsumer);
+    this.eventSourceModelConsumer = eventSource.connect(eventConsumer);
 
     eventRunner.post(
         new Runnable() {
@@ -184,7 +185,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
     effectDispatcher.disable();
 
     // Stop the event source and effect handler.
-    eventSourceDisposable.dispose();
+    eventSourceModelConsumer.dispose();
     effectConsumer.dispose();
 
     // Finally clean up the dispatchers that now no longer are needed.
@@ -226,6 +227,19 @@ public class MobiusLoop<M, E, F> implements Disposable {
      */
     @Nonnull
     Builder<M, E, F> eventSources(EventSource<E> eventSource, EventSource<E>... eventSources);
+
+    /**
+     * @return a new {@link Builder} with the supplied {@link Connectable<M,E>}, and the same values
+     *     as the current one for the other fields. NOTE: Invoking this method will replace the
+     *     current event source with the supplied one. If a loop has a {@link Connectable<M,E>} as
+     *     its event source, it will connect to it and will invoke the {@link Connection<M>} accept
+     *     method every time the model changes. This allows us to conditionally subscribe to
+     *     different sources based on the current state. If you provide a regular {@link
+     *     EventSource<E>}, it will be wrapped in a {@link Connectable} and that implementation will
+     *     subscribe to that event source only once when the loop is initialized.
+     */
+    @Nonnull
+    Builder<M, E, F> eventSource(Connectable<M, E> eventSource);
 
     /**
      * @return a new {@link Builder} with the supplied logger, and the same values as the current

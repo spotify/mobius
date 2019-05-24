@@ -124,7 +124,12 @@ public class MobiusLoopTest {
     observer = new RecordingModelObserver<>();
 
     mobiusLoop =
-        MobiusLoop.create(mobiusStore, effectHandler, eventSource, immediateRunner, effectRunner);
+        MobiusLoop.create(
+            mobiusStore,
+            effectHandler,
+            EventSourceConnectable.create(eventSource),
+            immediateRunner,
+            effectRunner);
 
     mobiusLoop.observe(observer);
   }

@@ -20,7 +20,11 @@ public class MobiusLoopObservabilityBehavior extends MobiusLoopTest {
 
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore, effectHandler, eventSource, immediateRunner, immediateRunner);
+            mobiusStore,
+            effectHandler,
+            EventSourceConnectable.create(eventSource),
+            immediateRunner,
+            immediateRunner);
 
     Disposable unregister = mobiusLoop.observe(observer);
 
