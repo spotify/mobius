@@ -21,9 +21,14 @@ package com.spotify.mobius.extras;
 
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
-import com.spotify.mobius.ConnectionLimitExceededException;
+import com.spotify.mobius.extras.connections.ContramapConnection;
+import com.spotify.mobius.extras.connections.DisconnectOnNullDimapConnection;
+import com.spotify.mobius.extras.connections.MergeConnectablesConnection;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
+import com.spotify.mobius.internal_util.Preconditions;
+import java.util.ArrayList;
+import java.util.Collections;
 import javax.annotation.Nonnull;
 
 /** Contains utility functions for working with {@link Connectables}. */
@@ -91,24 +96,105 @@ public final class Connectables {
   @Nonnull
   public static <I, J, O> Connectable<J, O> contramap(
       final Function<J, I> mapper, final Connectable<I, O> connectable) {
-    return new Connectable<J, O>() {
-      @Nonnull
-      @Override
-      public Connection<J> connect(Consumer<O> output) throws ConnectionLimitExceededException {
-        final Connection<I> delegateConnection = connectable.connect(output);
-
-        return new Connection<J>() {
+    return SimpleConnectable.withConnectionFactory(
+        new Function<Consumer<O>, Connection<J>>() {
+          @Nonnull
           @Override
-          public void accept(J value) {
-            delegateConnection.accept(mapper.apply(value));
+          public Connection<J> apply(Consumer<O> output) {
+            return ContramapConnection.create(mapper, connectable, output);
           }
+        });
+  }
 
+  /**
+   * Convert a {@link Connectable} of one type pair to another type pair by converting every
+   * incoming A to a B using the provided function. The function can then return either a B or null.
+   * On the first B returned, a connection to the provided connectable is established, and that B is
+   * passed through. If the aToB function returns null, this connection will be disposed. Whenever
+   * the provided connectable dispatches a C through the consumer it receives, that C is converted
+   * to a D and is then dispatched to whomever connected to the resulting connectable. The mechanism
+   * described is the dimap function from Haskell's <a
+   * href="http://hackage.haskell.org/package/profunctors-5.4/docs/Data-Profunctor.html#v:dimap">Profunctor
+   * </a> typeclass
+   *
+   * <pre>
+   *  class A {
+   *      final B b;
+   *      A(B b) { this.b = b; }
+   *      B b() { return b }
+   *  }
+   *
+   *  abstract class B {
+   *      abstract int x();
+   *  }
+   *
+   *  abstract class C {
+   *      abstract String y();
+   *  }
+   *
+   *  class D {
+   *      final C c;
+   *      D(C c) { this.c = c; }
+   *  }
+   *
+   *  Connectable innerConnectable = o -> new Connection() {
+   *      public void accept(B b) {
+   *          o.accept(new C(b.x().toString()));
+   *      }
+   *
+   *      public void dispose() {
+   *
+   *      }
+   *  }
+   *
+   *  Connectable outerConnectable = dimap(A::b, D::new, innerConnectable);
+   *  RecordingConsumer consumer = new RecordingConsumer<>();
+   *  Connection connection = outerConnectable.connect(consumer);
+   *  connection.accept(new A(new B(5))); // connects to innerConnectable and forwards value
+   *  consumer.assertValues(new D(new C("5")))
+   *
+   *  connection.accept(new A(null)); // disconnects from innerConnectable
+   *  connection.dispose(); // also disconnects from inner connectable
+   * </pre>
+   */
+  @Nonnull
+  public static <A, B, C, D> com.spotify.mobius.Connectable<A, D> dimap(
+      final com.spotify.mobius.extras.Function<A, B> aToB,
+      final Function<C, D> cToD,
+      final Connectable<B, C> connectable) {
+    return SimpleConnectable.withConnectionFactory(
+        new Function<Consumer<D>, Connection<A>>() {
+          @Nonnull
           @Override
-          public void dispose() {
-            delegateConnection.dispose();
+          public Connection<A> apply(Consumer<D> output) {
+            return DisconnectOnNullDimapConnection.create(aToB, cToD, connectable, output);
           }
-        };
-      }
-    };
+        });
+  }
+
+  /**
+   * Merges all provided connectables into one. The resulting connectable will invoke all
+   * connectables sequentially on connection, on receiving items, and will forward any generated
+   * items to the receiver. Children with blocking connections must process incoming items on
+   * separate threads or they will block the parent from dispatching inputs to the rest of the
+   * siblings.
+   */
+  @SafeVarargs
+  @Nonnull
+  public static <A, B> Connectable<A, B> merge(
+      final Connectable<A, B> fst, final Connectable<A, B> snd, final Connectable<A, B>... cs) {
+    return SimpleConnectable.withConnectionFactory(
+        new Function<Consumer<B>, Connection<A>>() {
+          @Nonnull
+          @Override
+          public Connection<A> apply(Consumer<B> output) {
+            final ArrayList<Connectable<A, B>> connectables = new ArrayList<>(cs.length + 2);
+            connectables.add(fst);
+            connectables.add(snd);
+            Collections.addAll(
+                connectables, (Connectable<A, B>[]) Preconditions.checkArrayNoNulls(cs));
+            return MergeConnectablesConnection.create(connectables, output);
+          }
+        });
   }
 }
