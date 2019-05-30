@@ -19,6 +19,8 @@
  */
 package com.spotify.mobius.extras;
 
+import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
+
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
 import com.spotify.mobius.ConnectionLimitExceededException;
@@ -36,7 +38,7 @@ public final class SimpleConnectable<T, R> implements Connectable<T, R> {
 
   public static <T, R> Connectable<T, R> withConnectionFactory(
       Function<Consumer<R>, Connection<T>> factory) {
-    return new SimpleConnectable<>(factory);
+    return new SimpleConnectable<>(checkNotNull(factory));
   }
 
   private SimpleConnectable(Function<Consumer<R>, Connection<T>> factory) {

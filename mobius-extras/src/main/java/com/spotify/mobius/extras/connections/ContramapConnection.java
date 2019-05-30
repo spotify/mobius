@@ -19,6 +19,8 @@
  */
 package com.spotify.mobius.extras.connections;
 
+import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
+
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
 import com.spotify.mobius.functions.Consumer;
@@ -29,7 +31,8 @@ public class ContramapConnection<A, B, C> implements Connection<B> {
 
   public static <A, B, C> Connection<B> create(
       Function<B, A> mapper, Connectable<A, C> connectable, Consumer<C> output) {
-    return new ContramapConnection<>(mapper, connectable, output);
+    return new ContramapConnection<>(
+        checkNotNull(mapper), checkNotNull(connectable), checkNotNull(output));
   }
 
   private final Function<B, A> mapper;

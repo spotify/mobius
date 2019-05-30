@@ -19,6 +19,8 @@
  */
 package com.spotify.mobius.extras.connections;
 
+import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
+
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
 import com.spotify.mobius.extras.Function;
@@ -32,7 +34,8 @@ public class DisconnectOnNullDimapConnection<A, B, C, D> implements Connection<A
       com.spotify.mobius.functions.Function<C, D> cToD,
       Connectable<B, C> connectable,
       Consumer<D> output) {
-    return new DisconnectOnNullDimapConnection<>(aToB, cToD, connectable, output);
+    return new DisconnectOnNullDimapConnection<>(
+        checkNotNull(aToB), checkNotNull(cToD), checkNotNull(connectable), checkNotNull(output));
   }
 
   private final Function<A, B> aToB;

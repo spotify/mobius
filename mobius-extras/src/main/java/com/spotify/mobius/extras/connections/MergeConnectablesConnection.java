@@ -19,44 +19,53 @@
  */
 package com.spotify.mobius.extras.connections;
 
+import static com.spotify.mobius.internal_util.Preconditions.checkIterableNoNulls;
+import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
+
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
 import com.spotify.mobius.functions.Consumer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MergeConnectablesConnection<A, B> implements Connection<A> {
 
-  private final List<Connection<A>> connections;
+  private CopyOnWriteArrayList<Connection<A>> connections;
 
   public static <A, B> Connection<A> create(
       List<Connectable<A, B>> connectables, Consumer<B> output) {
-    return new MergeConnectablesConnection<>(connectables, output);
+    return new MergeConnectablesConnection<>(
+        checkIterableNoNulls(connectables), checkNotNull(output));
   }
 
   public static <A, B> Connection<A> create(
       Connectable<A, B> fst, Connectable<A, B> snd, Consumer<B> output) {
-    return create(Arrays.asList(fst, snd), output);
+    return create(Arrays.asList(checkNotNull(fst), checkNotNull(snd)), checkNotNull(output));
   }
 
   private MergeConnectablesConnection(List<Connectable<A, B>> connectables, Consumer<B> output) {
-    connections = new ArrayList<>(connectables.size());
+    List<Connection<A>> cs = new ArrayList<>(connectables.size());
     for (Connectable<A, B> connectable : connectables) {
-      connections.add(connectable.connect(output));
+      cs.add(connectable.connect(output));
     }
+
+    connections = new CopyOnWriteArrayList<>(cs);
   }
 
   @Override
-  public synchronized void accept(A value) {
+  public void accept(A value) {
     for (Connection<A> c : connections) {
       c.accept(value);
     }
   }
 
   @Override
-  public synchronized void dispose() {
-    for (Connection<A> c : connections) {
+  public void dispose() {
+    List<Connection<A>> cs = new ArrayList<>(connections);
+    connections.clear();
+    for (Connection<A> c : cs) {
       c.dispose();
     }
   }
