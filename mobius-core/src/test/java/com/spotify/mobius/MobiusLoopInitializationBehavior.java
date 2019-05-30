@@ -19,7 +19,6 @@
  */
 package com.spotify.mobius;
 
-import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.test.SimpleConnection;
 import com.spotify.mobius.testdomain.TestEffect;
@@ -61,16 +60,18 @@ public class MobiusLoopInitializationBehavior extends MobiusLoopTest {
     mobiusStore = MobiusStore.create(m -> First.first("First" + m), update, "init");
 
     eventSource =
-        new EventSource<TestEvent>() {
+        new Connectable<String, TestEvent>() {
+
           @Nonnull
           @Override
-          public Disposable subscribe(Consumer<TestEvent> eventConsumer) {
+          public Connection<String> connect(Consumer<TestEvent> eventConsumer) {
             eventConsumer.accept(new TestEvent("1"));
-            return new Disposable() {
+            return new Connection<String>() {
               @Override
-              public void dispose() {
-                // do nothing
-              }
+              public void accept(String value) {}
+
+              @Override
+              public void dispose() {}
             };
           }
         };

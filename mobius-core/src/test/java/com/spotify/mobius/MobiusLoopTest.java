@@ -21,7 +21,6 @@ package com.spotify.mobius;
 
 import static com.spotify.mobius.Effects.effects;
 
-import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.runners.ExecutorServiceWorkRunner;
 import com.spotify.mobius.runners.ImmediateWorkRunner;
@@ -49,12 +48,15 @@ public class MobiusLoopTest {
   final WorkRunner immediateRunner = new ImmediateWorkRunner();
   WorkRunner backgroundRunner;
 
-  EventSource<TestEvent> eventSource =
-      new EventSource<TestEvent>() {
+  Connectable<String, TestEvent> eventSource =
+      new Connectable<String, TestEvent>() {
         @Nonnull
         @Override
-        public Disposable subscribe(Consumer<TestEvent> eventConsumer) {
-          return new Disposable() {
+        public Connection<String> connect(Consumer<TestEvent> output) {
+          return new Connection<String>() {
+            @Override
+            public void accept(String value) {}
+
             @Override
             public void dispose() {}
           };
@@ -124,12 +126,7 @@ public class MobiusLoopTest {
     observer = new RecordingModelObserver<>();
 
     mobiusLoop =
-        MobiusLoop.create(
-            mobiusStore,
-            effectHandler,
-            EventSourceConnectable.create(eventSource),
-            immediateRunner,
-            effectRunner);
+        MobiusLoop.create(mobiusStore, effectHandler, eventSource, immediateRunner, effectRunner);
 
     mobiusLoop.observe(observer);
   }

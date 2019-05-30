@@ -19,18 +19,58 @@
  */
 package com.spotify.mobius;
 
+import static com.spotify.mobius.Next.next;
+import static com.spotify.mobius.Next.noChange;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.runners.WorkRunners;
+import com.spotify.mobius.test.RecordingConsumer;
 import com.spotify.mobius.test.RecordingModelObserver;
+import com.spotify.mobius.testdomain.EventWithSafeEffect;
+import com.spotify.mobius.testdomain.TestEffect;
 import com.spotify.mobius.testdomain.TestEvent;
 import java.util.concurrent.Semaphore;
 import javax.annotation.Nonnull;
 import org.junit.Test;
 
 public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
+
   @Test
-  public void invokesEventSourceOnEveryModelUpdate() {
+  public void invokesEventSourceOnlyOnModelUpdates() {
+    ModelRecordingConnectableEventSource eventSource = new ModelRecordingConnectableEventSource();
+
+    update =
+        (s, e) -> {
+          if (e instanceof EventWithSafeEffect) {
+            return next(s + "->" + e.toString());
+          } else {
+            return noChange();
+          }
+        };
+
+    final MobiusLoop<String, TestEvent, TestEffect> loop =
+        Mobius.loop(update, new FakeEffectHandler())
+            .eventRunner(WorkRunners::immediate)
+            .effectRunner(WorkRunners::immediate)
+            .eventSource(eventSource)
+            .startFrom("init");
+
+    loop.dispatchEvent(new TestEvent("This"));
+    loop.dispatchEvent(new EventWithSafeEffect("1"));
+    loop.dispatchEvent(new TestEvent("will not"));
+    loop.dispatchEvent(new EventWithSafeEffect("2"));
+    loop.dispatchEvent(new TestEvent("change"));
+    loop.dispatchEvent(new TestEvent("state"));
+
+    eventSource.receivedModels.assertValues("init", "init->1", "init->1->2");
+    assertThat(eventSource.receivedModels.valueCount(), is(3));
+  }
+
+  @Test
+  public void processesEventsFromEventSources() {
     Semaphore s = new Semaphore(0);
     ConnectableEventSource eventSource = new ConnectableEventSource(s);
 
@@ -68,8 +108,7 @@ public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
 
     @Nonnull
     @Override
-    public Connection<String> connect(Consumer<TestEvent> output)
-        throws ConnectionLimitExceededException {
+    public Connection<String> connect(Consumer<TestEvent> output) {
       return new Connection<String>() {
 
         int count;
@@ -87,6 +126,25 @@ public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
         public void dispose() {
           disposed = true;
         }
+      };
+    }
+  }
+
+  static class ModelRecordingConnectableEventSource implements Connectable<String, TestEvent> {
+
+    final RecordingConsumer<String> receivedModels = new RecordingConsumer<>();
+
+    @Nonnull
+    @Override
+    public Connection<String> connect(Consumer<TestEvent> output) {
+      return new Connection<String>() {
+        @Override
+        public void accept(String value) {
+          receivedModels.accept(value);
+        }
+
+        @Override
+        public void dispose() {}
       };
     }
   }

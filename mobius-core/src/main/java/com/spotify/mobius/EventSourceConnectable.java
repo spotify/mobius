@@ -42,7 +42,7 @@ class EventSourceConnectable<M, E> implements Connectable<M, E> {
       private Disposable disposable;
 
       @Override
-      public void accept(M value) {
+      public synchronized void accept(M value) {
         if (disposable != null) {
           return;
         }
@@ -50,7 +50,7 @@ class EventSourceConnectable<M, E> implements Connectable<M, E> {
       }
 
       @Override
-      public void dispose() {
+      public synchronized void dispose() {
         if (disposable == null) {
           return;
         }
