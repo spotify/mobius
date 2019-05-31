@@ -23,30 +23,31 @@ import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
-import com.spotify.mobius.extras.Function;
+import com.spotify.mobius.extras.NullValuedFunction;
 import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.functions.Function;
 
 /** A {@link Connection} that implements dimap. */
 public class DisconnectOnNullDimapConnection<A, B, C, D> implements Connection<A> {
 
   public static <A, B, C, D> Connection<A> create(
-      Function<A, B> aToB,
-      com.spotify.mobius.functions.Function<C, D> cToD,
+      NullValuedFunction<A, B> aToB,
+      Function<C, D> cToD,
       Connectable<B, C> connectable,
       Consumer<D> output) {
     return new DisconnectOnNullDimapConnection<>(
         checkNotNull(aToB), checkNotNull(cToD), checkNotNull(connectable), checkNotNull(output));
   }
 
-  private final Function<A, B> aToB;
-  private final com.spotify.mobius.functions.Function<C, D> cToD;
+  private final NullValuedFunction<A, B> aToB;
+  private final Function<C, D> cToD;
   private final Connectable<B, C> connectable;
   private final Consumer<D> output;
   private Connection<B> currentDelegate;
 
   private DisconnectOnNullDimapConnection(
-      Function<A, B> aToB,
-      com.spotify.mobius.functions.Function<C, D> cToD,
+      NullValuedFunction<A, B> aToB,
+      Function<C, D> cToD,
       Connectable<B, C> connectable,
       Consumer<D> output) {
     this.aToB = aToB;

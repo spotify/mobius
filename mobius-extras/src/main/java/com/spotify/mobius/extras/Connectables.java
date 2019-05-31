@@ -52,9 +52,9 @@ public final class Connectables {
    * the full model used in the {@code MobiusLoop}. As a simplified example, suppose that your model
    * consists of a {@code Long} timestamp that you want to format to a {@code String} before
    * rendering it in the UI. Your UI could then implement {@code Connectable<String, Event>}, and
-   * you could create a {@code Function<Long, String>} that does the formatting. The {@link
-   * com.spotify.mobius.MobiusLoop} would be outputting {@code Long} models that you need to convert
-   * to Strings before they can be accepted by the UI.
+   * you could create a {@code NullValuedFunction<Long, String>} that does the formatting. The
+   * {@link com.spotify.mobius.MobiusLoop} would be outputting {@code Long} models that you need to
+   * convert to Strings before they can be accepted by the UI.
    *
    * <pre>
    * public class Formatter {
@@ -159,7 +159,7 @@ public final class Connectables {
    */
   @Nonnull
   public static <A, B, C, D> com.spotify.mobius.Connectable<A, D> dimap(
-      final com.spotify.mobius.extras.Function<A, B> aToB,
+      final NullValuedFunction<A, B> aToB,
       final Function<C, D> cToD,
       final Connectable<B, C> connectable) {
     return SimpleConnectable.withConnectionFactory(
