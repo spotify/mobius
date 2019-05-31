@@ -21,6 +21,7 @@ package com.spotify.mobius.extras;
 
 import static com.spotify.mobius.extras.TestConnectable.State.CONNECTED;
 import static com.spotify.mobius.extras.TestConnectable.State.DISPOSED;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 
 import com.spotify.mobius.Connectable;
@@ -75,6 +76,15 @@ public class MergeConnectablesTest {
     connect();
     connection.accept(B.create("Hello"));
     consumer.assertValues(C.create("olleH"), C.create("hello"));
+  }
+
+  @Test
+  public void acceptingValuesAfterDisposalThrowsException() {
+    connect();
+    connection.dispose();
+    assertThatThrownBy(
+            () -> connection.accept(B.create("I know I shouldn't do this, but I am anyway!")))
+        .isInstanceOf(IllegalStateException.class);
   }
 
   private void connect() {

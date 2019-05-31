@@ -19,6 +19,7 @@
  */
 package com.spotify.mobius.extras.connections;
 
+import static com.spotify.mobius.internal_util.Preconditions.checkArgument;
 import static com.spotify.mobius.internal_util.Preconditions.checkIterableNoNulls;
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
@@ -32,23 +33,26 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MergeConnectablesConnection<A, B> implements Connection<A> {
 
-  private CopyOnWriteArrayList<Connection<A>> connections;
+  private final CopyOnWriteArrayList<Connection<A>> connections;
 
   public static <A, B> Connection<A> create(
       List<Connectable<A, B>> connectables, Consumer<B> output) {
-    return new MergeConnectablesConnection<>(
-        checkIterableNoNulls(connectables), checkNotNull(output));
+    return new MergeConnectablesConnection<>(connectables, output);
   }
 
   public static <A, B> Connection<A> create(
       Connectable<A, B> fst, Connectable<A, B> snd, Consumer<B> output) {
-    return create(Arrays.asList(checkNotNull(fst), checkNotNull(snd)), checkNotNull(output));
+    return create(Arrays.asList(fst, snd), output);
   }
 
   private MergeConnectablesConnection(List<Connectable<A, B>> connectables, Consumer<B> output) {
+    checkIterableNoNulls(connectables);
+    checkArgument(connectables.size() > 0);
+    final Consumer<B> consumer = checkNotNull(output);
+
     List<Connection<A>> cs = new ArrayList<>(connectables.size());
     for (Connectable<A, B> connectable : connectables) {
-      cs.add(connectable.connect(output));
+      cs.add(connectable.connect(consumer));
     }
 
     connections = new CopyOnWriteArrayList<>(cs);
@@ -56,6 +60,13 @@ public class MergeConnectablesConnection<A, B> implements Connection<A> {
 
   @Override
   public void accept(A value) {
+
+    synchronized (connections) {
+      if (connections.size() == 0) {
+        throw new IllegalStateException("Calling accept on an already disposed connection");
+      }
+    }
+
     for (Connection<A> c : connections) {
       c.accept(value);
     }
@@ -64,7 +75,11 @@ public class MergeConnectablesConnection<A, B> implements Connection<A> {
   @Override
   public void dispose() {
     List<Connection<A>> cs = new ArrayList<>(connections);
-    connections.clear();
+
+    synchronized (connections) {
+      connections.clear();
+    }
+
     for (Connection<A> c : cs) {
       c.dispose();
     }

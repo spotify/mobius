@@ -58,4 +58,10 @@ public final class Preconditions {
 
     return input;
   }
+
+  public static void checkArgument(boolean condition) {
+    if (!condition) {
+      throw new IllegalArgumentException();
+    }
+  }
 }
