@@ -51,10 +51,7 @@ public class ContramapConnection<A, B, C> implements Connection<B> {
 
   @Override
   public void accept(B j) {
-    final A a = mapper.apply(j);
-    if (a != null) {
-      delegateConnection.accept(a);
-    }
+    delegateConnection.accept(mapper.apply(j));
   }
 
   @Override
