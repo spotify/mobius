@@ -32,7 +32,6 @@ import com.spotify.mobius.test.RecordingModelObserver;
 import com.spotify.mobius.testdomain.EventWithSafeEffect;
 import com.spotify.mobius.testdomain.TestEffect;
 import com.spotify.mobius.testdomain.TestEvent;
-import java.util.concurrent.Semaphore;
 import javax.annotation.Nonnull;
 import org.junit.Test;
 
@@ -71,72 +70,40 @@ public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
 
   @Test
   public void processesEventsFromEventSources() {
-    Semaphore s = new Semaphore(0);
-    ConnectableEventSource eventSource = new ConnectableEventSource(s);
+    ModelRecordingConnectableEventSource eventSource = new ModelRecordingConnectableEventSource();
 
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore, effectHandler, eventSource, backgroundRunner, immediateRunner);
+            mobiusStore, effectHandler, eventSource, immediateRunner, immediateRunner);
     observer = new RecordingModelObserver<>();
     mobiusLoop.observe(observer);
-    s.acquireUninterruptibly();
-    mobiusLoop.dispose();
+    eventSource.consumer.accept(new TestEvent(Integer.toString(1)));
+    eventSource.consumer.accept(new TestEvent(Integer.toString(2)));
+    eventSource.consumer.accept(new TestEvent(Integer.toString(3)));
     observer.assertStates("init", "init->1", "init->1->2", "init->1->2->3");
-    assertTrue(eventSource.disposed);
   }
 
   @Test
   public void disposesOfEventSourceWhenDisposed() {
-    Semaphore s = new Semaphore(0);
-    ConnectableEventSource eventSource = new ConnectableEventSource(s);
+    ModelRecordingConnectableEventSource eventSource = new ModelRecordingConnectableEventSource();
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore, effectHandler, eventSource, backgroundRunner, immediateRunner);
+            mobiusStore, effectHandler, eventSource, immediateRunner, immediateRunner);
 
     mobiusLoop.dispose();
     assertTrue(eventSource.disposed);
-  }
-
-  static class ConnectableEventSource implements Connectable<String, TestEvent> {
-
-    private final Semaphore lock;
-    boolean disposed;
-
-    ConnectableEventSource(Semaphore lock) {
-      this.lock = lock;
-    }
-
-    @Nonnull
-    @Override
-    public Connection<String> connect(Consumer<TestEvent> output) {
-      return new Connection<String>() {
-
-        int count;
-
-        @Override
-        public void accept(String value) {
-          if (++count > 3) {
-            lock.release();
-            return;
-          }
-          output.accept(new TestEvent(Integer.toString(count)));
-        }
-
-        @Override
-        public void dispose() {
-          disposed = true;
-        }
-      };
-    }
   }
 
   static class ModelRecordingConnectableEventSource implements Connectable<String, TestEvent> {
 
     final RecordingConsumer<String> receivedModels = new RecordingConsumer<>();
+    boolean disposed;
+    private Consumer<TestEvent> consumer;
 
     @Nonnull
     @Override
     public Connection<String> connect(Consumer<TestEvent> output) {
+      consumer = output;
       return new Connection<String>() {
         @Override
         public void accept(String value) {
@@ -144,7 +111,9 @@ public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
         }
 
         @Override
-        public void dispose() {}
+        public void dispose() {
+          disposed = true;
+        }
       };
     }
   }
