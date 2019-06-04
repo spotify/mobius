@@ -38,22 +38,13 @@ class EventSourceConnectable<M, E> implements Connectable<M, E> {
   @Nonnull
   @Override
   public Connection<M> connect(final Consumer<E> output) throws ConnectionLimitExceededException {
+    final Disposable disposable = eventSource.subscribe(output);
     return new Connection<M>() {
-      private Disposable disposable;
-
       @Override
-      public synchronized void accept(M value) {
-        if (disposable != null) {
-          return;
-        }
-        disposable = eventSource.subscribe(output);
-      }
+      public synchronized void accept(M value) {}
 
       @Override
       public synchronized void dispose() {
-        if (disposable == null) {
-          return;
-        }
         disposable.dispose();
       }
     };

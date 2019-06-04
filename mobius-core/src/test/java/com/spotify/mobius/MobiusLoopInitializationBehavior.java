@@ -19,6 +19,7 @@
  */
 package com.spotify.mobius;
 
+import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.test.SimpleConnection;
 import com.spotify.mobius.testdomain.TestEffect;
@@ -56,7 +57,7 @@ public class MobiusLoopInitializationBehavior extends MobiusLoopTest {
   }
 
   @Test
-  public void shouldProcessInitBeforeEventsFromEventSource() throws Exception {
+  public void shouldProcessInitBeforeEventsFromConnectableEventSource() throws Exception {
     mobiusStore = MobiusStore.create(m -> First.first("First" + m), update, "init");
 
     eventSource =
@@ -75,6 +76,33 @@ public class MobiusLoopInitializationBehavior extends MobiusLoopTest {
             };
           }
         };
+
+    setupWithEffects(new FakeEffectHandler(), immediateRunner);
+
+    // in this scenario, the init and the first event get processed before the observer
+    // is connected, meaning the 'Firstinit' state is never seen
+    observer.assertStates("Firstinit->1");
+  }
+
+  @Test
+  public void shouldProcessInitBeforeEventsFromEventSource() throws Exception {
+    mobiusStore = MobiusStore.create(m -> First.first("First" + m), update, "init");
+
+    eventSource =
+        EventSourceConnectable.create(
+            new EventSource<TestEvent>() {
+              @Nonnull
+              @Override
+              public Disposable subscribe(Consumer<TestEvent> eventConsumer) {
+                eventConsumer.accept(new TestEvent("1"));
+                return new Disposable() {
+                  @Override
+                  public void dispose() {
+                    // do nothing
+                  }
+                };
+              }
+            });
 
     setupWithEffects(new FakeEffectHandler(), immediateRunner);
 

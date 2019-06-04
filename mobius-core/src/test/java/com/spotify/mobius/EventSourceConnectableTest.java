@@ -45,32 +45,25 @@ public class EventSourceConnectableTest {
 
   public static class SubscriptionsBehavior extends EventSourceConnectableTest {
     @Test
-    public void subscribesToEventSourceOnFirstModel() {
-      final Connection<Integer> connection = underTest.connect(events);
-      connection.accept(0);
+    public void subscribesToEventSourceOnConnect() {
+      underTest.connect(events);
       assertThat(source.subscriberCount(), is(1));
     }
 
     @Test
-    public void subscribesToEventSourceOnlyOnce() {
-      final Connection<Integer> connection = underTest.connect(events);
-      connection.accept(0);
-      connection.accept(1);
+    public void subscribesToEventSourceOnEveryConnect() {
+      final Connection<Integer> c1 = underTest.connect(events);
+      final Connection<Integer> c2 = underTest.connect(events);
+      assertThat(source.subscriberCount(), is(2));
+      c2.dispose();
       assertThat(source.subscriberCount(), is(1));
+      c1.dispose();
+      assertThat(source.subscriberCount(), is(0));
     }
 
     @Test
     public void disposingUnsubscribesFromEventSource() {
       final Connection<Integer> connection = underTest.connect(events);
-      connection.accept(0);
-      connection.dispose();
-      assertThat(source.subscriberCount(), is(0));
-    }
-
-    @Test
-    public void disposingBeforeStartingDoesNothing() {
-      final Connection<Integer> connection = underTest.connect(events);
-      assertThat(source.subscriberCount(), is(0));
       connection.dispose();
       assertThat(source.subscriberCount(), is(0));
     }
@@ -78,21 +71,21 @@ public class EventSourceConnectableTest {
     @Test
     public void disposingThenSubscribingResubscribesToEventSource() {
       Connection<Integer> connection = underTest.connect(events);
-      connection.accept(0);
       assertThat(source.subscriberCount(), is(1));
       connection.dispose();
       assertThat(source.subscriberCount(), is(0));
+
       connection = underTest.connect(events);
-      connection.accept(1);
       assertThat(source.subscriberCount(), is(1));
+      connection.dispose();
+      assertThat(source.subscriberCount(), is(0));
     }
   }
 
   public static class EmissionsBehavior extends EventSourceConnectableTest {
     @Test
     public void forwardsAllEmittedEvents() {
-      final Connection<Integer> connection = underTest.connect(events);
-      connection.accept(0);
+      underTest.connect(events);
       source.publishEvent("Hello");
       source.publishEvent("World");
       events.assertValues("Hello", "World");
@@ -101,7 +94,6 @@ public class EventSourceConnectableTest {
     @Test
     public void noItemsAreEmittedOnceDisposed() {
       final Connection<Integer> connection = underTest.connect(events);
-      connection.accept(0);
       source.publishEvent("Hello");
       connection.dispose();
       source.publishEvent("World");
@@ -119,13 +111,13 @@ public class EventSourceConnectableTest {
       return () -> consumers.remove(eventConsumer);
     }
 
-    public void publishEvent(String event) {
+    void publishEvent(String event) {
       for (Consumer<String> consumer : consumers) {
         consumer.accept(event);
       }
     }
 
-    public int subscriberCount() {
+    int subscriberCount() {
       return consumers.size();
     }
   }
