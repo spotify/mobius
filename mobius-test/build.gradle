@@ -24,6 +24,13 @@ dependencies {
     testImplementation "org.awaitility:awaitility:${versions.awaitility}"
 }
 
+test {
+    testLogging {
+        events "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
 compileJava {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8

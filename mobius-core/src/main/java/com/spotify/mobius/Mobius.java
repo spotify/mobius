@@ -21,7 +21,6 @@ package com.spotify.mobius;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
-import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Producer;
 import com.spotify.mobius.runners.WorkRunner;
@@ -46,12 +45,17 @@ public final class Mobius {
         }
       };
 
-  private static final EventSource<?> NOOP_EVENT_SOURCE =
-      new EventSource<Object>() {
+  private static final Connectable<?, ?> NOOP_EVENT_SOURCE =
+      new Connectable<Object, Object>() {
+
         @Nonnull
         @Override
-        public Disposable subscribe(Consumer<Object> eventConsumer) {
-          return new Disposable() {
+        public Connection<Object> connect(Consumer<Object> output)
+            throws ConnectionLimitExceededException {
+          return new Connection<Object>() {
+            @Override
+            public void accept(Object value) {}
+
             @Override
             public void dispose() {}
           };
@@ -113,7 +117,7 @@ public final class Mobius {
         update,
         effectHandler,
         (Init<M, F>) NOOP_INIT,
-        (EventSource<E>) NOOP_EVENT_SOURCE,
+        (Connectable<M, E>) NOOP_EVENT_SOURCE,
         (MobiusLoop.Logger<M, E, F>) NOOP_LOGGER,
         new Producer<WorkRunner>() {
           @Nonnull
@@ -163,7 +167,7 @@ public final class Mobius {
     private final Update<M, E, F> update;
     private final Connectable<F, E> effectHandler;
     private final Init<M, F> init;
-    private final EventSource<E> eventSource;
+    private final Connectable<M, E> eventSource;
     private final Producer<WorkRunner> eventRunner;
     private final Producer<WorkRunner> effectRunner;
     private final MobiusLoop.Logger<M, E, F> logger;
@@ -172,7 +176,7 @@ public final class Mobius {
         Update<M, E, F> update,
         Connectable<F, E> effectHandler,
         Init<M, F> init,
-        EventSource<E> eventSource,
+        Connectable<M, E> eventSource,
         MobiusLoop.Logger<M, E, F> logger,
         Producer<WorkRunner> eventRunner,
         Producer<WorkRunner> effectRunner) {
@@ -194,9 +198,22 @@ public final class Mobius {
 
     @Override
     @Nonnull
-    public MobiusLoop.Builder<M, E, F> eventSource(EventSource<E> eventSource) {
+    public MobiusLoop.Builder<M, E, F> eventSource(Connectable<M, E> eventSource) {
       return new Builder<>(
           update, effectHandler, init, eventSource, logger, eventRunner, effectRunner);
+    }
+
+    @Override
+    @Nonnull
+    public MobiusLoop.Builder<M, E, F> eventSource(EventSource<E> eventSource) {
+      return new Builder<>(
+          update,
+          effectHandler,
+          init,
+          EventSourceConnectable.<M, E>create(eventSource),
+          logger,
+          eventRunner,
+          effectRunner);
     }
 
     @Nonnull
@@ -205,7 +222,13 @@ public final class Mobius {
         EventSource<E> eventSource, EventSource<E>... eventSources) {
       EventSource<E> mergedSource = MergedEventSource.from(eventSource, eventSources);
       return new Builder<>(
-          update, effectHandler, init, mergedSource, logger, eventRunner, effectRunner);
+          update,
+          effectHandler,
+          init,
+          EventSourceConnectable.<M, E>create(mergedSource),
+          logger,
+          eventRunner,
+          effectRunner);
     }
 
     @Override

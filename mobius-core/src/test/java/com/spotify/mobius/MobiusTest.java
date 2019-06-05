@@ -29,6 +29,7 @@ import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.runners.ImmediateWorkRunner;
 import com.spotify.mobius.runners.WorkRunner;
+import com.spotify.mobius.runners.WorkRunners;
 import com.spotify.mobius.test.SimpleConnection;
 import java.util.ArrayList;
 import java.util.List;
@@ -122,7 +123,26 @@ public class MobiusTest {
   public void shouldPermitUsingEventSource() throws Exception {
     TestEventSource eventSource = new TestEventSource();
 
-    loop = Mobius.loop(UPDATE, HANDLER).eventSource(eventSource).startFrom(MY_MODEL);
+    loop =
+        Mobius.loop(UPDATE, HANDLER)
+            .eventRunner(WorkRunners::immediate)
+            .eventSource(eventSource)
+            .startFrom(MY_MODEL);
+
+    eventSource.consumer.accept(7);
+
+    await().atMost(Duration.ONE_SECOND).until(() -> loop.getMostRecentModel(), is("start7"));
+  }
+
+  @Test
+  public void shouldPermitUsingConnectablesAsAnEventSource() throws Exception {
+    ConnectableTestEventSource eventSource = new ConnectableTestEventSource();
+
+    loop =
+        Mobius.loop(UPDATE, HANDLER)
+            .eventRunner(WorkRunners::immediate)
+            .eventSource(eventSource)
+            .startFrom(MY_MODEL);
 
     eventSource.consumer.accept(7);
 
@@ -196,6 +216,25 @@ public class MobiusTest {
 
     @Override
     public void dispose() {}
+  }
+
+  private static class ConnectableTestEventSource implements Connectable<String, Integer> {
+
+    Consumer<Integer> consumer;
+
+    @Nonnull
+    @Override
+    public Connection<String> connect(Consumer<Integer> output)
+        throws ConnectionLimitExceededException {
+      this.consumer = output;
+      return new Connection<String>() {
+        @Override
+        public void accept(String value) {}
+
+        @Override
+        public void dispose() {}
+      };
+    }
   }
 
   private static class TestEventSource implements EventSource<Integer> {
