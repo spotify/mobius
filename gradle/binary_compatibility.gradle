@@ -27,16 +27,21 @@ try {
     ).files).filter {
       it.name.equals(jarFile)
     }.singleFile
+} catch (org.gradle.api.internal.artifacts.ivyservice.DefaultLenientConfiguration$ArtifactResolveException e) {
+    // Skip if there is no baseline version
+
 } finally {
     project.group = projectGroup
 }
 
-task japicmp(type: JapicmpTask, dependsOn: jar) {
-    oldClasspath = files(baselineJar)
-    newArchives = files(jar.archivePath)
-    newClasspath = configurations.runtimeClasspath
-    onlyModified = true
-    failOnModification = true
-    ignoreMissingClasses = true
-    htmlOutputFile = file("$buildDir/reports/japi.html")
+if (baselineJar != null) {
+    task japicmp(type: JapicmpTask, dependsOn: jar) {
+        oldClasspath = files(baselineJar)
+        newArchives = files(jar.archivePath)
+        newClasspath = configurations.runtimeClasspath
+        onlyModified = true
+        failOnModification = true
+        ignoreMissingClasses = true
+        htmlOutputFile = file("$buildDir/reports/japi.html")
+    }
 }
