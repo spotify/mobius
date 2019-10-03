@@ -1,10 +1,6 @@
 apply plugin: 'com.android.library'
 
 
-apply from: rootProject.file('gradle/java_8_sources.gradle')
-
-ext.compileUnitTestsAsJava8()
-
 repositories {
     google()
 }
@@ -22,6 +18,10 @@ static def gitSha() {
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
+    compileOptions {
+      sourceCompatibility JavaVersion.VERSION_1_8
+      targetCompatibility JavaVersion.VERSION_1_8
+    }
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         buildConfigField "String", "LIBRARY_VERSION", "\"${VERSION_NAME}\""

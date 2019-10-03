@@ -65,9 +65,6 @@ subprojects {
 
     afterEvaluate { proj ->
         if (isAndroidProject(proj)) {
-            proj.apply from: rootProject.file('gradle/java_8_sources.gradle')
-            proj.compileUnitTestsAsJava8()
-
             // for android, auto-format, even though that leads to worse error messages for syntax
             // errors
             android.libraryVariants.all { variant ->

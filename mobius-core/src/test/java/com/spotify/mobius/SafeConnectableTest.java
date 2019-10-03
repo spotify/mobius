@@ -48,7 +48,7 @@ public class SafeConnectableTest {
 
   private SafeConnectable<Integer, String> underTest;
 
-  private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+  private final ExecutorService executorService = Executors.newCachedThreadPool();
 
   @Before
   public void setUp() throws Exception {
@@ -119,14 +119,7 @@ public class SafeConnectableTest {
     blockableConnection.block = true;
 
     // when an effect is requested
-    Future<?> effectPerformedFuture =
-        executorService.submit(
-            new Runnable() {
-              @Override
-              public void run() {
-                safeConsumer.accept(1);
-              }
-            });
+    Future<?> effectPerformedFuture = executorService.submit(() -> safeConsumer.accept(1));
 
     // and the sink is disposed
     safeConsumer.dispose();
