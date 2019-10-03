@@ -19,10 +19,7 @@
  */
 package com.spotify.mobius;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import com.google.common.collect.Sets;
-import com.spotify.mobius.internal_util.ImmutableUtil;
 import com.spotify.mobius.test.RecordingConsumer;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -30,9 +27,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class EventProcessorTest {
-
-  private static final Set<Long> START_EFFECTS = ImmutableUtil.setOf(15L, 25L, 35L);
-  public static final String START_MODEL = "init!";
 
   private EventProcessor<String, Integer, Long> underTest;
   private RecordingConsumer<Long> effectConsumer;
@@ -44,14 +38,13 @@ public class EventProcessorTest {
     stateConsumer = new RecordingConsumer<>();
     underTest =
         new EventProcessor<>(
-            MobiusStore.create(createUpdate(), START_MODEL), effectConsumer, stateConsumer);
-    underTest.init("init!", START_EFFECTS);
+            MobiusStore.create(createUpdate(), "init!"), effectConsumer, stateConsumer);
   }
 
   @Test
   public void shouldEmitStateIfStateChanged() throws Exception {
     underTest.update(1);
-    stateConsumer.assertValues("init!", "init!->1");
+    stateConsumer.assertValues("init!->1");
   }
 
   @Test
@@ -67,7 +60,7 @@ public class EventProcessorTest {
     underTest.update(1);
     underTest.update(0);
     underTest.update(2);
-    stateConsumer.assertValues("init!", "init!->1", "init!->1->2");
+    stateConsumer.assertValues("init!->1", "init!->1->2");
   }
 
   @Test
@@ -75,38 +68,6 @@ public class EventProcessorTest {
     effectConsumer.clearValues();
     underTest.update(3);
     effectConsumer.assertValuesInAnyOrder(10L, 20L, 30L);
-  }
-
-  @Test
-  public void shouldEmitStateDuringInit() throws Exception {
-    stateConsumer.assertValues("init!");
-  }
-
-  @Test
-  public void shouldEmitEffectsDuringInit() throws Exception {
-    effectConsumer.assertValuesInAnyOrder(15L, 25L, 35L);
-  }
-
-  @Test
-  public void shouldQueueUpdatesReceivedBeforeInit() throws Exception {
-    stateConsumer.clearValues();
-    underTest =
-        new EventProcessor<>(
-            MobiusStore.create(createUpdate(), START_MODEL), effectConsumer, stateConsumer);
-
-    underTest.update(1);
-    underTest.update(2);
-    underTest.update(3);
-
-    underTest.init(START_MODEL, START_EFFECTS);
-
-    stateConsumer.assertValues("init!", "init!->1", "init!->1->2", "init!->1->2->3");
-  }
-
-  @Test
-  public void shouldDisallowDuplicateInitialisation() throws Exception {
-    assertThatThrownBy(() -> underTest.init(START_MODEL, START_EFFECTS))
-        .isInstanceOf(IllegalStateException.class);
   }
 
   private Update<String, Integer, Long> createUpdate() {

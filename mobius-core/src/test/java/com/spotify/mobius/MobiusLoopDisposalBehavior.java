@@ -155,58 +155,6 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
   }
 
   @Test
-  public void disposingLoopBeforeInitRunsIgnoresModelFromInit() throws Exception {
-    // Model changes emitted from the init function after dispose should be ignored.
-    // This test sets up the following scenario:
-    // 1. The loop is created and initialized on a separate thread
-    // 2. The loop is configured with an event runner that will block before executing the init function
-    // 3. The test will then dispose of the loop
-    // 4. Once the loop is disposed, the test will proceed to unblock the initialization runnable
-    // 5. Once the initialization is completed, the test will proceed to examine the observer
-
-    observer = new RecordingModelObserver<>();
-
-    Semaphore awaitInitExecutionRequest = new Semaphore(0);
-    Semaphore blockInitExecution = new Semaphore(0);
-    Semaphore initExecutionCompleted = new Semaphore(0);
-
-    final Update<String, TestEvent, TestEffect> update = (model, event) -> Next.noChange();
-    final MobiusLoop.Builder<String, TestEvent, TestEffect> builder =
-        Mobius.loop(update, effectHandler)
-            .eventRunner(
-                () ->
-                    new WorkRunner() {
-                      @Override
-                      public void post(Runnable runnable) {
-                        backgroundRunner.post(
-                            () -> {
-                              awaitInitExecutionRequest.release();
-                              blockInitExecution.acquireUninterruptibly();
-                              runnable.run();
-                              initExecutionCompleted.release();
-                            });
-                      }
-
-                      @Override
-                      public void dispose() {
-                        backgroundRunner.dispose();
-                      }
-                    });
-
-    new Thread(() -> mobiusLoop = builder.startFrom("foo")).start();
-
-    awaitInitExecutionRequest.acquireUninterruptibly();
-
-    mobiusLoop.observe(observer);
-    mobiusLoop.dispose();
-
-    blockInitExecution.release();
-    initExecutionCompleted.acquireUninterruptibly();
-
-    observer.assertStates();
-  }
-
-  @Test
   public void modelsFromUpdateDuringDisposeAreIgnored() throws Exception {
     // Model changes emitted from the update function during dispose should be ignored.
 

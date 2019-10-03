@@ -46,8 +46,4 @@ class MobiusStore<M, E, F> {
     currentModel = next.modelOrElse(currentModel);
     return next;
   }
-
-  M model() {
-    return currentModel;
-  }
 }
