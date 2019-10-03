@@ -53,6 +53,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
 
   static <M, E, F> MobiusLoop<M, E, F> create(
       MobiusStore<M, E, F> store,
+      Iterable<F> startEffects,
       Connectable<F, E> effectHandler,
       Connectable<M, E> eventSource,
       WorkRunner eventRunner,
@@ -60,6 +61,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
 
     return new MobiusLoop<>(
         new EventProcessor.Factory<>(checkNotNull(store)),
+        checkNotNull(startEffects),
         checkNotNull(effectHandler),
         checkNotNull(eventSource),
         checkNotNull(eventRunner),
@@ -68,6 +70,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
 
   private MobiusLoop(
       EventProcessor.Factory<M, E, F> eventProcessorFactory,
+      Iterable<F> startEffects,
       Connectable<F, E> effectHandler,
       Connectable<M, E> eventSource,
       WorkRunner eventRunner,
@@ -125,7 +128,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
         new Runnable() {
           @Override
           public void run() {
-            eventProcessor.init();
+            eventProcessor.init(startEffects);
           }
         });
   }

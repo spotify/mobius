@@ -50,15 +50,13 @@ class EventProcessor<M, E, F> {
     this.modelConsumer = checkNotNull(modelConsumer);
   }
 
-  synchronized void init() {
+  synchronized void init(Iterable<F> startEffects) {
     if (initialised) {
       throw new IllegalStateException("already initialised");
     }
 
-    First<M, F> first = store.init();
-
-    dispatchModel(first.model());
-    dispatchEffects(first.effects());
+    dispatchModel(store.model());
+    dispatchEffects(startEffects);
 
     initialised = true;
     for (E event : eventsReceivedBeforeInit) {

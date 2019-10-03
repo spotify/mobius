@@ -31,6 +31,8 @@ import org.junit.Test;
 
 public class EventProcessorTest {
 
+  private static final Set<Long> START_EFFECTS = ImmutableUtil.setOf(15L, 25L, 35L);
+
   private EventProcessor<String, Integer, Long> underTest;
   private RecordingConsumer<Long> effectConsumer;
   private RecordingConsumer<String> stateConsumer;
@@ -40,7 +42,7 @@ public class EventProcessorTest {
     effectConsumer = new RecordingConsumer<>();
     stateConsumer = new RecordingConsumer<>();
     underTest = new EventProcessor<>(createStore(), effectConsumer, stateConsumer);
-    underTest.init();
+    underTest.init(START_EFFECTS);
   }
 
   @Test
@@ -91,25 +93,19 @@ public class EventProcessorTest {
     underTest.update(2);
     underTest.update(3);
 
-    underTest.init();
+    underTest.init(START_EFFECTS);
 
     stateConsumer.assertValues("init!", "init!->1", "init!->1->2", "init!->1->2->3");
   }
 
   @Test
   public void shouldDisallowDuplicateInitialisation() throws Exception {
-    assertThatThrownBy(() -> underTest.init()).isInstanceOf(IllegalStateException.class);
+    assertThatThrownBy(() -> underTest.init(START_EFFECTS))
+        .isInstanceOf(IllegalStateException.class);
   }
 
   private MobiusStore<String, Integer, Long> createStore() {
     return MobiusStore.create(
-        new Init<String, Long>() {
-          @Nonnull
-          @Override
-          public First<String, Long> init(String model) {
-            return First.first(model + "!", ImmutableUtil.setOf(15L, 25L, 35L));
-          }
-        },
         new Update<String, Integer, Long>() {
           @Nonnull
           @Override
@@ -126,6 +122,6 @@ public class EventProcessorTest {
             return Next.next(model + "->" + event, effects);
           }
         },
-        "init");
+        "init!");
   }
 }
