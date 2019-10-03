@@ -261,7 +261,8 @@ public final class Mobius {
       First<M, F> first = loggingInit.init(checkNotNull(startModel));
 
       return MobiusLoop.create(
-          MobiusStore.create(loggingUpdate, first.model()),
+          loggingUpdate,
+          first.model(),
           first.effects(),
           effectHandler,
           eventSource,

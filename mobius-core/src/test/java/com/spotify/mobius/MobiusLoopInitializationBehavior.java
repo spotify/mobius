@@ -30,7 +30,7 @@ import org.junit.Test;
 public class MobiusLoopInitializationBehavior extends MobiusLoopTest {
   @Test
   public void shouldProcessInitBeforeEventsFromEffectHandler() throws Exception {
-    mobiusStore = MobiusStore.create(update, "Iinit");
+    startModel = "Iinit";
 
     // when an effect handler that emits events before returning the connection
     setupWithEffects(
@@ -58,7 +58,7 @@ public class MobiusLoopInitializationBehavior extends MobiusLoopTest {
 
   @Test
   public void shouldProcessInitBeforeEventsFromConnectableEventSource() throws Exception {
-    mobiusStore = MobiusStore.create(update, "Firstinit");
+    startModel = "Firstinit";
 
     eventSource =
         new Connectable<String, TestEvent>() {
@@ -86,7 +86,7 @@ public class MobiusLoopInitializationBehavior extends MobiusLoopTest {
 
   @Test
   public void shouldProcessInitBeforeEventsFromEventSource() throws Exception {
-    mobiusStore = MobiusStore.create(update, "Firstinit");
+    startModel = "Firstinit";
 
     eventSource =
         EventSourceConnectable.create(

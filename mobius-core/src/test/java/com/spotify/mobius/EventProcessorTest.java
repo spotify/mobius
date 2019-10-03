@@ -32,6 +32,7 @@ import org.junit.Test;
 public class EventProcessorTest {
 
   private static final Set<Long> START_EFFECTS = ImmutableUtil.setOf(15L, 25L, 35L);
+  public static final String START_MODEL = "init!";
 
   private EventProcessor<String, Integer, Long> underTest;
   private RecordingConsumer<Long> effectConsumer;
@@ -41,8 +42,10 @@ public class EventProcessorTest {
   public void setUp() throws Exception {
     effectConsumer = new RecordingConsumer<>();
     stateConsumer = new RecordingConsumer<>();
-    underTest = new EventProcessor<>(createStore(), effectConsumer, stateConsumer);
-    underTest.init(START_EFFECTS);
+    underTest =
+        new EventProcessor<>(
+            MobiusStore.create(createUpdate(), START_MODEL), effectConsumer, stateConsumer);
+    underTest.init("init!", START_EFFECTS);
   }
 
   @Test
@@ -87,41 +90,41 @@ public class EventProcessorTest {
   @Test
   public void shouldQueueUpdatesReceivedBeforeInit() throws Exception {
     stateConsumer.clearValues();
-    underTest = new EventProcessor<>(createStore(), effectConsumer, stateConsumer);
+    underTest =
+        new EventProcessor<>(
+            MobiusStore.create(createUpdate(), START_MODEL), effectConsumer, stateConsumer);
 
     underTest.update(1);
     underTest.update(2);
     underTest.update(3);
 
-    underTest.init(START_EFFECTS);
+    underTest.init(START_MODEL, START_EFFECTS);
 
     stateConsumer.assertValues("init!", "init!->1", "init!->1->2", "init!->1->2->3");
   }
 
   @Test
   public void shouldDisallowDuplicateInitialisation() throws Exception {
-    assertThatThrownBy(() -> underTest.init(START_EFFECTS))
+    assertThatThrownBy(() -> underTest.init(START_MODEL, START_EFFECTS))
         .isInstanceOf(IllegalStateException.class);
   }
 
-  private MobiusStore<String, Integer, Long> createStore() {
-    return MobiusStore.create(
-        new Update<String, Integer, Long>() {
-          @Nonnull
-          @Override
-          public Next<String, Long> update(String model, Integer event) {
-            if (event == 0) {
-              return Next.noChange();
-            }
+  private Update<String, Integer, Long> createUpdate() {
+    return new Update<String, Integer, Long>() {
+      @Nonnull
+      @Override
+      public Next<String, Long> update(String model, Integer event) {
+        if (event == 0) {
+          return Next.noChange();
+        }
 
-            Set<Long> effects = Sets.newHashSet();
-            for (int i = 0; i < event; i++) {
-              effects.add(10L * (i + 1));
-            }
+        Set<Long> effects = Sets.newHashSet();
+        for (int i = 0; i < event; i++) {
+          effects.add(10L * (i + 1));
+        }
 
-            return Next.next(model + "->" + event, effects);
-          }
-        },
-        "init!");
+        return Next.next(model + "->" + event, effects);
+      }
+    };
   }
 }

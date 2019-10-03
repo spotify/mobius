@@ -39,7 +39,8 @@ public class MobiusLoopObservabilityBehavior extends MobiusLoopTest {
 
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore,
+            update,
+            startModel,
             startEffects,
             effectHandler,
             eventSource,

@@ -74,7 +74,8 @@ public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
 
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore,
+            update,
+            startModel,
             startEffects,
             effectHandler,
             eventSource,
@@ -93,7 +94,8 @@ public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
     ModelRecordingConnectableEventSource eventSource = new ModelRecordingConnectableEventSource();
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore,
+            update,
+            startModel,
             startEffects,
             effectHandler,
             eventSource,

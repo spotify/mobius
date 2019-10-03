@@ -146,7 +146,7 @@ public class MobiusLoopBehaviorWithEffectHandlers extends MobiusLoopTest {
   @Test
   public void shouldPerformEffectFromInit() throws Exception {
 
-    Update<String, TestEvent, TestEffect> update =
+    update =
         new Update<String, TestEvent, TestEffect>() {
           @Nonnull
           @Override
@@ -155,7 +155,7 @@ public class MobiusLoopBehaviorWithEffectHandlers extends MobiusLoopTest {
           }
         };
 
-    mobiusStore = MobiusStore.create(update, "init");
+    startModel = "init";
     startEffects = effects(new SafeEffect("frominit"));
 
     TestWorkRunner testWorkRunner = new TestWorkRunner();

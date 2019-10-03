@@ -57,7 +57,13 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
 
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore, startEffects, effectHandler, eventSource, eventRunner, effectRunner);
+            update,
+            startModel,
+            startEffects,
+            effectHandler,
+            eventSource,
+            eventRunner,
+            effectRunner);
 
     mobiusLoop.dispose();
 
@@ -71,7 +77,8 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
 
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore,
+            update,
+            startModel,
             startEffects,
             effectHandler,
             EventSourceConnectable.create(eventSource),

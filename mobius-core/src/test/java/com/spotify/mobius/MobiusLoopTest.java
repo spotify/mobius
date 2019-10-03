@@ -44,7 +44,6 @@ import org.junit.Before;
 public class MobiusLoopTest {
 
   MobiusLoop<String, TestEvent, TestEffect> mobiusLoop;
-  MobiusStore<String, TestEvent, TestEffect> mobiusStore;
   Connectable<TestEffect, TestEvent> effectHandler;
 
   final WorkRunner immediateRunner = new ImmediateWorkRunner();
@@ -67,8 +66,9 @@ public class MobiusLoopTest {
 
   RecordingModelObserver<String> observer;
   RecordingConsumer<TestEffect> effectObserver;
-  Update<String, TestEvent, TestEffect> update;
 
+  Update<String, TestEvent, TestEffect> update;
+  String startModel;
   Set<TestEffect> startEffects;
 
   @Before
@@ -92,8 +92,7 @@ public class MobiusLoopTest {
           }
         };
 
-    mobiusStore = MobiusStore.create(update, "init");
-
+    startModel = "init";
     startEffects = ImmutableUtil.emptySet();
 
     effectHandler =
@@ -124,7 +123,13 @@ public class MobiusLoopTest {
 
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore, startEffects, effectHandler, eventSource, immediateRunner, effectRunner);
+            update,
+            startModel,
+            startEffects,
+            effectHandler,
+            eventSource,
+            immediateRunner,
+            effectRunner);
 
     mobiusLoop.observe(observer);
   }
