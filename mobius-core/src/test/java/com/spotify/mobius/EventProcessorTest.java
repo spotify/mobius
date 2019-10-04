@@ -19,10 +19,7 @@
  */
 package com.spotify.mobius;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import com.google.common.collect.Sets;
-import com.spotify.mobius.internal_util.ImmutableUtil;
 import com.spotify.mobius.test.RecordingConsumer;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -39,14 +36,15 @@ public class EventProcessorTest {
   public void setUp() throws Exception {
     effectConsumer = new RecordingConsumer<>();
     stateConsumer = new RecordingConsumer<>();
-    underTest = new EventProcessor<>(createStore(), effectConsumer, stateConsumer);
-    underTest.init();
+    underTest =
+        new EventProcessor<>(
+            MobiusStore.create(createUpdate(), "init!"), effectConsumer, stateConsumer);
   }
 
   @Test
   public void shouldEmitStateIfStateChanged() throws Exception {
     underTest.update(1);
-    stateConsumer.assertValues("init!", "init!->1");
+    stateConsumer.assertValues("init!->1");
   }
 
   @Test
@@ -62,7 +60,7 @@ public class EventProcessorTest {
     underTest.update(1);
     underTest.update(0);
     underTest.update(2);
-    stateConsumer.assertValues("init!", "init!->1", "init!->1->2");
+    stateConsumer.assertValues("init!->1", "init!->1->2");
   }
 
   @Test
@@ -72,60 +70,22 @@ public class EventProcessorTest {
     effectConsumer.assertValuesInAnyOrder(10L, 20L, 30L);
   }
 
-  @Test
-  public void shouldEmitStateDuringInit() throws Exception {
-    stateConsumer.assertValues("init!");
-  }
+  private Update<String, Integer, Long> createUpdate() {
+    return new Update<String, Integer, Long>() {
+      @Nonnull
+      @Override
+      public Next<String, Long> update(String model, Integer event) {
+        if (event == 0) {
+          return Next.noChange();
+        }
 
-  @Test
-  public void shouldEmitEffectsDuringInit() throws Exception {
-    effectConsumer.assertValuesInAnyOrder(15L, 25L, 35L);
-  }
+        Set<Long> effects = Sets.newHashSet();
+        for (int i = 0; i < event; i++) {
+          effects.add(10L * (i + 1));
+        }
 
-  @Test
-  public void shouldQueueUpdatesReceivedBeforeInit() throws Exception {
-    stateConsumer.clearValues();
-    underTest = new EventProcessor<>(createStore(), effectConsumer, stateConsumer);
-
-    underTest.update(1);
-    underTest.update(2);
-    underTest.update(3);
-
-    underTest.init();
-
-    stateConsumer.assertValues("init!", "init!->1", "init!->1->2", "init!->1->2->3");
-  }
-
-  @Test
-  public void shouldDisallowDuplicateInitialisation() throws Exception {
-    assertThatThrownBy(() -> underTest.init()).isInstanceOf(IllegalStateException.class);
-  }
-
-  private MobiusStore<String, Integer, Long> createStore() {
-    return MobiusStore.create(
-        new Init<String, Long>() {
-          @Nonnull
-          @Override
-          public First<String, Long> init(String model) {
-            return First.first(model + "!", ImmutableUtil.setOf(15L, 25L, 35L));
-          }
-        },
-        new Update<String, Integer, Long>() {
-          @Nonnull
-          @Override
-          public Next<String, Long> update(String model, Integer event) {
-            if (event == 0) {
-              return Next.noChange();
-            }
-
-            Set<Long> effects = Sets.newHashSet();
-            for (int i = 0; i < event; i++) {
-              effects.add(10L * (i + 1));
-            }
-
-            return Next.next(model + "->" + event, effects);
-          }
-        },
-        "init");
+        return Next.next(model + "->" + event, effects);
+      }
+    };
   }
 }

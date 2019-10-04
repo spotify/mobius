@@ -52,14 +52,19 @@ public class MobiusLoop<M, E, F> implements Disposable {
   private volatile boolean disposed;
 
   static <M, E, F> MobiusLoop<M, E, F> create(
-      MobiusStore<M, E, F> store,
+      Update<M, E, F> update,
+      M startModel,
+      Iterable<F> startEffects,
       Connectable<F, E> effectHandler,
       Connectable<M, E> eventSource,
       WorkRunner eventRunner,
       WorkRunner effectRunner) {
 
     return new MobiusLoop<>(
-        new EventProcessor.Factory<>(checkNotNull(store)),
+        new EventProcessor.Factory<>(
+            MobiusStore.create(checkNotNull(update), checkNotNull(startModel))),
+        checkNotNull(startModel),
+        checkNotNull(startEffects),
         checkNotNull(effectHandler),
         checkNotNull(eventSource),
         checkNotNull(eventRunner),
@@ -68,6 +73,8 @@ public class MobiusLoop<M, E, F> implements Disposable {
 
   private MobiusLoop(
       EventProcessor.Factory<M, E, F> eventProcessorFactory,
+      M startModel,
+      Iterable<F> startEffects,
       Connectable<F, E> effectHandler,
       Connectable<M, E> eventSource,
       WorkRunner eventRunner,
@@ -121,11 +128,16 @@ public class MobiusLoop<M, E, F> implements Disposable {
     this.effectConsumer = effectHandler.connect(eventConsumer);
     this.eventSourceModelConsumer = eventSource.connect(eventConsumer);
 
+    mostRecentModel = startModel;
+
     eventRunner.post(
         new Runnable() {
           @Override
           public void run() {
-            eventProcessor.init();
+            onModelChanged.accept(startModel);
+            for (F effect : startEffects) {
+              effectDispatcher.accept(effect);
+            }
           }
         });
   }

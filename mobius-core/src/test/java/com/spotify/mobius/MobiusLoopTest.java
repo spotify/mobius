@@ -22,6 +22,7 @@ package com.spotify.mobius;
 import static com.spotify.mobius.Effects.effects;
 
 import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.internal_util.ImmutableUtil;
 import com.spotify.mobius.runners.ExecutorServiceWorkRunner;
 import com.spotify.mobius.runners.ImmediateWorkRunner;
 import com.spotify.mobius.runners.WorkRunner;
@@ -34,6 +35,7 @@ import com.spotify.mobius.testdomain.EventWithSafeEffect;
 import com.spotify.mobius.testdomain.SafeEffect;
 import com.spotify.mobius.testdomain.TestEffect;
 import com.spotify.mobius.testdomain.TestEvent;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import javax.annotation.Nonnull;
 import org.junit.After;
@@ -42,7 +44,6 @@ import org.junit.Before;
 public class MobiusLoopTest {
 
   MobiusLoop<String, TestEvent, TestEffect> mobiusLoop;
-  MobiusStore<String, TestEvent, TestEffect> mobiusStore;
   Connectable<TestEffect, TestEvent> effectHandler;
 
   final WorkRunner immediateRunner = new ImmediateWorkRunner();
@@ -65,20 +66,14 @@ public class MobiusLoopTest {
 
   RecordingModelObserver<String> observer;
   RecordingConsumer<TestEffect> effectObserver;
+
   Update<String, TestEvent, TestEffect> update;
+  String startModel;
+  Set<TestEffect> startEffects;
 
   @Before
   public void setUp() throws Exception {
     backgroundRunner = new ExecutorServiceWorkRunner(Executors.newSingleThreadExecutor());
-    Init<String, TestEffect> init =
-        new Init<String, TestEffect>() {
-          @Nonnull
-          @Override
-          public First<String, TestEffect> init(String model) {
-            return First.first(model);
-          }
-        };
-
     update =
         new Update<String, TestEvent, TestEffect>() {
           @Nonnull
@@ -97,7 +92,8 @@ public class MobiusLoopTest {
           }
         };
 
-    mobiusStore = MobiusStore.create(init, update, "init");
+    startModel = "init";
+    startEffects = ImmutableUtil.emptySet();
 
     effectHandler =
         eventConsumer ->
@@ -126,7 +122,14 @@ public class MobiusLoopTest {
     observer = new RecordingModelObserver<>();
 
     mobiusLoop =
-        MobiusLoop.create(mobiusStore, effectHandler, eventSource, immediateRunner, effectRunner);
+        MobiusLoop.create(
+            update,
+            startModel,
+            startEffects,
+            effectHandler,
+            eventSource,
+            immediateRunner,
+            effectRunner);
 
     mobiusLoop.observe(observer);
   }

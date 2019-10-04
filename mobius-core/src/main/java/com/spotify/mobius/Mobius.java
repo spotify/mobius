@@ -258,8 +258,12 @@ public final class Mobius {
       LoggingInit<M, F> loggingInit = new LoggingInit<>(init, logger);
       LoggingUpdate<M, E, F> loggingUpdate = new LoggingUpdate<>(update, logger);
 
+      First<M, F> first = loggingInit.init(checkNotNull(startModel));
+
       return MobiusLoop.create(
-          MobiusStore.create(loggingInit, loggingUpdate, checkNotNull(startModel)),
+          loggingUpdate,
+          first.model(),
+          first.effects(),
           effectHandler,
           eventSource,
           checkNotNull(eventRunner.get()),

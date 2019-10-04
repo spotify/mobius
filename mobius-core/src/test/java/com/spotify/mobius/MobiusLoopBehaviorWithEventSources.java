@@ -74,7 +74,13 @@ public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
 
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore, effectHandler, eventSource, immediateRunner, immediateRunner);
+            update,
+            startModel,
+            startEffects,
+            effectHandler,
+            eventSource,
+            immediateRunner,
+            immediateRunner);
     observer = new RecordingModelObserver<>();
     mobiusLoop.observe(observer);
     eventSource.consumer.accept(new TestEvent(Integer.toString(1)));
@@ -88,7 +94,13 @@ public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
     ModelRecordingConnectableEventSource eventSource = new ModelRecordingConnectableEventSource();
     mobiusLoop =
         MobiusLoop.create(
-            mobiusStore, effectHandler, eventSource, immediateRunner, immediateRunner);
+            update,
+            startModel,
+            startEffects,
+            effectHandler,
+            eventSource,
+            immediateRunner,
+            immediateRunner);
 
     mobiusLoop.dispose();
     assertTrue(eventSource.disposed);

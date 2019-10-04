@@ -26,28 +26,18 @@ import javax.annotation.Nonnull;
 /** Responsible for holding and updating the current model. */
 class MobiusStore<M, E, F> {
 
-  @Nonnull private final Init<M, F> init;
   @Nonnull private final Update<M, E, F> update;
 
   @Nonnull private M currentModel;
 
-  private MobiusStore(Init<M, F> init, Update<M, E, F> update, M startModel) {
-    this.init = checkNotNull(init);
+  private MobiusStore(Update<M, E, F> update, M startModel) {
     this.update = checkNotNull(update);
     this.currentModel = checkNotNull(startModel);
   }
 
   @Nonnull
-  public static <M, E, F> MobiusStore<M, E, F> create(
-      Init<M, F> init, Update<M, E, F> update, M startModel) {
-    return new MobiusStore<>(init, update, startModel);
-  }
-
-  @Nonnull
-  synchronized First<M, F> init() {
-    First<M, F> first = init.init(currentModel);
-    currentModel = first.model();
-    return first;
+  public static <M, E, F> MobiusStore<M, E, F> create(Update<M, E, F> update, M startModel) {
+    return new MobiusStore<>(update, startModel);
   }
 
   @Nonnull
