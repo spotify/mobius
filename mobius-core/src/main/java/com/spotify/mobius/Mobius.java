@@ -23,27 +23,21 @@ import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Producer;
+import com.spotify.mobius.internal_util.ImmutableUtil;
 import com.spotify.mobius.runners.WorkRunner;
 import com.spotify.mobius.runners.WorkRunners;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public final class Mobius {
   private Mobius() {
     // prevent instantiation
   }
-
-  private static final Init<?, ?> NOOP_INIT =
-      new Init<Object, Object>() {
-        @Nonnull
-        @Override
-        public First<Object, Object> init(Object model) {
-          return First.first(model);
-        }
-      };
 
   private static final Connectable<?, ?> NOOP_EVENT_SOURCE =
       new Connectable<Object, Object>() {
@@ -116,7 +110,7 @@ public final class Mobius {
     return new Builder<>(
         update,
         effectHandler,
-        (Init<M, F>) NOOP_INIT,
+        null,
         (Connectable<M, E>) NOOP_EVENT_SOURCE,
         (MobiusLoop.Logger<M, E, F>) NOOP_LOGGER,
         new Producer<WorkRunner>() {
@@ -166,7 +160,7 @@ public final class Mobius {
 
     private final Update<M, E, F> update;
     private final Connectable<F, E> effectHandler;
-    private final Init<M, F> init;
+    @Nullable private final Init<M, F> init;
     private final Connectable<M, E> eventSource;
     private final Producer<WorkRunner> eventRunner;
     private final Producer<WorkRunner> effectRunner;
@@ -175,14 +169,14 @@ public final class Mobius {
     private Builder(
         Update<M, E, F> update,
         Connectable<F, E> effectHandler,
-        Init<M, F> init,
+        @Nullable Init<M, F> init,
         Connectable<M, E> eventSource,
         MobiusLoop.Logger<M, E, F> logger,
         Producer<WorkRunner> eventRunner,
         Producer<WorkRunner> effectRunner) {
       this.update = checkNotNull(update);
       this.effectHandler = checkNotNull(effectHandler);
-      this.init = checkNotNull(init);
+      this.init = init;
       this.eventSource = checkNotNull(eventSource);
       this.eventRunner = checkNotNull(eventRunner);
       this.effectRunner = checkNotNull(effectRunner);
@@ -193,7 +187,13 @@ public final class Mobius {
     @Nonnull
     public MobiusLoop.Builder<M, E, F> init(Init<M, F> init) {
       return new Builder<>(
-          update, effectHandler, init, eventSource, logger, eventRunner, effectRunner);
+          update,
+          effectHandler,
+          checkNotNull(init),
+          eventSource,
+          logger,
+          eventRunner,
+          effectRunner);
     }
 
     @Override
@@ -254,16 +254,39 @@ public final class Mobius {
 
     @Override
     @Nonnull
-    public MobiusLoop<M, E, F> startFrom(M startModel) {
-      LoggingInit<M, F> loggingInit = new LoggingInit<>(init, logger);
-      LoggingUpdate<M, E, F> loggingUpdate = new LoggingUpdate<>(update, logger);
+    public MobiusLoop<M, E, F> startFrom(final M startModel) {
+      M firstModel = startModel;
+      Set<F> firstEffects = ImmutableUtil.emptySet();
 
-      First<M, F> first = loggingInit.init(checkNotNull(startModel));
+      if (init != null) {
+        LoggingInit<M, F> loggingInit = new LoggingInit<>(init, logger);
+        First<M, F> first = loggingInit.init(checkNotNull(startModel));
+
+        firstModel = first.model();
+        firstEffects = first.effects();
+      }
+
+      return startFromInternal(firstModel, firstEffects);
+    }
+
+    @Override
+    @Nonnull
+    public MobiusLoop<M, E, F> startFrom(M startModel, Set<F> startEffects) {
+      if (init != null) {
+        throw new IllegalArgumentException(
+            "cannot pass in start effects when a loop has init defined");
+      }
+
+      return startFromInternal(startModel, startEffects);
+    }
+
+    private MobiusLoop<M, E, F> startFromInternal(M startModel, Set<F> startEffects) {
+      LoggingUpdate<M, E, F> loggingUpdate = new LoggingUpdate<>(update, logger);
 
       return MobiusLoop.create(
           loggingUpdate,
-          first.model(),
-          first.effects(),
+          startModel,
+          startEffects,
           effectHandler,
           eventSource,
           checkNotNull(eventRunner.get()),

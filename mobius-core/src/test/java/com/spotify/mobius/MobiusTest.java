@@ -20,6 +20,7 @@
 package com.spotify.mobius;
 
 import static com.spotify.mobius.Effects.effects;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.core.Is.is;
@@ -33,6 +34,7 @@ import com.spotify.mobius.runners.WorkRunners;
 import com.spotify.mobius.test.SimpleConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -155,6 +157,7 @@ public class MobiusTest {
 
     loop =
         Mobius.loop(UPDATE, HANDLER)
+            .init(First::first)
             .logger(logger)
             .eventRunner(ImmediateWorkRunner::new)
             .effectRunner(ImmediateWorkRunner::new)
@@ -196,6 +199,30 @@ public class MobiusTest {
     loop = factory.startFrom("second");
     loop.dispatchEvent(97);
     await().atMost(Duration.ONE_SECOND).until(() -> loop.getMostRecentModel(), is("second97"));
+  }
+
+  @Test
+  public void shouldAllowStartingWithEffects() throws Exception {
+    TestableWorkRunner runner = new TestableWorkRunner();
+
+    loop =
+        Mobius.loop(UPDATE, HANDLER).effectRunner(() -> runner).startFrom(MY_MODEL, effects(false));
+
+    await().atMost(Duration.ONE_SECOND).until(() -> runner.runCounter.get() == 1);
+  }
+
+  @Test
+  public void shouldDisallowBothInitAndStartEffects() throws Exception {
+    final Set<Boolean> startEffects = effects(true);
+    Init<String, Boolean> init = model -> First.first(model, startEffects);
+
+    MobiusLoop.Factory<String, Integer, Boolean> factory = Mobius.loop(UPDATE, HANDLER).init(init);
+
+    assertThatThrownBy(
+            () -> {
+              factory.startFrom(MY_MODEL, startEffects);
+            })
+        .hasMessageContaining("has init defined");
   }
 
   private static class TestableWorkRunner implements WorkRunner {

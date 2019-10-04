@@ -26,6 +26,7 @@ import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Producer;
 import com.spotify.mobius.runners.WorkRunner;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -218,10 +219,12 @@ public class MobiusLoop<M, E, F> implements Disposable {
   public interface Builder<M, E, F> extends Factory<M, E, F> {
 
     /**
+     * @deprecated Pass your initial effects to {@link #startFrom(Object, Set)} instead.
      * @return a new {@link Builder} with the supplied {@link Init}, and the same values as the
      *     current one for the other fields.
      */
     @Nonnull
+    @Deprecated
     Builder<M, E, F> init(Init<M, F> init);
 
     /**
@@ -283,6 +286,15 @@ public class MobiusLoop<M, E, F> implements Disposable {
      * @return the started {@link MobiusLoop}
      */
     MobiusLoop<M, E, F> startFrom(M startModel);
+
+    /**
+     * Start a {@link MobiusLoop} using this factory.
+     *
+     * @param startModel the model that the loop should start from
+     * @param startEffects the effects that the loop should start with
+     * @return the started {@link MobiusLoop}
+     */
+    MobiusLoop<M, E, F> startFrom(M startModel, Set<F> startEffects);
   }
 
   /**
