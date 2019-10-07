@@ -31,15 +31,20 @@ class MobiusLoopController<M, E, F>
 
   private final MobiusLoop.Factory<M, E, F> loopFactory;
   private final M defaultModel;
+  private final Init<M, F> init;
   private final WorkRunner mainThreadRunner;
 
   private ControllerStateBase<M, E> currentState;
 
   MobiusLoopController(
-      MobiusLoop.Factory<M, E, F> loopFactory, M defaultModel, WorkRunner mainThreadRunner) {
+      MobiusLoop.Factory<M, E, F> loopFactory,
+      M defaultModel,
+      Init<M, F> init,
+      WorkRunner mainThreadRunner) {
 
     this.loopFactory = checkNotNull(loopFactory);
     this.defaultModel = checkNotNull(defaultModel);
+    this.init = checkNotNull(init);
     this.mainThreadRunner = checkNotNull(mainThreadRunner);
     goToStateInit(defaultModel);
   }
@@ -135,7 +140,7 @@ class MobiusLoopController<M, E, F>
   @Override
   public synchronized void goToStateRunning(Connection<M> renderer, M nextModelToStartFrom) {
     ControllerStateRunning<M, E, F> stateRunning =
-        new ControllerStateRunning<>(this, renderer, loopFactory, nextModelToStartFrom);
+        new ControllerStateRunning<>(this, renderer, loopFactory, nextModelToStartFrom, init);
 
     currentState = stateRunning;
 

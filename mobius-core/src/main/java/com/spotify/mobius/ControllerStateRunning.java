@@ -32,12 +32,15 @@ class ControllerStateRunning<M, E, F> extends ControllerStateBase<M, E> {
       ControllerActions<M, E> actions,
       Connection<M> renderer,
       MobiusLoop.Factory<M, E, F> loopFactory,
-      M modelToStartFrom) {
+      M modelToStartFrom,
+      Init<M, F> init) {
+
+    First<M, F> first = init.init(modelToStartFrom);
 
     this.actions = actions;
     this.renderer = renderer;
-    this.loop = loopFactory.startFrom(modelToStartFrom);
-    this.startModel = modelToStartFrom;
+    this.loop = loopFactory.startFrom(first.model(), first.effects());
+    this.startModel = first.model();
   }
 
   void start() {
