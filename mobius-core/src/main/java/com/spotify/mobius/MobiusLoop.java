@@ -39,6 +39,9 @@ import javax.annotation.Nullable;
  */
 public class MobiusLoop<M, E, F> implements Disposable {
 
+  @Nonnull private final Connection<E> safeOnEventReceived;
+  @Nonnull private final Connection<F> safeOnEffectReceived;
+
   @Nonnull private final MessageDispatcher<E> eventDispatcher;
   @Nonnull private final MessageDispatcher<F> effectDispatcher;
 
@@ -113,8 +116,11 @@ public class MobiusLoop<M, E, F> implements Disposable {
           }
         };
 
-    this.eventDispatcher = new MessageDispatcher<>(eventRunner, onEventReceived);
-    this.effectDispatcher = new MessageDispatcher<>(effectRunner, onEffectReceived);
+    this.safeOnEventReceived = new SafeConsumer<>(onEventReceived);
+    this.safeOnEffectReceived = new SafeConsumer<>(onEffectReceived);
+
+    this.eventDispatcher = new MessageDispatcher<>(eventRunner, safeOnEventReceived);
+    this.effectDispatcher = new MessageDispatcher<>(effectRunner, safeOnEffectReceived);
 
     this.eventProcessor = eventProcessorFactory.create(effectDispatcher, onModelChanged);
 
@@ -194,8 +200,8 @@ public class MobiusLoop<M, E, F> implements Disposable {
 
     // Disable the event and effect dispatchers. This will cause any further
     // events or effects posted to the dispatchers to be ignored and logged.
-    eventDispatcher.disable();
-    effectDispatcher.disable();
+    safeOnEventReceived.dispose();
+    safeOnEffectReceived.dispose();
 
     // Stop the event source and effect handler.
     eventSourceModelConsumer.dispose();

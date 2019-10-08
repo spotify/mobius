@@ -33,25 +33,28 @@ import javax.annotation.Nonnull;
  * <p>This only acts as a safeguard, you still need to make sure that the Connectable disposes of
  * resources correctly.
  */
-class SafeConnectable<F, E> implements Connectable<F, E> {
+class SafeConnectable<I, O> implements Connectable<I, O> {
 
-  private final Connectable<F, E> actual;
+  private final Connectable<I, O> actual;
 
-  SafeConnectable(Connectable<F, E> actual) {
+  SafeConnectable(Connectable<I, O> actual) {
     this.actual = checkNotNull(actual);
   }
 
   @Nonnull
   @Override
-  public Connection<F> connect(Consumer<E> output) {
-    final SafeConsumer<E> safeEventConsumer = new SafeConsumer<>(checkNotNull(output));
-    final Connection<F> effectConsumer =
-        new SafeEffectConsumer<>(checkNotNull(actual.connect(safeEventConsumer)));
-    final Disposable disposable = CompositeDisposable.from(safeEventConsumer, effectConsumer);
-    return new Connection<F>() {
+  public Connection<I> connect(Consumer<O> output) {
+    final SafeConsumer<O> safeOutput = new SafeConsumer<>(checkNotNull(output));
+
+    final Connection<I> connection = checkNotNull(actual.connect(safeOutput));
+    final Connection<I> safeConnection = new SafeConnection<>(connection);
+
+    final Disposable disposable = CompositeDisposable.from(safeOutput, safeConnection);
+
+    return new Connection<I>() {
       @Override
-      public synchronized void accept(F effect) {
-        effectConsumer.accept(effect);
+      public synchronized void accept(I input) {
+        safeConnection.accept(input);
       }
 
       @Override
@@ -59,50 +62,5 @@ class SafeConnectable<F, E> implements Connectable<F, E> {
         disposable.dispose();
       }
     };
-  }
-
-  private static class SafeEffectConsumer<F> implements Connection<F> {
-    private final Connection<F> actual;
-    private boolean disposed;
-
-    private SafeEffectConsumer(Connection<F> actual) {
-      this.actual = actual;
-    }
-
-    @Override
-    public synchronized void accept(F effect) {
-      if (disposed) {
-        return;
-      }
-      actual.accept(effect);
-    }
-
-    @Override
-    public synchronized void dispose() {
-      disposed = true;
-      actual.dispose();
-    }
-  }
-
-  private static class SafeConsumer<E> implements Connection<E> {
-    private final Consumer<E> actual;
-    private boolean disposed;
-
-    private SafeConsumer(Consumer<E> actual) {
-      this.actual = actual;
-    }
-
-    @Override
-    public synchronized void accept(E value) {
-      if (disposed) {
-        return;
-      }
-      actual.accept(value);
-    }
-
-    @Override
-    public synchronized void dispose() {
-      disposed = true;
-    }
   }
 }
