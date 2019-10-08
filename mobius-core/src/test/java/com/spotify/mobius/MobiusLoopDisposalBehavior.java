@@ -28,7 +28,6 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.util.concurrent.SettableFuture;
 import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
-import com.spotify.mobius.runners.WorkRunner;
 import com.spotify.mobius.test.RecordingConsumer;
 import com.spotify.mobius.test.RecordingModelObserver;
 import com.spotify.mobius.test.TestWorkRunner;
@@ -168,9 +167,7 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
         };
 
     final MobiusLoop.Builder<String, TestEvent, TestEffect> builder =
-        Mobius.loop(update, effectHandler)
-            .eventRunner(
-                () -> InitImmediatelyThenUpdateConcurrentlyWorkRunner.create(backgroundRunner));
+        Mobius.loop(update, effectHandler);
 
     mobiusLoop = builder.startFrom("foo");
     mobiusLoop.observe(observer);
@@ -346,36 +343,6 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
           }
         }
       }
-    }
-  }
-
-  static class InitImmediatelyThenUpdateConcurrentlyWorkRunner implements WorkRunner {
-    private final WorkRunner delegate;
-
-    private boolean ranOnce;
-
-    private InitImmediatelyThenUpdateConcurrentlyWorkRunner(WorkRunner delegate) {
-      this.delegate = delegate;
-    }
-
-    public static WorkRunner create(WorkRunner eventRunner) {
-      return new InitImmediatelyThenUpdateConcurrentlyWorkRunner(eventRunner);
-    }
-
-    @Override
-    public synchronized void post(Runnable runnable) {
-      if (ranOnce) {
-        delegate.post(runnable);
-        return;
-      }
-
-      ranOnce = true;
-      runnable.run();
-    }
-
-    @Override
-    public void dispose() {
-      delegate.dispose();
     }
   }
 }

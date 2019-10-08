@@ -131,16 +131,10 @@ public class MobiusLoop<M, E, F> implements Disposable {
 
     mostRecentModel = startModel;
 
-    eventRunner.post(
-        new Runnable() {
-          @Override
-          public void run() {
-            onModelChanged.accept(startModel);
-            for (F effect : startEffects) {
-              effectDispatcher.accept(effect);
-            }
-          }
-        });
+    onModelChanged.accept(startModel);
+    for (F effect : startEffects) {
+      effectDispatcher.accept(effect);
+    }
   }
 
   public void dispatchEvent(E event) {
