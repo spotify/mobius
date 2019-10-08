@@ -117,8 +117,7 @@ public class MobiusTest {
 
     loop.dispatchEvent(3);
 
-    // 2 because the initial model dispatch is run on the event runner
-    await().atMost(Duration.ONE_SECOND).until(() -> runner.runCounter.get() == 2);
+    await().atMost(Duration.ONE_SECOND).until(() -> runner.runCounter.get() == 1);
   }
 
   @Test
