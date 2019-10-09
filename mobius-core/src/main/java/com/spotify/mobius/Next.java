@@ -23,7 +23,9 @@ import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 import com.google.auto.value.AutoValue;
 import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.functions.Function;
 import com.spotify.mobius.internal_util.ImmutableUtil;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -103,6 +105,35 @@ public abstract class Next<M, F> {
     if (hasModel()) {
       consumer.accept(modelUnsafe());
     }
+  }
+
+  /** Transforms the model if present, otherwise just change the model type. */
+  public <N> Next<N, F> mapModel(Function<M, N> mapper) {
+    if (hasModel()) {
+      return next(mapper.apply(modelUnsafe()), effects());
+    } else {
+      return dispatch(effects());
+    }
+  }
+
+  /** Transforms the model if present, otherwise just change the model type. */
+  public <G> Next<M, G> mapEffects(Function<F, G> mapper) {
+    Set<G> effects = new HashSet<>();
+
+    for (F effect : effects()) {
+      effects.add(mapper.apply(effect));
+    }
+
+    if (hasModel()) {
+      return next(modelUnsafe(), effects);
+    } else {
+      return dispatch(effects);
+    }
+  }
+
+  /** Create a new Next based on this one, but with some extra effects added. */
+  public Next<M, F> addEffects(Set<? extends F> effects) {
+    return next(model(), ImmutableUtil.unionSets(effects(), effects));
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
