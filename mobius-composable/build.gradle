@@ -1,0 +1,11 @@
+apply plugin: 'java-library'
+
+dependencies {
+    api project(':mobius-core')
+    api project(':mobius-extras')
+
+    testImplementation project(':mobius-test')
+}
+
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+apply from: rootProject.file('gradle/jacoco-coverage.gradle')
