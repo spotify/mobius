@@ -21,9 +21,17 @@ configurations {
 }
 
 dependencies {
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    testImplementation 'org.quicktheories:quicktheories:0.25'
+    testImplementation "junit:junit:${versions.junit}"
+
     api project(':mobius-core')
     api project(':mobius-extras')
 
+    api "com.google.code.findbugs:jsr305:${versions.jsr305}"
+
+    testImplementation "junit:junit:${versions.junit}"
+    testImplementation "org.quicktheories:quicktheories:${versions.quicktheories}"
     testImplementation project(':mobius-test')
 }
 
