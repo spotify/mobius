@@ -1,4 +1,24 @@
 apply plugin: 'java-library'
+apply plugin: 'kotlin'
+
+buildscript {
+    ext.kotlin_version = '1.2.61'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+apply from: rootProject.file('gradle/jacoco-coverage.gradle')
+
+configurations {
+    apt {
+        visible false
+    }
+}
 
 dependencies {
     api project(':mobius-core')
@@ -7,5 +27,68 @@ dependencies {
     testImplementation project(':mobius-test')
 }
 
-apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
-apply from: rootProject.file('gradle/jacoco-coverage.gradle')
+def generatedSrcDir = new File(project.buildDir, "/generated/java")
+def generatedTestSrcDir = new File(project.buildDir, "/generated-test/java")
+
+sourceSets {
+    generated.java.srcDir(generatedSrcDir)
+    test.java.srcDirs += [generatedTestSrcDir]
+}
+
+repositories {
+    mavenCentral()
+}
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    options.annotationProcessorPath = configurations.apt
+
+    options.compilerArgs << "-s"
+    options.compilerArgs << "$generatedSrcDir"
+
+    doFirst {
+        // make sure that directory exists and is empty - the latter in order to avoid "endPosTable already set"
+        file(generatedSrcDir).deleteDir()
+        file(generatedSrcDir).mkdirs()
+    }
+}
+
+compileTestJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    options.annotationProcessorPath = configurations.apt
+
+    options.compilerArgs << "-s"
+    options.compilerArgs << "$generatedTestSrcDir"
+
+    doFirst {
+        // make sure that directory exists and is empty - the latter in order to avoid "endPosTable already set"
+        file(generatedTestSrcDir).deleteDir()
+        file(generatedTestSrcDir).mkdirs()
+    }
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+task sourceJar(type: Jar, dependsOn: classes) {
+    classifier "sources"
+    from sourceSets.main.allJava
+}
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier "javadoc"
+    from javadoc.destinationDir
+}
+
