@@ -1,0 +1,93 @@
+package com.spotify.mobius.android;
+
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.ViewModel;
+import com.spotify.mobius.First;
+import com.spotify.mobius.Init;
+import com.spotify.mobius.MobiusLoop;
+import com.spotify.mobius.MobiusLoop.Factory;
+import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.functions.Function;
+import javax.annotation.Nonnull;
+
+/**
+ * A Mobius Loop controller which is based on the Android ViewModel. <br>
+ *
+ * <p>This controller introduces a new concept of a View Effect (parameter V) which is a type of
+ * effect that requires the corresponding Android lifecycle owner to be in an active state i.e.
+ * between onResume and onPause. To allow the normal effect handler to send these, the controller
+ * will provide a Consumer of these View Effects to the Loop Factory Provider, which can then be
+ * passed into the normal Effect handler so it can delegate view effects where necessary<br>
+ *
+ * <p>Since it's based on Android View model, this controller will keep the loop alive as long as
+ * the lifecycle owner it is associated with (via a factory to produce it) is not destroyed -
+ * meaning the Mobius loop will persist through rotations and brief app minimization to background,
+ * <br>
+ *
+ * <p>While the loop is running but the view is paused, which is between onPause and onDestroy, the
+ * controller will keep the latest model/state sent by the loop and will keep a queue of View
+ * Effects that have been sent by the effect handler. The loop is automatically disposed when the
+ * lifecycle owner is destroyed
+ *
+ * @param <M> The Model with which the Mobius Loop will run
+ * @param <E> The Event type accepted by the loop
+ * @param <F> The Effect type handled by the loop
+ * @param <S> The View State which will be emitted by this controller
+ * @param <V> The View Effect which will be emitted by this controller
+ */
+public class ViewModelController<M, E, F, S, V> extends ViewModel {
+  private final MutableLiveData<S> stateData = new MutableLiveData<>();
+  private final MutableLiveData<Accumulator<V>> viewEffectData = new MutableLiveData<>();
+  private final MobiusLoop<M, E, F> loop;
+  private final M startModel;
+  private final Function<M, S> modelToStateMapper;
+
+  public ViewModelController(
+      @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
+      @Nonnull Function<M, S> modelToStateMapper,
+      @Nonnull M modelToStartFrom,
+      @Nonnull Init<M, F> init) {
+    viewEffectData.setValue(new Accumulator<>());
+    final Factory<M, E, F> loopFactory = loopFactoryProvider.apply(this::acceptViewEffect);
+    final First<M, F> first = init.init(modelToStartFrom);
+    this.loop = loopFactory.startFrom(first.model(), first.effects());
+    this.startModel = first.model();
+    this.modelToStateMapper = modelToStateMapper;
+    loop.observe(this::onModelChanged);
+  }
+
+  @Nonnull
+  public final M getModel() {
+    M model = loop.getMostRecentModel();
+    return model != null ? model : startModel;
+  }
+
+  @Nonnull
+  public final LiveData<S> stateEmitter() {
+    return stateData;
+  }
+
+  public final LiveData<Accumulator<V>> viewEffectEmitter() {
+    return viewEffectData;
+  }
+
+  public void dispatchEvent(@Nonnull E event) {
+    loop.dispatchEvent(event);
+  }
+
+  @Override
+  protected final void onCleared() {
+    super.onCleared();
+    loop.dispose();
+  }
+
+  private void onModelChanged(M model) {
+    stateData.postValue(modelToStateMapper.apply(model));
+  }
+
+  private void acceptViewEffect(V viewEffect) {
+    final Accumulator<V> currentEffects = viewEffectData.getValue();
+    viewEffectData.postValue(Accumulator.add(currentEffects, viewEffect));
+  }
+}

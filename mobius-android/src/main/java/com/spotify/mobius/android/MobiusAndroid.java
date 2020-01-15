@@ -19,11 +19,13 @@
  */
 package com.spotify.mobius.android;
 
+import android.arch.lifecycle.Observer;
 import com.spotify.mobius.First;
 import com.spotify.mobius.Init;
 import com.spotify.mobius.Mobius;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.android.runners.MainThreadWorkRunner;
+import javax.annotation.Nonnull;
 
 public final class MobiusAndroid {
   private MobiusAndroid() {
@@ -39,5 +41,14 @@ public final class MobiusAndroid {
   public static <M, E, F> MobiusLoop.Controller<M, E> controller(
       MobiusLoop.Factory<M, E, F> loopFactory, M defaultModel, Init<M, F> init) {
     return Mobius.controller(loopFactory, defaultModel, init, MainThreadWorkRunner.create());
+  }
+
+  @Nonnull
+  public static <V> Observer<Accumulator<V>> unfold(@Nonnull Observer<V> observer) {
+    return acc -> {
+      if (acc != null) {
+        acc.handle(observer::onChanged);
+      }
+    };
   }
 }
