@@ -33,11 +33,11 @@ import javax.annotation.Nonnull;
 /**
  * A Mobius Loop controller which is based on the Android ViewModel. <br>
  *
- * <p>This controller introduces a new concept of a View Effect (parameter V) which is a type of
- * effect that requires the corresponding Android lifecycle owner to be in an active state i.e.
- * between onResume and onPause. To allow the normal effect handler to send these, the controller
- * will provide a Consumer of these View Effects to the Loop Factory Provider, which can then be
- * passed into the normal Effect handler so it can delegate view effects where necessary<br>
+ * <p>This controller has the concept of a View Effect (parameter V) which is a type of effect that
+ * requires the corresponding Android lifecycle owner to be in an active state i.e. between onResume
+ * and onPause. To allow the normal effect handler to send these, the controller will provide a
+ * Consumer of these View Effects to the Loop Factory Provider, which can then be passed into the
+ * normal Effect handler so it can delegate view effects where necessary<br>
  *
  * <p>Since it's based on Android View model, this controller will keep the loop alive as long as
  * the lifecycle owner it is associated with (via a factory to produce it) is not destroyed -
@@ -55,14 +55,14 @@ import javax.annotation.Nonnull;
  * @param <S> The View State which will be emitted by this controller
  * @param <V> The View Effect which will be emitted by this controller
  */
-public class ViewModelController<M, E, F, S, V> extends ViewModel {
+public class MobiusAndroidViewModel<M, E, F, S, V> extends ViewModel {
   private final MutableLiveData<S> stateData = new MutableLiveData<>();
   private final MutableLiveData<Accumulator<V>> viewEffectData = new MutableLiveData<>();
   private final MobiusLoop<M, E, F> loop;
   private final M startModel;
   private final Function<M, S> modelToStateMapper;
 
-  public ViewModelController(
+  public MobiusAndroidViewModel(
       @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
       @Nonnull Function<M, S> modelToStateMapper,
       @Nonnull M modelToStartFrom,
@@ -106,7 +106,8 @@ public class ViewModelController<M, E, F, S, V> extends ViewModel {
   }
 
   private void acceptViewEffect(V viewEffect) {
-    final Accumulator<V> currentEffects = viewEffectData.getValue();
-    viewEffectData.postValue(Accumulator.add(currentEffects, viewEffect));
+    synchronized (viewEffectData) {
+      viewEffectData.postValue(Accumulator.add(viewEffectData.getValue(), viewEffect));
+    }
   }
 }

@@ -19,10 +19,8 @@
  */
 package com.spotify.mobius.android;
 
-import static java.util.Collections.singletonList;
-
 import com.spotify.mobius.functions.Consumer;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
@@ -33,17 +31,19 @@ public class Accumulator<T> {
   private final AtomicBoolean handled = new AtomicBoolean(false);
 
   Accumulator() {
-    this(Collections.emptyList());
+    events = new ArrayList<>();
   }
 
-  Accumulator(@Nonnull List<T> event) {
-    events = event;
+  Accumulator(T event) {
+    final List<T> newEvents = new ArrayList<>(1);
+    newEvents.add(event);
+    events = newEvents;
   }
 
   @Nonnull
   static <T> Accumulator<T> add(@Nullable Accumulator<T> accumulator, @Nonnull T event) {
     if (accumulator == null) {
-      return new Accumulator<>(singletonList(event));
+      return new Accumulator<>(event);
     } else {
       return accumulator.plus(event);
     }
@@ -51,19 +51,23 @@ public class Accumulator<T> {
 
   void handle(@Nonnull Consumer<T> eventConsumer) {
     if (handled.compareAndSet(false, true)) {
-      for (T event : events) {
-        eventConsumer.accept(event);
+      synchronized (events) {
+        for (T event : events) {
+          eventConsumer.accept(event);
+        }
       }
     }
   }
 
   @Nonnull
-  Accumulator<T> plus(@Nonnull T event) {
-    if (handled.compareAndSet(false, true)) {
-      events.add(event);
-      return new Accumulator<>(events);
+  private Accumulator<T> plus(@Nonnull T event) {
+    if (handled.get()) {
+      return new Accumulator<>(event);
     } else {
-      return new Accumulator<>(singletonList(event));
+      synchronized (events) {
+        events.add(event);
+      }
+      return this;
     }
   }
 }
