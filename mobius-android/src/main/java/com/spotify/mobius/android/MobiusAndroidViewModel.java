@@ -26,7 +26,6 @@ import com.spotify.mobius.First;
 import com.spotify.mobius.Init;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.MobiusLoop.Factory;
-import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
 import javax.annotation.Nonnull;
 
@@ -63,12 +62,24 @@ public class MobiusAndroidViewModel<M, E, F, S, V> extends ViewModel {
   private final Function<M, S> modelToStateMapper;
 
   public MobiusAndroidViewModel(
-      @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
+      @Nonnull Function<ViewEffectHandler<V>, Factory<M, E, F>> loopFactoryProvider,
       @Nonnull Function<M, S> modelToStateMapper,
       @Nonnull M modelToStartFrom,
       @Nonnull Init<M, F> init) {
     viewEffectData.setValue(new Accumulator<>());
-    final Factory<M, E, F> loopFactory = loopFactoryProvider.apply(this::acceptViewEffect);
+    ViewEffectHandler<V> viewEffectHandler =
+        new ViewEffectHandler<V>() {
+          @Override
+          public void post(@Nonnull V viewEffect) {
+            acceptViewEffect(viewEffect);
+          }
+
+          @Override
+          public void postTransient(@Nonnull V viewEffect) {
+            acceptTransientViewEffect(viewEffect);
+          }
+        };
+    final Factory<M, E, F> loopFactory = loopFactoryProvider.apply(viewEffectHandler);
     final First<M, F> first = init.init(modelToStartFrom);
     this.loop = loopFactory.startFrom(first.model(), first.effects());
     this.startModel = first.model();
@@ -108,6 +119,12 @@ public class MobiusAndroidViewModel<M, E, F, S, V> extends ViewModel {
   private void acceptViewEffect(V viewEffect) {
     synchronized (viewEffectData) {
       viewEffectData.postValue(Accumulator.add(viewEffectData.getValue(), viewEffect));
+    }
+  }
+
+  private void acceptTransientViewEffect(V viewEffect) {
+    if (viewEffectData.hasActiveObservers()) {
+      acceptViewEffect(viewEffect);
     }
   }
 }
