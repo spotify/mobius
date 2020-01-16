@@ -71,6 +71,37 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
   }
 
   @Test
+  public void shouldIncludeEventTypeAndEventAndModelInErrorMessageForEventsAfterDispose()
+      throws Exception {
+    FakeEventSource<TestEvent> eventSource = new FakeEventSource<>();
+
+    mobiusLoop =
+        MobiusLoop.create(
+            update,
+            startModel,
+            startEffects,
+            effectHandler,
+            EventSourceConnectable.create(eventSource),
+            immediateRunner,
+            immediateRunner);
+
+    observer = new RecordingModelObserver<>(); // to clear out the init from the previous setup
+    mobiusLoop.observe(observer);
+
+    eventSource.emit(new EventWithSafeEffect("one"));
+    mobiusLoop.dispose();
+
+    final EventWithSafeEffect event = new EventWithSafeEffect("two");
+    assertThatThrownBy(() -> eventSource.emit(event))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining(event.getClass().getName())
+        .hasMessageContaining(event.toString())
+        .hasMessageContaining(String.valueOf(mobiusLoop.getMostRecentModel()));
+
+    observer.assertStates("init", "init->one");
+  }
+
+  @Test
   public void shouldThrowForEventSourceEventsAfterDispose() throws Exception {
     FakeEventSource<TestEvent> eventSource = new FakeEventSource<>();
 
