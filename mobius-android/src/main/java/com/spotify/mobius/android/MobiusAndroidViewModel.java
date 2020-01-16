@@ -118,7 +118,12 @@ public class MobiusAndroidViewModel<M, E, F, S, V> extends ViewModel {
 
   private void acceptViewEffect(V viewEffect) {
     synchronized (viewEffectData) {
-      viewEffectData.postValue(Accumulator.add(viewEffectData.getValue(), viewEffect));
+      Accumulator<V> effects = viewEffectData.getValue();
+      if (effects == null) {
+        viewEffectData.postValue(new Accumulator<>());
+      } else {
+        viewEffectData.postValue(effects.append(viewEffect));
+      }
     }
   }
 

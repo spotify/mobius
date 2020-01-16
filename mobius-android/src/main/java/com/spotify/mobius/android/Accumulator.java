@@ -20,54 +20,46 @@
 package com.spotify.mobius.android;
 
 import com.spotify.mobius.functions.Consumer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.LinkedList;
+import java.util.Queue;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
+/**
+ * A mutable object queue container that allows objects to be accessed only once before being
+ * cleared
+ *
+ * @param <T> The object to store
+ */
 public class Accumulator<T> {
-  private final List<T> events;
-  private final AtomicBoolean handled = new AtomicBoolean(false);
+  private final Queue<T> objectQueue;
 
   Accumulator() {
-    events = new ArrayList<>();
+    objectQueue = new LinkedList<>();
   }
 
-  Accumulator(T event) {
-    final List<T> newEvents = new ArrayList<>(1);
-    newEvents.add(event);
-    events = newEvents;
+  /**
+   * Sends each and every object stored in this container once, and only once and removes each of
+   * them from the queue
+   *
+   * @param objectConsumer The consumer to receive each object
+   */
+  public void handle(@Nonnull Consumer<T> objectConsumer) {
+    synchronized (objectQueue) {
+      while (!objectQueue.isEmpty()) objectConsumer.accept(objectQueue.poll());
+    }
   }
 
+  /**
+   * Appends the given event to this accumulator's queue
+   *
+   * @param object The object to store
+   * @return this accumulator, for convenience
+   */
   @Nonnull
-  static <T> Accumulator<T> add(@Nullable Accumulator<T> accumulator, @Nonnull T event) {
-    if (accumulator == null) {
-      return new Accumulator<>(event);
-    } else {
-      return accumulator.plus(event);
+  Accumulator<T> append(@Nonnull T object) {
+    synchronized (objectQueue) {
+      objectQueue.add(object);
     }
-  }
-
-  void handle(@Nonnull Consumer<T> eventConsumer) {
-    if (handled.compareAndSet(false, true)) {
-      synchronized (events) {
-        for (T event : events) {
-          eventConsumer.accept(event);
-        }
-      }
-    }
-  }
-
-  @Nonnull
-  private Accumulator<T> plus(@Nonnull T event) {
-    if (handled.get()) {
-      return new Accumulator<>(event);
-    } else {
-      synchronized (events) {
-        events.add(event);
-      }
-      return this;
-    }
+    return this;
   }
 }

@@ -12,6 +12,9 @@ dependencies {
     implementation "com.google.code.findbugs:jsr305:${versions.jsr305}"
     implementation "android.arch.lifecycle:livedata:${versions.livedata}"
     implementation "android.arch.lifecycle:viewmodel:${versions.viewmodel}"
+
+    testImplementation project(':mobius-test')
+    testImplementation "junit:junit:${versions.junit}"
 }
 
 static def gitSha() {
