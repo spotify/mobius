@@ -140,7 +140,10 @@ public class MobiusLoop<M, E, F> implements Disposable {
   public void dispatchEvent(E event) {
     if (disposed)
       throw new IllegalStateException(
-          "This loop has already been disposed. You cannot dispatch events after disposal");
+          String.format(
+              "This loop has already been disposed. You cannot dispatch events after "
+                  + "disposal - event received: %s=%s, currentModel: %s",
+              event.getClass().getName(), event, mostRecentModel));
     eventDispatcher.accept(checkNotNull(event));
   }
 
