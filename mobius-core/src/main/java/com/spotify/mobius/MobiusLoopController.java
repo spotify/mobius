@@ -31,7 +31,7 @@ class MobiusLoopController<M, E, F>
 
   private final MobiusLoop.Factory<M, E, F> loopFactory;
   private final M defaultModel;
-  private final Init<M, F> init;
+  @Nullable private final Init<M, F> init;
   private final WorkRunner mainThreadRunner;
 
   private ControllerStateBase<M, E> currentState;
@@ -39,12 +39,12 @@ class MobiusLoopController<M, E, F>
   MobiusLoopController(
       MobiusLoop.Factory<M, E, F> loopFactory,
       M defaultModel,
-      Init<M, F> init,
+      @Nullable Init<M, F> init,
       WorkRunner mainThreadRunner) {
 
     this.loopFactory = checkNotNull(loopFactory);
     this.defaultModel = checkNotNull(defaultModel);
-    this.init = checkNotNull(init);
+    this.init = init;
     this.mainThreadRunner = checkNotNull(mainThreadRunner);
     goToStateInit(defaultModel);
   }

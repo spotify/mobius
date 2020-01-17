@@ -138,8 +138,7 @@ public final class Mobius {
    */
   public static <M, E, F> MobiusLoop.Controller<M, E> controller(
       MobiusLoop.Factory<M, E, F> loopFactory, M defaultModel) {
-    return new MobiusLoopController<>(
-        loopFactory, defaultModel, model -> First.<M, F>first(model), WorkRunners.immediate());
+    return new MobiusLoopController<>(loopFactory, defaultModel, null, WorkRunners.immediate());
   }
 
   /**
@@ -165,8 +164,7 @@ public final class Mobius {
    */
   public static <M, E, F> MobiusLoop.Controller<M, E> controller(
       MobiusLoop.Factory<M, E, F> loopFactory, M defaultModel, WorkRunner modelRunner) {
-    return new MobiusLoopController<>(
-        loopFactory, defaultModel, model -> First.<M, F>first(model), modelRunner);
+    return new MobiusLoopController<>(loopFactory, defaultModel, null, modelRunner);
   }
 
   /**
