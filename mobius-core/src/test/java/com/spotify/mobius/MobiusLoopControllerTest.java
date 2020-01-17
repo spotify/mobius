@@ -497,6 +497,75 @@ public class MobiusLoopControllerTest {
     }
   }
 
+  public static class CornerCases {
+
+    private final MobiusLoop.Builder<String, String, String> builder =
+        Mobius.<String, String, String>loop(
+                (model, event) -> Next.next(model + event), effectHandler)
+            .eventRunner(WorkRunners::immediate)
+            .effectRunner(WorkRunners::immediate);
+
+    private MobiusLoop.Controller<String, String> underTest;
+
+    @Test
+    public void canStartLoopWithInit() throws Exception {
+      underTest = Mobius.controller(builder.init(First::first), "init");
+
+      underTest.connect(view());
+      underTest.start();
+    }
+
+    @Test
+    public void canStartLoopWithInitialEffects() throws Exception {
+      underTest = Mobius.controller(builder, "init", model -> First.first(model));
+
+      underTest.connect(view());
+      underTest.start();
+    }
+
+    @Test
+    public void cannotStartLoopWithBothInitialEffectsAndInit() throws Exception {
+      underTest =
+          Mobius.controller(
+              builder.init(First::first), "init", (Init<String, String>) First::first);
+
+      underTest.connect(view());
+
+      assertThatThrownBy(() -> underTest.start()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void canStartLoopWithInitAndWorkRunner() throws Exception {
+      underTest = Mobius.controller(builder.init(First::first), "init", WorkRunners.immediate());
+
+      underTest.connect(view());
+      underTest.start();
+    }
+
+    @Test
+    public void canStartLoopWithInitialEffectsAndWorkRunner() throws Exception {
+      underTest =
+          Mobius.controller(builder, "init", model -> First.first(model), WorkRunners.immediate());
+
+      underTest.connect(view());
+      underTest.start();
+    }
+
+    @Test
+    public void cannotStartLoopWithBothInitialEffectsAndInitAndWorkRunner() throws Exception {
+      underTest =
+          Mobius.controller(
+              builder.init(First::first),
+              "init",
+              (Init<String, String>) First::first,
+              WorkRunners.immediate());
+
+      underTest.connect(view());
+
+      assertThatThrownBy(() -> underTest.start()).isInstanceOf(IllegalArgumentException.class);
+    }
+  }
+
   private static class KnownThreadWorkRunner implements WorkRunner {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private volatile Thread workerThread = null;

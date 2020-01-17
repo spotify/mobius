@@ -21,6 +21,7 @@ package com.spotify.mobius;
 
 import com.spotify.mobius.functions.Consumer;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 class ControllerStateRunning<M, E, F> extends ControllerStateBase<M, E> {
   @Nonnull private final ControllerActions<M, E> actions;
@@ -33,14 +34,19 @@ class ControllerStateRunning<M, E, F> extends ControllerStateBase<M, E> {
       Connection<M> renderer,
       MobiusLoop.Factory<M, E, F> loopFactory,
       M modelToStartFrom,
-      Init<M, F> init) {
-
-    First<M, F> first = init.init(modelToStartFrom);
+      @Nullable Init<M, F> init) {
 
     this.actions = actions;
     this.renderer = renderer;
-    this.loop = loopFactory.startFrom(first.model(), first.effects());
-    this.startModel = first.model();
+
+    if (init != null) {
+      First<M, F> first = init.init(modelToStartFrom);
+      this.loop = loopFactory.startFrom(first.model(), first.effects());
+      this.startModel = first.model();
+    } else {
+      this.loop = loopFactory.startFrom(modelToStartFrom);
+      this.startModel = modelToStartFrom;
+    }
   }
 
   void start() {
