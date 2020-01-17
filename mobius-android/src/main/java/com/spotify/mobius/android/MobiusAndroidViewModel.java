@@ -56,7 +56,7 @@ import javax.annotation.Nonnull;
  */
 public class MobiusAndroidViewModel<M, E, F, S, V> extends ViewModel {
   private final MutableLiveData<S> stateData = new MutableLiveData<>();
-  private final MutableLiveData<Accumulator<V>> viewEffectData = new MutableLiveData<>();
+  private final MutableEffectLiveData<V> viewEffectData = new MutableEffectLiveData<>();
   private final MobiusLoop<M, E, F> loop;
   private final M startModel;
   private final Function<M, S> modelToStateMapper;
@@ -66,7 +66,6 @@ public class MobiusAndroidViewModel<M, E, F, S, V> extends ViewModel {
       @Nonnull Function<M, S> modelToStateMapper,
       @Nonnull M modelToStartFrom,
       @Nonnull Init<M, F> init) {
-    viewEffectData.setValue(new Accumulator<>());
     ViewEffectHandler<V> viewEffectHandler =
         new ViewEffectHandler<V>() {
           @Override
@@ -98,7 +97,7 @@ public class MobiusAndroidViewModel<M, E, F, S, V> extends ViewModel {
     return stateData;
   }
 
-  public final LiveData<Accumulator<V>> viewEffectEmitter() {
+  public final EffectLiveData<V> viewEffectEmitter() {
     return viewEffectData;
   }
 
@@ -117,19 +116,10 @@ public class MobiusAndroidViewModel<M, E, F, S, V> extends ViewModel {
   }
 
   private void acceptViewEffect(V viewEffect) {
-    synchronized (viewEffectData) {
-      Accumulator<V> effects = viewEffectData.getValue();
-      if (effects == null) {
-        viewEffectData.postValue(new Accumulator<>());
-      } else {
-        viewEffectData.postValue(effects.append(viewEffect));
-      }
-    }
+    viewEffectData.post(viewEffect);
   }
 
   private void acceptTransientViewEffect(V viewEffect) {
-    if (viewEffectData.hasActiveObservers()) {
-      acceptViewEffect(viewEffect);
-    }
+    viewEffectData.postTransient(viewEffect);
   }
 }

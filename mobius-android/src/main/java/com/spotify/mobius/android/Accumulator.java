@@ -30,7 +30,7 @@ import javax.annotation.Nonnull;
  *
  * @param <T> The object to store
  */
-public class Accumulator<T> {
+class Accumulator<T> {
   private final Queue<T> objectQueue;
 
   Accumulator() {
@@ -43,7 +43,7 @@ public class Accumulator<T> {
    *
    * @param objectConsumer The consumer to receive each object
    */
-  public void handle(@Nonnull Consumer<T> objectConsumer) {
+  void handle(@Nonnull Consumer<T> objectConsumer) {
     synchronized (objectQueue) {
       while (!objectQueue.isEmpty()) objectConsumer.accept(objectQueue.poll());
     }
