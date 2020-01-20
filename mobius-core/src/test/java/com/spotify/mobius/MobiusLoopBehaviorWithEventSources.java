@@ -106,6 +106,27 @@ public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
     assertTrue(eventSource.disposed);
   }
 
+  @Test
+  public void shouldSupportEventSourcesThatEmitOnConnect() throws Exception {
+    // given an event source that immediately emits an event (id 1) on connect
+    ImmediateEmitter eventSource = new ImmediateEmitter();
+
+    // when we create a mobius loop
+    mobiusLoop =
+        MobiusLoop.create(
+            update,
+            startModel,
+            startEffects,
+            effectHandler,
+            eventSource,
+            immediateRunner,
+            immediateRunner);
+
+    // then the event source should receive the initial model as well as the one following from
+    // its emitted event
+    eventSource.receivedModels.assertValues("init", "init->1");
+  }
+
   static class ModelRecordingConnectableEventSource implements Connectable<String, TestEvent> {
 
     final RecordingConsumer<String> receivedModels = new RecordingConsumer<>();
@@ -126,6 +147,26 @@ public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
         public void dispose() {
           disposed = true;
         }
+      };
+    }
+  }
+
+  static class ImmediateEmitter implements Connectable<String, TestEvent> {
+    final RecordingConsumer<String> receivedModels = new RecordingConsumer<>();
+
+    @Nonnull
+    @Override
+    public Connection<String> connect(Consumer<TestEvent> output)
+        throws ConnectionLimitExceededException {
+      output.accept(new EventWithSafeEffect("1"));
+      return new Connection<String>() {
+        @Override
+        public void accept(String value) {
+          receivedModels.accept(value);
+        }
+
+        @Override
+        public void dispose() {}
       };
     }
   }

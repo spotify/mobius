@@ -44,7 +44,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
 
   @Nonnull private final EventProcessor<M, E, F> eventProcessor;
   @Nonnull private final Connection<F> effectConsumer;
-  @Nonnull private final Connection<M> eventSourceModelConsumer;
+  @Nonnull private final QueuingConnection<M> eventSourceModelConsumer;
 
   @Nonnull private final List<Consumer<M>> modelObservers = new CopyOnWriteArrayList<>();
 
@@ -101,6 +101,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
           }
         };
 
+    eventSourceModelConsumer = new QueuingConnection<>();
     Consumer<M> onModelChanged =
         new Consumer<M>() {
           @Override
@@ -127,7 +128,6 @@ public class MobiusLoop<M, E, F> implements Disposable {
         };
 
     this.effectConsumer = effectHandler.connect(eventConsumer);
-    this.eventSourceModelConsumer = eventSource.connect(eventConsumer);
 
     mostRecentModel = startModel;
 
@@ -135,6 +135,8 @@ public class MobiusLoop<M, E, F> implements Disposable {
     for (F effect : startEffects) {
       effectDispatcher.accept(effect);
     }
+
+    this.eventSourceModelConsumer.setDelegate(eventSource.connect(eventConsumer));
   }
 
   public void dispatchEvent(E event) {
