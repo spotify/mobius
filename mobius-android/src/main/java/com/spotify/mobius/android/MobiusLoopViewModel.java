@@ -54,14 +54,15 @@ import javax.annotation.Nonnull;
  * @param <S> The View State which will be emitted by this controller
  * @param <V> The View Effect which will be emitted by this controller
  */
-public class MobiusAndroidViewModel<M, E, F, S, V> extends ViewModel {
+public class MobiusLoopViewModel<M, E, F, S, V> extends ViewModel {
   private final MutableLiveData<S> stateData = new MutableLiveData<>();
-  private final MutableEffectLiveData<V> viewEffectData = new MutableEffectLiveData<>();
+  private final MutableQueueingSingleLiveData<V> viewEffectData =
+      new MutableQueueingSingleLiveData<>();
   private final MobiusLoop<M, E, F> loop;
   private final M startModel;
   private final Function<M, S> modelToStateMapper;
 
-  public MobiusAndroidViewModel(
+  public MobiusLoopViewModel(
       @Nonnull Function<ViewEffectHandler<V>, Factory<M, E, F>> loopFactoryProvider,
       @Nonnull Function<M, S> modelToStateMapper,
       @Nonnull M modelToStartFrom,
@@ -97,7 +98,7 @@ public class MobiusAndroidViewModel<M, E, F, S, V> extends ViewModel {
     return stateData;
   }
 
-  public final EffectLiveData<V> viewEffectEmitter() {
+  public final SingleLiveData<V> viewEffectEmitter() {
     return viewEffectData;
   }
 

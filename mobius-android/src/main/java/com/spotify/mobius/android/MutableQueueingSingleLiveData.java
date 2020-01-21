@@ -24,7 +24,7 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 
 /**
- * An internal implementation of {@link EffectLiveData} that allows posting values. This
+ * An internal implementation of {@link SingleLiveData} that allows posting values. This
  * implementation is backed by an Android Live data and also uses an {@link Accumulator} to allow
  * queueing up values being sent.<br>
  * There are two methods to send values - post and postTransient, the first will queue values, the
@@ -32,7 +32,7 @@ import android.arch.lifecycle.Observer;
  *
  * @param <T> The type of data to store and queue up
  */
-final class MutableEffectLiveData<T> implements EffectLiveData<T> {
+final class MutableQueueingSingleLiveData<T> implements SingleLiveData<T> {
   private final MutableLiveData<Accumulator<T>> data = new MutableLiveData<>();
 
   private static <T> Observer<Accumulator<T>> unfold(Observer<? super T> observer) {
@@ -69,7 +69,7 @@ final class MutableEffectLiveData<T> implements EffectLiveData<T> {
   }
 
   /**
-   * This method will post the value via the live thread, behaving similarly to MutableLiveData's
+   * This method will post the value via the main thread, behaving similarly to MutableLiveData's
    * postValue, with the difference being that if multiple values are being sent while nothing is
    * observing the data, they will be queued up along with any other calls made to post values.
    *
@@ -86,7 +86,7 @@ final class MutableEffectLiveData<T> implements EffectLiveData<T> {
   }
 
   /**
-   * This method will post the value via the live thread, behaving similarly to MutableLiveData's
+   * This method will post the value via the main thread, behaving similarly to MutableLiveData's
    * postValue.<br>
    * However, if nothing is observing the data at the moment, the value is simply discarded.
    *

@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 /**
  * Represents a View Effect handler that handles effects that specifically require an Android
  * component to handle.<br>
- * This is used by the {@link MobiusAndroidViewModel} when creating a loop factory
+ * This is used by the {@link MobiusLoopViewModel} when creating a loop factory
  *
  * @param <V> The View Effect type
  */

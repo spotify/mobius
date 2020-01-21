@@ -25,11 +25,11 @@ import android.arch.lifecycle.Observer;
 /**
  * An interface for an object that acts like an Android LiveData, except it will only emit each
  * object it receives once and only once.<br>
- * This is meant to be used as a means of sending single-handle Events to the view
+ * This is meant to be used as a means of sending single-handle Effects to the view
  *
  * @param <T> The type of object to store
  */
-public interface EffectLiveData<T> {
+public interface SingleLiveData<T> {
 
   boolean hasActiveObservers();
 
