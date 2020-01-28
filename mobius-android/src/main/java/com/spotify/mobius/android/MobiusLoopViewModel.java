@@ -26,6 +26,7 @@ import com.spotify.mobius.First;
 import com.spotify.mobius.Init;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.MobiusLoop.Factory;
+import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
 import javax.annotation.Nonnull;
 
@@ -51,39 +52,23 @@ import javax.annotation.Nonnull;
  * @param <M> The Model with which the Mobius Loop will run
  * @param <E> The Event type accepted by the loop
  * @param <F> The Effect type handled by the loop
- * @param <S> The View State which will be emitted by this controller
  * @param <V> The View Effect which will be emitted by this controller
  */
-public class MobiusLoopViewModel<M, E, F, S, V> extends ViewModel {
-  private final MutableLiveData<S> stateData = new MutableLiveData<>();
+public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
+  private final MutableLiveData<M> modelData = new MutableLiveData<>();
   private final MutableQueueingSingleLiveData<V> viewEffectData =
       new MutableQueueingSingleLiveData<>();
   private final MobiusLoop<M, E, F> loop;
   private final M startModel;
-  private final Function<M, S> modelToStateMapper;
 
   public MobiusLoopViewModel(
-      @Nonnull Function<ViewEffectHandler<V>, Factory<M, E, F>> loopFactoryProvider,
-      @Nonnull Function<M, S> modelToStateMapper,
+      @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
       @Nonnull M modelToStartFrom,
       @Nonnull Init<M, F> init) {
-    ViewEffectHandler<V> viewEffectHandler =
-        new ViewEffectHandler<V>() {
-          @Override
-          public void post(@Nonnull V viewEffect) {
-            acceptViewEffect(viewEffect);
-          }
-
-          @Override
-          public void postTransient(@Nonnull V viewEffect) {
-            acceptTransientViewEffect(viewEffect);
-          }
-        };
-    final Factory<M, E, F> loopFactory = loopFactoryProvider.apply(viewEffectHandler);
+    final Factory<M, E, F> loopFactory = loopFactoryProvider.apply(this::acceptViewEffect);
     final First<M, F> first = init.init(modelToStartFrom);
     this.loop = loopFactory.startFrom(first.model(), first.effects());
     this.startModel = first.model();
-    this.modelToStateMapper = modelToStateMapper;
     loop.observe(this::onModelChanged);
   }
 
@@ -94,8 +79,8 @@ public class MobiusLoopViewModel<M, E, F, S, V> extends ViewModel {
   }
 
   @Nonnull
-  public final LiveData<S> stateEmitter() {
-    return stateData;
+  public final LiveData<M> stateEmitter() {
+    return modelData;
   }
 
   public final SingleLiveData<V> viewEffectEmitter() {
@@ -113,14 +98,10 @@ public class MobiusLoopViewModel<M, E, F, S, V> extends ViewModel {
   }
 
   private void onModelChanged(M model) {
-    stateData.postValue(modelToStateMapper.apply(model));
+    modelData.postValue(model);
   }
 
   private void acceptViewEffect(V viewEffect) {
     viewEffectData.post(viewEffect);
-  }
-
-  private void acceptTransientViewEffect(V viewEffect) {
-    viewEffectData.postTransient(viewEffect);
   }
 }
