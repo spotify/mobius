@@ -21,23 +21,63 @@ package com.spotify.mobius.android;
 
 import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
- * An interface for an object that acts like an Android LiveData, except it will only emit each
- * object it receives once and only once.<br>
- * This is meant to be used as a means of sending single-handle Effects to the view
+ * An interface for a object emitter which emits objects once and only. This can be used to send
+ * effects that need to be handled only once, while also providing a mechanism to queue and handle
+ * effects that occur while the lifecycle-owner is in a paused state.<br>
  *
  * @param <T> The type of object to store
  */
 public interface SingleLiveData<T> {
 
-  boolean hasActiveObservers();
+  /**
+   * @return <code>true</code> if the current observer is in a Resumed state<br>
+   *     <code>false</code> if the current observer is not Resumed, or there is no current observer
+   */
+  boolean hasActiveObserver();
 
-  boolean hasObservers();
+  /**
+   * @return <code>true</code> if there is an observer assigned ot this single live data<br>
+   *     <code>false</code> if there is no current observer assigned
+   */
+  boolean hasObserver();
 
-  void observe(LifecycleOwner owner, Observer<? super T> observer);
+  /**
+   * A utility method for calling {@link #setObserver(LifecycleOwner, Observer, Observer)} that
+   * substitutes null for the optional observer. See linked method doc for full info.
+   */
+  void setObserver(
+      @Nonnull LifecycleOwner lifecycleOwner, @Nonnull Observer<? super T> liveEffectsObserver);
 
-  void observeForever(Observer<? super T> observer);
+  /**
+   * The Single Live Data supports only a single observer, so calling this method will override any
+   * previous observers set.<br>
+   * Effects while the lifecycle is active are sent only to the liveEffectsObserver.<br>
+   * Once the lifecycle owner goes into Paused state, no effects will be forwarded, however, if the
+   * state changes to Resumed, all effects that occurred while Paused will be passed to the optional
+   * pausedEffectsObserver. If this optional observer is not provided, these effects will be
+   * ignored.<br>
+   * Effects that occur while there is no lifecycle owner set will not be queued.
+   *
+   * @param lifecycleOwner This required parameter is used to queue effects while its state is
+   *     Paused and to resume sending effects once it resumes.
+   * @param liveEffectsObserver This required observer will be forwarded all effects while the
+   *     lifecycle owner is in a Resumed state.
+   * @param pausedEffectsObserver The nullable observer will be invoked when the lifecycle owner
+   *     resumes, and will receive all effects that occurred while paused.
+   */
+  void setObserver(
+      @Nonnull LifecycleOwner lifecycleOwner,
+      @Nonnull Observer<? super T> liveEffectsObserver,
+      @Nullable Observer<? super T> pausedEffectsObserver);
 
-  void removeObservers(LifecycleOwner owner);
+  /**
+   * Removes the current observer and clears any queued effects.<br>
+   * To replace the observer without clearing queued effects, use {@link
+   * #setObserver(LifecycleOwner, Observer, Observer)}
+   */
+  void clearObserver();
 }

@@ -19,82 +19,141 @@
  */
 package com.spotify.mobius.android;
 
+import static android.arch.lifecycle.Lifecycle.State.DESTROYED;
+
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.LifecycleObserver;
 import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.OnLifecycleEvent;
+
+import com.spotify.mobius.runners.WorkRunner;
+import java.util.LinkedList;
+import java.util.Queue;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
- * An internal implementation of {@link SingleLiveData} that allows posting values. This
- * implementation is backed by an Android Live data and also uses an {@link Accumulator} to allow
- * queueing up values being sent.<br>
- * There are two methods to send values - post and postTransient, the first will queue values, the
- * other will not. See method docs.
+ * An internal implementation of {@link SingleLiveData} that allows posting values.
  *
  * @param <T> The type of data to store and queue up
  */
 final class MutableQueueingSingleLiveData<T> implements SingleLiveData<T> {
-  private final MutableLiveData<Accumulator<T>> data = new MutableLiveData<>();
 
-  private static <T> Observer<Accumulator<T>> unfold(Observer<? super T> observer) {
-    return accumulator -> {
-      if (accumulator != null) {
-        accumulator.handle(observer::onChanged);
-      }
-    };
+  private final Object lock = new Object();
+  private final WorkRunner effectsWorkRunner;
+
+  @Nonnull private Queue<T> pausedEffectsQueue = new LinkedList<>();
+  @Nullable private Observer<? super T> liveObserver = null;
+  @Nullable private Observer<? super T> pausedObserver = null;
+  private boolean lifecycleOwnerIsPaused = true;
+
+  MutableQueueingSingleLiveData(WorkRunner effectsWorkRunner) {
+    this.effectsWorkRunner = effectsWorkRunner;
   }
 
   @Override
-  public boolean hasActiveObservers() {
-    return data.hasActiveObservers();
+  public boolean hasActiveObserver() {
+    return liveObserver != null && !lifecycleOwnerIsPaused;
   }
 
   @Override
-  public boolean hasObservers() {
-    return data.hasObservers();
+  public boolean hasObserver() {
+    return liveObserver != null;
   }
 
   @Override
-  public void observe(LifecycleOwner owner, Observer<? super T> observer) {
-    data.observe(owner, unfold(observer));
+  public void setObserver(
+      @Nonnull LifecycleOwner owner, @Nonnull Observer<? super T> liveEffectsObserver) {
+    setObserver(owner, liveEffectsObserver, null);
   }
 
   @Override
-  public void observeForever(Observer<? super T> observer) {
-    data.observeForever(unfold(observer));
+  public void setObserver(
+      @Nonnull LifecycleOwner lifecycleOwner,
+      @Nonnull Observer<? super T> liveObserver,
+      @Nullable Observer<? super T> pausedObserver) {
+    if (lifecycleOwner.getLifecycle().getCurrentState() == DESTROYED) {
+      return; // ignore
+    }
+    synchronized (lock) {
+      this.liveObserver = liveObserver;
+      this.pausedObserver = pausedObserver;
+      this.lifecycleOwnerIsPaused = true;
+      lifecycleOwner.getLifecycle().addObserver(new LifecycleObserverHelper());
+    }
   }
 
   @Override
-  public void removeObservers(LifecycleOwner owner) {
-    data.removeObservers(owner);
-  }
-
-  /**
-   * This method will post the value via the main thread, behaving similarly to MutableLiveData's
-   * postValue, with the difference being that if multiple values are being sent while nothing is
-   * observing the data, they will be queued up along with any other calls made to post values.
-   *
-   * @param value The value to emit, or alternatively if nothing is observing, to queue up
-   */
-  void post(T value) {
-    synchronized (data) {
-      if (data.getValue() == null) {
-        data.postValue(new Accumulator<T>().append(value));
-      } else {
-        data.postValue(data.getValue().append(value));
-      }
+  public void clearObserver() {
+    synchronized (lock) {
+      liveObserver = null;
+      pausedObserver = null;
+      lifecycleOwnerIsPaused = true;
+      pausedEffectsQueue.clear();
     }
   }
 
   /**
-   * This method will post the value via the main thread, behaving similarly to MutableLiveData's
-   * postValue.<br>
-   * However, if nothing is observing the data at the moment, the value is simply discarded.
+   * This method will try to send the posted data to any observers
    *
-   * @param value The value to emit, which will be discarded if nothing is observing it
+   * @param data The data to send
    */
-  void postTransient(T value) {
-    if (data.hasActiveObservers()) {
-      post(value);
+  void post(@Nonnull final T data) {
+    synchronized (lock) {
+      if (liveObserver == null) {
+        return;
+      }
+      if (lifecycleOwnerIsPaused) {
+        pausedEffectsQueue.offer(data);
+      } else {
+        effectsWorkRunner.post(() -> liveObserver.onChanged(data));
+      }
+    }
+  }
+
+  private void onLifecycleChanged(Lifecycle.Event event) {
+    switch (event) {
+      case ON_RESUME:
+        synchronized (lock) {
+          lifecycleOwnerIsPaused = false;
+          sendQueuedEffects();
+        }
+        break;
+      case ON_PAUSE:
+        synchronized (lock) {
+          lifecycleOwnerIsPaused = true;
+        }
+        break;
+      case ON_DESTROY:
+        synchronized (lock) {
+          clearObserver();
+        }
+        break;
+    }
+  }
+
+  private void sendQueuedEffects() {
+    synchronized (lock) {
+      if (lifecycleOwnerIsPaused || pausedObserver == null || pausedEffectsQueue.isEmpty()) {
+        return;
+      }
+      final Queue<T> queueToSend = pausedEffectsQueue;
+      pausedEffectsQueue = new LinkedList<>();
+      effectsWorkRunner.post(
+          () -> {
+            while (!queueToSend.isEmpty()) {
+              pausedObserver.onChanged(queueToSend.poll());
+            }
+          });
+    }
+  }
+
+  private class LifecycleObserverHelper implements LifecycleObserver {
+    @SuppressWarnings("unused")
+    @OnLifecycleEvent(Lifecycle.Event.ON_ANY)
+    void onAny(LifecycleOwner source, Lifecycle.Event event) {
+      onLifecycleChanged(event);
     }
   }
 }

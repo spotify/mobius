@@ -26,8 +26,10 @@ import com.spotify.mobius.First;
 import com.spotify.mobius.Init;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.MobiusLoop.Factory;
+import com.spotify.mobius.android.runners.MainThreadWorkRunner;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
+import com.spotify.mobius.runners.WorkRunner;
 import javax.annotation.Nonnull;
 
 /**
@@ -56,20 +58,29 @@ import javax.annotation.Nonnull;
  */
 public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   private final MutableLiveData<M> modelData = new MutableLiveData<>();
-  private final MutableQueueingSingleLiveData<V> viewEffectData =
-      new MutableQueueingSingleLiveData<>();
+  private final MutableQueueingSingleLiveData<V> viewEffectData;
   private final MobiusLoop<M, E, F> loop;
   private final M startModel;
 
-  public MobiusLoopViewModel(
+  private MobiusLoopViewModel(
+      @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
+      @Nonnull M modelToStartFrom,
+      @Nonnull Init<M, F> init,
+      @Nonnull WorkRunner mainLoopWorkRunner) {
+    final Factory<M, E, F> loopFactory = loopFactoryProvider.apply(this::acceptViewEffect);
+    final First<M, F> first = init.init(modelToStartFrom);
+    loop = loopFactory.startFrom(first.model(), first.effects());
+    startModel = first.model();
+    viewEffectData = new MutableQueueingSingleLiveData<>(mainLoopWorkRunner);
+    loop.observe(this::onModelChanged);
+  }
+
+  public static <M, E, F, V> MobiusLoopViewModel create(
       @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
       @Nonnull M modelToStartFrom,
       @Nonnull Init<M, F> init) {
-    final Factory<M, E, F> loopFactory = loopFactoryProvider.apply(this::acceptViewEffect);
-    final First<M, F> first = init.init(modelToStartFrom);
-    this.loop = loopFactory.startFrom(first.model(), first.effects());
-    this.startModel = first.model();
-    loop.observe(this::onModelChanged);
+    return new MobiusLoopViewModel<>(
+        loopFactoryProvider, modelToStartFrom, init, MainThreadWorkRunner.create());
   }
 
   @Nonnull
