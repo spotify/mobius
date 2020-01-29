@@ -33,28 +33,28 @@ import com.spotify.mobius.runners.WorkRunner;
 import javax.annotation.Nonnull;
 
 /**
- * A Mobius Loop controller which is based on the Android ViewModel. <br>
+ * A Mobius Loop lifecycle handler which is based on the Android ViewModel. <br>
  *
- * <p>This controller has the concept of a View Effect (parameter V) which is a type of effect that
+ * <p>This view model has the concept of a View Effect (parameter V) which is a type of effect that
  * requires the corresponding Android lifecycle owner to be in an active state i.e. between onResume
- * and onPause. To allow the normal effect handler to send these, the controller will provide a
+ * and onPause. To allow the normal effect handler to send these, the view model will provide a
  * Consumer of these View Effects to the Loop Factory Provider, which can then be passed into the
  * normal Effect handler so it can delegate view effects where necessary<br>
  *
- * <p>Since it's based on Android View model, this controller will keep the loop alive as long as
+ * <p>Since it's based on Android View model, this view model will keep the loop alive as long as
  * the lifecycle owner it is associated with (via a factory to produce it) is not destroyed -
  * meaning the Mobius loop will persist through rotations and brief app minimization to background,
  * <br>
  *
  * <p>While the loop is running but the view is paused, which is between onPause and onDestroy, the
- * controller will keep the latest model/state sent by the loop and will keep a queue of View
+ * view model will keep the latest model/state sent by the loop and will keep a queue of View
  * Effects that have been sent by the effect handler. The loop is automatically disposed when the
  * lifecycle owner is destroyed
  *
  * @param <M> The Model with which the Mobius Loop will run
  * @param <E> The Event type accepted by the loop
  * @param <F> The Effect type handled by the loop
- * @param <V> The View Effect which will be emitted by this controller
+ * @param <V> The View Effect which will be emitted by this view model
  */
 public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   private final MutableLiveData<M> modelData = new MutableLiveData<>();
