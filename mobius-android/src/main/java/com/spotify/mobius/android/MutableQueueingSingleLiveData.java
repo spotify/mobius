@@ -26,7 +26,6 @@ import android.arch.lifecycle.LifecycleObserver;
 import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.OnLifecycleEvent;
-
 import com.spotify.mobius.runners.WorkRunner;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -40,9 +39,16 @@ import javax.annotation.Nullable;
  */
 final class MutableQueueingSingleLiveData<T> implements SingleLiveData<T> {
 
+  private class LifecycleObserverHelper implements LifecycleObserver {
+    @SuppressWarnings("unused")
+    @OnLifecycleEvent(Lifecycle.Event.ON_ANY)
+    void onAny(LifecycleOwner source, Lifecycle.Event event) {
+      onLifecycleChanged(event);
+    }
+  }
+
   private final Object lock = new Object();
   private final WorkRunner effectsWorkRunner;
-
   @Nonnull private Queue<T> pausedEffectsQueue = new LinkedList<>();
   @Nullable private Observer<? super T> liveObserver = null;
   @Nullable private Observer<? super T> pausedObserver = null;
@@ -146,14 +152,6 @@ final class MutableQueueingSingleLiveData<T> implements SingleLiveData<T> {
               pausedObserver.onChanged(queueToSend.poll());
             }
           });
-    }
-  }
-
-  private class LifecycleObserverHelper implements LifecycleObserver {
-    @SuppressWarnings("unused")
-    @OnLifecycleEvent(Lifecycle.Event.ON_ANY)
-    void onAny(LifecycleOwner source, Lifecycle.Event event) {
-      onLifecycleChanged(event);
     }
   }
 }
