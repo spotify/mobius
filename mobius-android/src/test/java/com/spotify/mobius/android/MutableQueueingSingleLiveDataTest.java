@@ -92,6 +92,20 @@ public class MutableQueueingSingleLiveDataTest {
   }
 
   @Test
+  public void shouldSendLiveAndQueuedEventsWhenRunningAndThenPausedObserver() {
+    fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
+
+    singleLiveData.setObserver(fakeLifecycleOwner1, recordingObserver1, recordingObserver2);
+    singleLiveData.post("one");
+    fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
+    singleLiveData.post("two");
+    fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
+
+    recordingObserver1.assertValues("one");
+    recordingObserver2.assertValues("two");
+  }
+
+  @Test
   public void shouldSendQueuedEffectsIfObserverSwitchedToResumedOneClearing() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
 
