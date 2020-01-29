@@ -33,11 +33,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * An internal implementation of {@link SingleLiveData} that allows posting values.
+ * An internal implementation of {@link LiveQueue} that allows posting values.
  *
  * @param <T> The type of data to store and queue up
  */
-final class MutableQueueingSingleLiveData<T> implements SingleLiveData<T> {
+final class MutableLiveQueue<T> implements LiveQueue<T> {
 
   private class LifecycleObserverHelper implements LifecycleObserver {
     @SuppressWarnings("unused")
@@ -51,10 +51,10 @@ final class MutableQueueingSingleLiveData<T> implements SingleLiveData<T> {
   private final WorkRunner effectsWorkRunner;
   @Nonnull private Queue<T> pausedEffectsQueue = new LinkedList<>();
   @Nullable private Observer<? super T> liveObserver = null;
-  @Nullable private Observer<? super T> pausedObserver = null;
+  @Nullable private Observer<Queue<? super T>> pausedObserver = null;
   private boolean lifecycleOwnerIsPaused = true;
 
-  MutableQueueingSingleLiveData(WorkRunner effectsWorkRunner) {
+  MutableLiveQueue(WorkRunner effectsWorkRunner) {
     this.effectsWorkRunner = effectsWorkRunner;
   }
 
@@ -78,7 +78,7 @@ final class MutableQueueingSingleLiveData<T> implements SingleLiveData<T> {
   public void setObserver(
       @Nonnull LifecycleOwner lifecycleOwner,
       @Nonnull Observer<? super T> liveObserver,
-      @Nullable Observer<? super T> pausedObserver) {
+      @Nullable Observer<Queue<? super T>> pausedObserver) {
     if (lifecycleOwner.getLifecycle().getCurrentState() == DESTROYED) {
       return; // ignore
     }
@@ -146,12 +146,7 @@ final class MutableQueueingSingleLiveData<T> implements SingleLiveData<T> {
       }
       final Queue<T> queueToSend = pausedEffectsQueue;
       pausedEffectsQueue = new LinkedList<>();
-      effectsWorkRunner.post(
-          () -> {
-            while (!queueToSend.isEmpty()) {
-              pausedObserver.onChanged(queueToSend.poll());
-            }
-          });
+      effectsWorkRunner.post(() -> pausedObserver.onChanged(queueToSend));
     }
   }
 }

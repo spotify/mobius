@@ -21,6 +21,7 @@ package com.spotify.mobius.android;
 
 import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
+import java.util.Queue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -31,7 +32,7 @@ import javax.annotation.Nullable;
  *
  * @param <T> The type of object to store
  */
-public interface SingleLiveData<T> {
+public interface LiveQueue<T> {
 
   /**
    * @return <code>true</code> if the current observer is in a Resumed state<br>
@@ -67,12 +68,12 @@ public interface SingleLiveData<T> {
    * @param liveEffectsObserver This required observer will be forwarded all effects while the
    *     lifecycle owner is in a Resumed state.
    * @param pausedEffectsObserver The nullable observer will be invoked when the lifecycle owner
-   *     resumes, and will receive all effects that occurred while paused.
+   *     resumes, and will receive a queue of effects, ordered as they occurred while paused.
    */
   void setObserver(
       @Nonnull LifecycleOwner lifecycleOwner,
       @Nonnull Observer<? super T> liveEffectsObserver,
-      @Nullable Observer<? super T> pausedEffectsObserver);
+      @Nullable Observer<Queue<? super T>> pausedEffectsObserver);
 
   /**
    * Removes the current observer and clears any queued effects.<br>

@@ -58,7 +58,7 @@ import javax.annotation.Nonnull;
  */
 public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   private final MutableLiveData<M> modelData = new MutableLiveData<>();
-  private final MutableQueueingSingleLiveData<V> viewEffectData;
+  private final MutableLiveQueue<V> viewEffectData;
   private final MobiusLoop<M, E, F> loop;
   private final M startModel;
 
@@ -71,7 +71,7 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
     final First<M, F> first = init.init(modelToStartFrom);
     loop = loopFactory.startFrom(first.model(), first.effects());
     startModel = first.model();
-    viewEffectData = new MutableQueueingSingleLiveData<>(mainLoopWorkRunner);
+    viewEffectData = new MutableLiveQueue<>(mainLoopWorkRunner);
     loop.observe(this::onModelChanged);
   }
 
@@ -94,7 +94,7 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
     return modelData;
   }
 
-  public final SingleLiveData<V> viewEffectEmitter() {
+  public final LiveQueue<V> viewEffectEmitter() {
     return viewEffectData;
   }
 
