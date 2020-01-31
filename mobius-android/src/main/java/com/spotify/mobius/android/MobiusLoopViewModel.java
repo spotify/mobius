@@ -49,7 +49,7 @@ import javax.annotation.Nonnull;
  * <p>While the loop is running but the view is paused, which is between onPause and onDestroy, the
  * view model will keep the latest model/state sent by the loop and will keep a queue of View
  * Effects that have been sent by the effect handler. The loop is automatically disposed when the
- * lifecycle owner is destroyed
+ * lifecycle owner is destroyed.
  *
  * @param <M> The Model with which the Mobius Loop will run
  * @param <E> The Event type accepted by the loop
@@ -58,7 +58,7 @@ import javax.annotation.Nonnull;
  */
 public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   private final MutableLiveData<M> modelData = new MutableLiveData<>();
-  private final MutableLiveQueue<V> viewEffectData;
+  private final MutableLiveQueue<V> viewEffectQueue;
   private final MobiusLoop<M, E, F> loop;
   private final M startModel;
 
@@ -71,7 +71,7 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
     final First<M, F> first = init.init(modelToStartFrom);
     loop = loopFactory.startFrom(first.model(), first.effects());
     startModel = first.model();
-    viewEffectData = new MutableLiveQueue<>(mainLoopWorkRunner);
+    viewEffectQueue = new MutableLiveQueue<>(mainLoopWorkRunner);
     loop.observe(this::onModelChanged);
   }
 
@@ -94,8 +94,9 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
     return modelData;
   }
 
+  @Nonnull
   public final LiveQueue<V> getViewEffects() {
-    return viewEffectData;
+    return viewEffectQueue;
   }
 
   public void dispatchEvent(@Nonnull E event) {
@@ -113,6 +114,6 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   }
 
   private void acceptViewEffect(V viewEffect) {
-    viewEffectData.post(viewEffect);
+    viewEffectQueue.post(viewEffect);
   }
 }

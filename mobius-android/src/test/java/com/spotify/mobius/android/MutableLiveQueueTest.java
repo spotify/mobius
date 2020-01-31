@@ -32,7 +32,7 @@ import org.junit.Test;
 
 public class MutableLiveQueueTest {
 
-  private MutableLiveQueue<String> singleLiveData;
+  private MutableLiveQueue<String> mutableLiveQueue;
 
   private FakeLifecycleOwner fakeLifecycleOwner1;
   private FakeLifecycleOwner fakeLifecycleOwner2;
@@ -41,7 +41,7 @@ public class MutableLiveQueueTest {
 
   @Before
   public void setup() {
-    singleLiveData = new MutableLiveQueue<>(WorkRunners.immediate());
+    mutableLiveQueue = new MutableLiveQueue<>(WorkRunners.immediate());
     fakeLifecycleOwner1 = new FakeLifecycleOwner();
     fakeLifecycleOwner2 = new FakeLifecycleOwner();
     liveObserver = new RecordingObserver<>();
@@ -52,20 +52,20 @@ public class MutableLiveQueueTest {
   public void shouldIgnoreDestroyedLifecycleOwner() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY);
 
-    singleLiveData.setObserver(fakeLifecycleOwner1, liveObserver);
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, liveObserver);
 
-    assertThat(singleLiveData.hasObserver(), equalTo(false));
+    assertThat(mutableLiveQueue.hasObserver(), equalTo(false));
   }
 
   @Test
   public void shouldSendDataToResumedObserver() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
 
-    singleLiveData.setObserver(fakeLifecycleOwner1, liveObserver);
-    singleLiveData.post("one");
-    singleLiveData.post("two");
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, liveObserver);
+    mutableLiveQueue.post("one");
+    mutableLiveQueue.post("two");
 
-    assertThat(singleLiveData.hasActiveObserver(), equalTo(true));
+    assertThat(mutableLiveQueue.hasActiveObserver(), equalTo(true));
     liveObserver.assertValues("one", "two");
   }
 
@@ -73,9 +73,9 @@ public class MutableLiveQueueTest {
   public void shouldNotQueueEventsWithNoObserver() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
 
-    singleLiveData.post("one");
-    singleLiveData.post("two");
-    singleLiveData.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
+    mutableLiveQueue.post("one");
+    mutableLiveQueue.post("two");
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
 
     assertThat(liveObserver.valueCount(), equalTo(0));
     assertThat(pausedObserver.valueCount(), equalTo(0));
@@ -85,9 +85,9 @@ public class MutableLiveQueueTest {
   public void shouldSendQueuedEventsWithValidPausedObserver() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
 
-    singleLiveData.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
-    singleLiveData.post("one");
-    singleLiveData.post("two");
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
+    mutableLiveQueue.post("one");
+    mutableLiveQueue.post("two");
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
 
     assertThat(liveObserver.valueCount(), equalTo(0));
@@ -98,10 +98,10 @@ public class MutableLiveQueueTest {
   public void shouldSendLiveAndQueuedEventsWhenRunningAndThenPausedObserver() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
 
-    singleLiveData.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
-    singleLiveData.post("one");
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
+    mutableLiveQueue.post("one");
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
-    singleLiveData.post("two");
+    mutableLiveQueue.post("two");
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
 
     liveObserver.assertValues("one");
@@ -109,27 +109,27 @@ public class MutableLiveQueueTest {
   }
 
   @Test
-  public void shouldSendQueuedEffectsIfObserverSwitchedToResumedOneClearing() {
+  public void shouldSendQueuedEffectsIfObserverSwappedToResumedOneClearing() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
 
-    singleLiveData.setObserver(fakeLifecycleOwner1, s -> {}, s -> {});
-    singleLiveData.post("one");
-    singleLiveData.post("two");
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, s -> {}, s -> {});
+    mutableLiveQueue.post("one");
+    mutableLiveQueue.post("two");
     fakeLifecycleOwner2.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
-    singleLiveData.setObserver(fakeLifecycleOwner2, liveObserver, pausedObserver);
+    mutableLiveQueue.setObserver(fakeLifecycleOwner2, liveObserver, pausedObserver);
 
     assertThat(liveObserver.valueCount(), equalTo(0));
     pausedObserver.assertValues(queueOf("one", "two"));
   }
 
   @Test
-  public void shouldSendQueuedEffectsIfObserverSwitchedWithoutClearing() {
+  public void shouldSendQueuedEffectsIfObserverSwappedWithoutClearing() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
 
-    singleLiveData.setObserver(fakeLifecycleOwner1, s -> {}, s -> {});
-    singleLiveData.post("one");
-    singleLiveData.post("two");
-    singleLiveData.setObserver(fakeLifecycleOwner2, liveObserver, pausedObserver);
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, s -> {}, s -> {});
+    mutableLiveQueue.post("one");
+    mutableLiveQueue.post("two");
+    mutableLiveQueue.setObserver(fakeLifecycleOwner2, liveObserver, pausedObserver);
     fakeLifecycleOwner2.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
 
     assertThat(liveObserver.valueCount(), equalTo(0));
@@ -140,11 +140,11 @@ public class MutableLiveQueueTest {
   public void shouldClearQueueIfObserverCleared() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
 
-    singleLiveData.setObserver(fakeLifecycleOwner1, s -> {}, s -> {});
-    singleLiveData.post("one");
-    singleLiveData.post("two");
-    singleLiveData.clearObserver();
-    singleLiveData.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, s -> {}, s -> {});
+    mutableLiveQueue.post("one");
+    mutableLiveQueue.post("two");
+    mutableLiveQueue.clearObserver();
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
 
     assertThat(liveObserver.valueCount(), equalTo(0));
@@ -155,9 +155,9 @@ public class MutableLiveQueueTest {
   public void shouldClearQueueIfLifecycleDestroyed() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
 
-    singleLiveData.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
-    singleLiveData.post("one");
-    singleLiveData.post("two");
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
+    mutableLiveQueue.post("one");
+    mutableLiveQueue.post("two");
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY);
 
     assertThat(liveObserver.valueCount(), equalTo(0));

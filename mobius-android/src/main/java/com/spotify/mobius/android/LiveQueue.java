@@ -25,7 +25,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * An interface for a object emitter which emits objects once and only. This can be used to send
+ * An interface for an object emitter which emits objects exactly once. This can be used to send
  * effects that need to be handled only once, while also providing a mechanism to queue and handle
  * effects that occur while the lifecycle-owner is in a paused state.<br>
  *
@@ -40,7 +40,7 @@ public interface LiveQueue<T> {
   boolean hasActiveObserver();
 
   /**
-   * @return <code>true</code> if there is an observer assigned ot this single live data<br>
+   * @return <code>true</code> if there is an observer of this <code>LiveQueue</code><br>
    *     <code>false</code> if there is no current observer assigned
    */
   boolean hasObserver();
@@ -53,8 +53,8 @@ public interface LiveQueue<T> {
       @Nonnull LifecycleOwner lifecycleOwner, @Nonnull Observer<? super T> liveEffectsObserver);
 
   /**
-   * The Single Live Data supports only a single observer, so calling this method will override any
-   * previous observers set.<br>
+   * The <code>LiveQueue</code> supports only a single observer, so calling this method will
+   * override any previous observers set.<br>
    * Effects while the lifecycle is active are sent only to the liveEffectsObserver.<br>
    * Once the lifecycle owner goes into Paused state, no effects will be forwarded, however, if the
    * state changes to Resumed, all effects that occurred while Paused will be passed to the optional
