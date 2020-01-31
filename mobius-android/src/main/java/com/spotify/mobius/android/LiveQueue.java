@@ -21,7 +21,6 @@ package com.spotify.mobius.android;
 
 import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
-import java.util.Queue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -73,7 +72,7 @@ public interface LiveQueue<T> {
   void setObserver(
       @Nonnull LifecycleOwner lifecycleOwner,
       @Nonnull Observer<? super T> liveEffectsObserver,
-      @Nullable Observer<Queue<? super T>> pausedEffectsObserver);
+      @Nullable Observer<Iterable<? super T>> pausedEffectsObserver);
 
   /**
    * Removes the current observer and clears any queued effects.<br>

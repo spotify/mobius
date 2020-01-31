@@ -51,7 +51,7 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
   private final WorkRunner effectsWorkRunner;
   @Nonnull private Queue<T> pausedEffectsQueue = new LinkedList<>();
   @Nullable private Observer<? super T> liveObserver = null;
-  @Nullable private Observer<Queue<? super T>> pausedObserver = null;
+  @Nullable private Observer<Iterable<? super T>> pausedObserver = null;
   private boolean lifecycleOwnerIsPaused = true;
 
   MutableLiveQueue(WorkRunner effectsWorkRunner) {
@@ -78,7 +78,7 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
   public void setObserver(
       @Nonnull LifecycleOwner lifecycleOwner,
       @Nonnull Observer<? super T> liveObserver,
-      @Nullable Observer<Queue<? super T>> pausedObserver) {
+      @Nullable Observer<Iterable<? super T>> pausedObserver) {
     if (lifecycleOwner.getLifecycle().getCurrentState() == DESTROYED) {
       return; // ignore
     }

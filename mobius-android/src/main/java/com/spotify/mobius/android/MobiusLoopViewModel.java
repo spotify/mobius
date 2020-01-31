@@ -90,11 +90,11 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   }
 
   @Nonnull
-  public final LiveData<M> stateEmitter() {
+  public final LiveData<M> getModels() {
     return modelData;
   }
 
-  public final LiveQueue<V> viewEffectEmitter() {
+  public final LiveQueue<V> getViewEffects() {
     return viewEffectData;
   }
 
