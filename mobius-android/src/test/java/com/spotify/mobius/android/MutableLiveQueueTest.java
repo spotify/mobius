@@ -37,7 +37,7 @@ public class MutableLiveQueueTest {
   private FakeLifecycleOwner fakeLifecycleOwner1;
   private FakeLifecycleOwner fakeLifecycleOwner2;
   private RecordingObserver<String> liveObserver;
-  private RecordingObserver<Queue<? super String>> pausedObserver;
+  private RecordingObserver<Iterable<? super String>> pausedObserver;
 
   @Before
   public void setup() {
