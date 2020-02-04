@@ -51,6 +51,11 @@ import javax.annotation.Nonnull;
  * Effects that have been sent by the effect handler. The loop is automatically disposed when the
  * lifecycle owner is destroyed.
  *
+ * <p>This class is {@code public} with a {@code protected} constructor in order to facilitate using
+ * it as a key in a {@link android.arch.lifecycle.ViewModelProvider}. It's not intended to be
+ * subclassed in order to change its behaviour, and for that reason, all its methods are private or
+ * final.
+ *
  * @param <M> The Model with which the Mobius Loop will run
  * @param <E> The Event type accepted by the loop
  * @param <F> The Effect type handled by the loop
@@ -99,7 +104,7 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
     return viewEffectQueue;
   }
 
-  public void dispatchEvent(@Nonnull E event) {
+  public final void dispatchEvent(@Nonnull E event) {
     loop.dispatchEvent(event);
   }
 
