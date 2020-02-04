@@ -62,7 +62,7 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   private final MobiusLoop<M, E, F> loop;
   private final M startModel;
 
-  private MobiusLoopViewModel(
+  protected MobiusLoopViewModel(
       @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
       @Nonnull M modelToStartFrom,
       @Nonnull Init<M, F> init,
