@@ -10,8 +10,8 @@ buildscript {
         }
     }
     dependencies {
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.5.2"
-        classpath('com.android.tools.build:gradle:3.5.2')
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.13.0"
+        classpath('com.android.tools.build:gradle:3.5.3')
         classpath 'net.researchgate:gradle-release:2.8.1'
     }
 }
@@ -39,13 +39,13 @@ ext {
 
     versions = [
             'autoValue'        : '1.7',
-            'assertjcore'      : '3.8.0',
-            'awaitility'       : '3.0.0',
+            'assertjcore'      : '3.15.0',
+            'awaitility'       : '4.0.2',
             'guava'            : '27.0.1-android',
             'junit'            : '4.12',
             'logback'          : '1.2.3',
             'rxJava'           : '1.3.8',
-            'rxJava2'          : '2.2.6',
+            'rxJava2'          : '2.2.17',
             'slf4j'            : '1.7.25',
             'jsr305'           : '3.0.1',
             'hamcrestLibrary'  : '1.3',

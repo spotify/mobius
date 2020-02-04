@@ -32,6 +32,7 @@ import com.spotify.mobius.runners.ImmediateWorkRunner;
 import com.spotify.mobius.runners.WorkRunner;
 import com.spotify.mobius.runners.WorkRunners;
 import com.spotify.mobius.test.SimpleConnection;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -40,7 +41,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nonnull;
-import org.awaitility.Duration;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +79,7 @@ public class MobiusTest {
 
     loop.dispatchEvent(8);
 
-    await().atMost(Duration.ONE_SECOND).until(() -> loop.getMostRecentModel(), is("start83"));
+    await().atMost(Duration.ofSeconds(1)).until(() -> loop.getMostRecentModel(), is("start83"));
   }
 
   @Test
@@ -97,7 +97,7 @@ public class MobiusTest {
 
     loop.dispatchEvent(3);
 
-    await().atMost(Duration.ONE_SECOND).until(() -> "start33".equals(loop.getMostRecentModel()));
+    await().atMost(Duration.ofSeconds(1)).until(() -> "start33".equals(loop.getMostRecentModel()));
   }
 
   @Test
@@ -107,7 +107,7 @@ public class MobiusTest {
 
     loop.dispatchEvent(3);
 
-    await().atMost(Duration.ONE_SECOND).until(() -> runner.runCounter.get() == 1);
+    await().atMost(Duration.ofSeconds(1)).until(() -> runner.runCounter.get() == 1);
   }
 
   @Test
@@ -117,7 +117,7 @@ public class MobiusTest {
 
     loop.dispatchEvent(3);
 
-    await().atMost(Duration.ONE_SECOND).until(() -> runner.runCounter.get() == 1);
+    await().atMost(Duration.ofSeconds(1)).until(() -> runner.runCounter.get() == 1);
   }
 
   @Test
@@ -132,7 +132,7 @@ public class MobiusTest {
 
     eventSource.consumer.accept(7);
 
-    await().atMost(Duration.ONE_SECOND).until(() -> loop.getMostRecentModel(), is("start7"));
+    await().atMost(Duration.ofSeconds(1)).until(() -> loop.getMostRecentModel(), is("start7"));
   }
 
   @Test
@@ -147,7 +147,7 @@ public class MobiusTest {
 
     eventSource.consumer.accept(7);
 
-    await().atMost(Duration.ONE_SECOND).until(() -> loop.getMostRecentModel(), is("start7"));
+    await().atMost(Duration.ofSeconds(1)).until(() -> loop.getMostRecentModel(), is("start7"));
   }
 
   @Test
@@ -181,7 +181,7 @@ public class MobiusTest {
 
     loop.dispatchEvent(97);
 
-    await().atMost(Duration.ONE_SECOND).until(() -> loop.getMostRecentModel(), is("resume97"));
+    await().atMost(Duration.ofSeconds(1)).until(() -> loop.getMostRecentModel(), is("resume97"));
   }
 
   @Test
@@ -191,13 +191,13 @@ public class MobiusTest {
     // one
     loop = factory.startFrom("first");
     loop.dispatchEvent(97);
-    await().atMost(Duration.ONE_SECOND).until(() -> loop.getMostRecentModel(), is("first97"));
+    await().atMost(Duration.ofSeconds(1)).until(() -> loop.getMostRecentModel(), is("first97"));
     loop.dispose();
 
     // then another one
     loop = factory.startFrom("second");
     loop.dispatchEvent(97);
-    await().atMost(Duration.ONE_SECOND).until(() -> loop.getMostRecentModel(), is("second97"));
+    await().atMost(Duration.ofSeconds(1)).until(() -> loop.getMostRecentModel(), is("second97"));
   }
 
   @Test
@@ -207,7 +207,7 @@ public class MobiusTest {
     loop =
         Mobius.loop(UPDATE, HANDLER).effectRunner(() -> runner).startFrom(MY_MODEL, effects(false));
 
-    await().atMost(Duration.ONE_SECOND).until(() -> runner.runCounter.get() == 1);
+    await().atMost(Duration.ofSeconds(1)).until(() -> runner.runCounter.get() == 1);
   }
 
   @Test

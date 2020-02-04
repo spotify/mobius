@@ -24,8 +24,8 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.lang.Thread.State;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
-import org.awaitility.Duration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -61,13 +61,13 @@ public class RecordingConsumerTest {
             });
 
     t.start();
-    await().atMost(Duration.FIVE_SECONDS).until(() -> t.getState() == State.TIMED_WAITING);
+    await().atMost(Duration.ofSeconds(5)).until(() -> t.getState() == State.TIMED_WAITING);
 
     // when a value arrives
     consumer.accept("heya");
 
     // then, in less than 1/10th of the configured waiting time,
-    await().atMost(Duration.TEN_SECONDS).until(() -> waitResult.get() != null);
+    await().atMost(Duration.ofSeconds(10)).until(() -> waitResult.get() != null);
 
     // the result is 'true'
     assertThat(waitResult.get(), is(true));
