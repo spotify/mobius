@@ -2,7 +2,7 @@ language: android
 
 android:
   components:
-    - build-tools-27.0.3
+    - build-tools-29.0.3
 
 before_cache:
   # Gradle creates lock files on every run which makes the cache "different" for every build
