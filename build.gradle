@@ -12,14 +12,14 @@ buildscript {
     dependencies {
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.5.2"
         classpath('com.android.tools.build:gradle:3.1.0')
-        classpath 'net.researchgate:gradle-release:2.6.0'
+        classpath 'net.researchgate:gradle-release:2.8.1'
     }
 }
 
 plugins {
     id 'com.github.sherter.google-java-format' version '0.6'
-    id 'com.github.hierynomus.license' version '0.14.0'
-    id 'io.codearte.nexus-staging' version '0.11.0'
+    id 'com.github.hierynomus.license' version '0.15.0'
+    id 'io.codearte.nexus-staging' version '0.21.2'
 }
 
 repositories {
