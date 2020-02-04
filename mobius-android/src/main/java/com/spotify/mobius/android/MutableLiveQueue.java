@@ -29,6 +29,8 @@ import android.arch.lifecycle.OnLifecycleEvent;
 import com.spotify.mobius.runners.WorkRunner;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -49,13 +51,14 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
 
   private final Object lock = new Object();
   private final WorkRunner effectsWorkRunner;
-  @Nonnull private Queue<T> pausedEffectsQueue = new LinkedList<>();
+  private final BlockingQueue<T> pausedEffectsQueue;
   @Nullable private Observer<? super T> liveObserver = null;
   @Nullable private Observer<Iterable<? super T>> pausedObserver = null;
   private boolean lifecycleOwnerIsPaused = true;
 
-  MutableLiveQueue(WorkRunner effectsWorkRunner) {
+  MutableLiveQueue(WorkRunner effectsWorkRunner, int capacity) {
     this.effectsWorkRunner = effectsWorkRunner;
+    this.pausedEffectsQueue = new ArrayBlockingQueue<>(capacity);
   }
 
   @Override
@@ -111,7 +114,13 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
         return;
       }
       if (lifecycleOwnerIsPaused) {
-        pausedEffectsQueue.offer(data);
+        if (!pausedEffectsQueue.offer(data)) {
+          throw new IllegalStateException(
+              "Maximum effect queue size ("
+                  + pausedEffectsQueue.size()
+                  + ") exceeded when posting: "
+                  + data);
+        }
       } else {
         effectsWorkRunner.post(() -> liveObserver.onChanged(data));
       }
@@ -144,8 +153,8 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
       if (lifecycleOwnerIsPaused || pausedObserver == null || pausedEffectsQueue.isEmpty()) {
         return;
       }
-      final Queue<T> queueToSend = pausedEffectsQueue;
-      pausedEffectsQueue = new LinkedList<>();
+      final Queue<T> queueToSend = new LinkedList<>();
+      pausedEffectsQueue.drainTo(queueToSend);
       effectsWorkRunner.post(() -> pausedObserver.onChanged(queueToSend));
     }
   }
