@@ -19,6 +19,7 @@
  */
 package com.spotify.mobius.android;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -32,6 +33,7 @@ import org.junit.Test;
 
 public class MutableLiveQueueTest {
 
+  public static final int QUEUE_CAPACITY = 4;
   private MutableLiveQueue<String> mutableLiveQueue;
 
   private FakeLifecycleOwner fakeLifecycleOwner1;
@@ -41,7 +43,7 @@ public class MutableLiveQueueTest {
 
   @Before
   public void setup() {
-    mutableLiveQueue = new MutableLiveQueue<>(WorkRunners.immediate());
+    mutableLiveQueue = new MutableLiveQueue<>(WorkRunners.immediate(), QUEUE_CAPACITY);
     fakeLifecycleOwner1 = new FakeLifecycleOwner();
     fakeLifecycleOwner2 = new FakeLifecycleOwner();
     liveObserver = new RecordingObserver<>();
@@ -162,6 +164,23 @@ public class MutableLiveQueueTest {
 
     assertThat(liveObserver.valueCount(), equalTo(0));
     assertThat(pausedObserver.valueCount(), equalTo(0));
+  }
+
+  @Test
+  public void shouldThrowIllegalStateExceptionIfQueueFull() throws Exception {
+    fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
+
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, liveObserver);
+
+    mutableLiveQueue.post("1");
+    mutableLiveQueue.post("2");
+    mutableLiveQueue.post("3");
+    mutableLiveQueue.post("4");
+
+    assertThatThrownBy(() -> mutableLiveQueue.post("this one breaks"))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("this one breaks")
+        .hasMessageContaining(String.valueOf(QUEUE_CAPACITY));
   }
 
   private Queue<String> queueOf(String... args) {
