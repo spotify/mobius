@@ -139,6 +139,13 @@ public class MobiusLoop<M, E, F> implements Disposable {
     this.eventSourceModelConsumer.setDelegate(eventSource.connect(eventConsumer));
   }
 
+  /**
+   * Dispatch an event to this loop for processing.
+   *
+   * @param event the event to process
+   * @throws IllegalStateException if the loop has been disposed, or if there is an error processing
+   *     the event.
+   */
   public void dispatchEvent(E event) {
     if (disposed)
       throw new IllegalStateException(
@@ -146,7 +153,12 @@ public class MobiusLoop<M, E, F> implements Disposable {
               "This loop has already been disposed. You cannot dispatch events after "
                   + "disposal - event received: %s=%s, currentModel: %s",
               event.getClass().getName(), event, mostRecentModel));
-    eventDispatcher.accept(checkNotNull(event));
+
+    try {
+      eventDispatcher.accept(checkNotNull(event));
+    } catch (RuntimeException e) {
+      throw new IllegalStateException("Exception processing event: " + event, e);
+    }
   }
 
   @Nullable
