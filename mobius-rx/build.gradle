@@ -1,69 +1,31 @@
 apply plugin: 'java-library'
 
-
-configurations {
-    apt {
-        visible false
-    }
-}
-
 dependencies {
     api "io.reactivex:rxjava:${versions.rxJava}"
     api project(':mobius-core')
 
     implementation "com.google.code.findbugs:jsr305:${versions.jsr305}"
 
+    testAnnotationProcessor "com.google.auto.value:auto-value:${versions.autoValue}"
+
     testImplementation project(':mobius-test')
     testImplementation "junit:junit:${versions.junit}"
     testImplementation "com.google.guava:guava:${versions.guava}"
-    testImplementation "com.google.auto.value:auto-value:${versions.autoValue}"
     testImplementation "org.hamcrest:hamcrest-library:${versions.hamcrestLibrary}"
     testImplementation "ch.qos.logback:logback-classic:${versions.logback}"
     testImplementation "org.awaitility:awaitility:${versions.awaitility}"
-    apt "com.google.auto.value:auto-value:${versions.autoValue}"
-}
-
-def generatedSrcDir = new File(project.buildDir, "/generated/java")
-def generatedTestSrcDir = new File(project.buildDir, "/generated-test/java")
-
-sourceSets {
-    generated.java.srcDir(generatedSrcDir)
-    test.java.srcDirs += [ generatedTestSrcDir ]
+    testImplementation "com.google.auto.value:auto-value-annotations:${versions.autoValue}"
 }
 
 compileJava {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
-
-    options.annotationProcessorPath = configurations.apt
-
-    options.compilerArgs << "-s"
-    options.compilerArgs << "$generatedSrcDir"
-
-    doFirst {
-        // make sure that directory exists and is empty - the latter in order to avoid "endPosTable already set"
-        file(generatedSrcDir).deleteDir()
-        file(generatedSrcDir).mkdirs()
-    }
 }
 
 test {
     testLogging {
         events "skipped", "failed"
         exceptionFormat "full"
-    }
-}
-
-compileTestJava {
-    options.annotationProcessorPath = configurations.apt
-
-    options.compilerArgs << "-s"
-    options.compilerArgs << "$generatedTestSrcDir"
-
-    doFirst {
-        // make sure that directory exists and is empty - the latter in order to avoid "endPosTable already set"
-        file(generatedTestSrcDir).deleteDir()
-        file(generatedTestSrcDir).mkdirs()
     }
 }
 

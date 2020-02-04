@@ -11,7 +11,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.5.2"
-        classpath('com.android.tools.build:gradle:3.1.0')
+        classpath('com.android.tools.build:gradle:3.5.2')
         classpath 'net.researchgate:gradle-release:2.8.1'
     }
 }
@@ -38,7 +38,7 @@ ext {
     targetSdkVersion = compileSdkVersion
 
     versions = [
-            'autoValue'        : '1.5.3',
+            'autoValue'        : '1.7',
             'assertjcore'      : '3.8.0',
             'awaitility'       : '3.0.0',
             'guava'            : '27.0.1-android',
