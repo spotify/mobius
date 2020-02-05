@@ -31,11 +31,10 @@ import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.schedulers.TestScheduler;
 import io.reactivex.subjects.PublishSubject;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import org.awaitility.Duration;
 import org.junit.Test;
 
 public class TransformersTest {
@@ -153,7 +152,7 @@ public class TransformersTest {
     // Since effects are processed in parallel thanks to FlatMap
     // we only wait the max time and add 100 milliseconds to
     // avoid test flakiness thanks to time
-    return new Duration(maxDuration + 100, TimeUnit.MILLISECONDS);
+    return Duration.ofMillis(maxDuration + 100);
   }
 
   private int duration(String f) {

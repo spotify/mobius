@@ -31,10 +31,10 @@ import com.spotify.mobius.testdomain.EventWithSafeEffect;
 import com.spotify.mobius.testdomain.SafeEffect;
 import com.spotify.mobius.testdomain.TestEffect;
 import com.spotify.mobius.testdomain.TestEvent;
+import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import javax.annotation.Nonnull;
-import org.awaitility.Duration;
 import org.junit.Test;
 
 public class MobiusLoopBehaviorWithEffectHandlers extends MobiusLoopTest {
@@ -100,11 +100,11 @@ public class MobiusLoopBehaviorWithEffectHandlers extends MobiusLoopTest {
     mobiusLoop.dispatchEvent(new EventWithSafeEffect("1"));
     mobiusLoop.dispatchEvent(new TestEvent("2"));
 
-    await().atMost(Duration.ONE_SECOND).until(() -> observer.valueCount() >= 3);
+    await().atMost(Duration.ofSeconds(1)).until(() -> observer.valueCount() >= 3);
 
     future.set(new TestEvent("3"));
 
-    await().atMost(Duration.ONE_SECOND).until(() -> observer.valueCount() >= 4);
+    await().atMost(Duration.ofSeconds(1)).until(() -> observer.valueCount() >= 4);
     observer.assertStates("init", "init->1", "init->1->2", "init->1->2->3");
   }
 
@@ -137,7 +137,7 @@ public class MobiusLoopBehaviorWithEffectHandlers extends MobiusLoopTest {
     mobiusLoop.dispatchEvent(new TestEvent("2"));
     mobiusLoop.dispatchEvent(new EventWithSafeEffect("3"));
 
-    await().atMost(Duration.FIVE_SECONDS).until(() -> observer.valueCount() >= 5);
+    await().atMost(Duration.ofSeconds(5)).until(() -> observer.valueCount() >= 5);
 
     observer.assertStates(
         "init", "init->1", "init->1->2", "init->1->2->3", "init->1->2->3->effect3");

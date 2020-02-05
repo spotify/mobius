@@ -2,11 +2,15 @@ language: android
 
 android:
   components:
-    - build-tools-27.0.3
+    - build-tools-29.0.3
+
+before_install:
+  - yes | sdkmanager "platforms;android-29"
 
 before_cache:
   # Gradle creates lock files on every run which makes the cache "different" for every build
   - find ~/.gradle/caches/ -name "*.lock" -type f -delete
+
 cache:
   directories:
     - $HOME/.gradle/caches/

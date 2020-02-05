@@ -100,11 +100,12 @@ class FlatMapCompletable<T, R> implements Observable.Transformer<T, R> {
                     new Func1<Object, R>() {
                       @Override
                       public R call(Object ignored) {
-                        // Since our upstream has ignoreElements on it, values will never ever be emitted, and
-                        // therefore this function call won't actually be executed. This map is really only present
-                        // in order to cast the stream to type R. Throwing an exception in this never-to-be-executed
-                        // function allows us say that the return type is T without actually needing to be able
-                        // to produce values of type T.
+                        // Since our upstream has ignoreElements on it, values will never ever be
+                        // emitted, and therefore this function call won't actually be executed.
+                        // This map is  really only present in order to cast the stream to type R.
+                        // Throwing an exception in this never-to-be-executed function allows us
+                        // say that the return type is T without actually needing to be able to
+                        // produce values of type T.
                         throw new IllegalStateException(
                             "Impossible state! ignoreElements() mustn't allow values to be emitted!");
                       }

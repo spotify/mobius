@@ -24,8 +24,8 @@ import static org.hamcrest.core.Is.is;
 
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.functions.BiFunction;
+import java.time.Duration;
 import javax.annotation.Nonnull;
-import org.awaitility.Duration;
 import org.junit.Test;
 
 public class MobiusExtrasTest {
@@ -48,6 +48,6 @@ public class MobiusExtrasTest {
 
     loop.dispatchEvent(8);
 
-    await().atMost(Duration.ONE_SECOND).until(() -> loop.getMostRecentModel(), is("start8"));
+    await().atMost(Duration.ofSeconds(1)).until(() -> loop.getMostRecentModel(), is("start8"));
   }
 }

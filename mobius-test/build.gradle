@@ -9,7 +9,7 @@ configurations {
 
 dependencies {
     compileOnly project(':mobius-core')
-    compileOnly "com.google.auto.value:auto-value:${versions.autoValue}"
+    annotationProcessor "com.google.auto.value:auto-value:${versions.autoValue}"
 
     apt "com.google.auto.value:auto-value:${versions.autoValue}"
 
@@ -17,6 +17,7 @@ dependencies {
 
     implementation "junit:junit:${versions.junit}"
     implementation "org.hamcrest:hamcrest-library:${versions.hamcrestLibrary}"
+    implementation "com.google.auto.value:auto-value-annotations:${versions.autoValue}"
 
     testImplementation project(':mobius-core')
     testImplementation "junit:junit:${versions.junit}"

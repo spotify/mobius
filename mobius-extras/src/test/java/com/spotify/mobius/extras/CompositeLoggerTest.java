@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.auto.value.AutoValue;
 import com.spotify.mobius.First;
 import com.spotify.mobius.MobiusLoop;
-import com.spotify.mobius.MobiusLoop.Logger;
 import com.spotify.mobius.Next;
 import java.util.ArrayList;
 import java.util.Collections;
