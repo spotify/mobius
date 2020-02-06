@@ -457,13 +457,10 @@ public final class RxMobius {
 
     private static <F, E> Consumer<Throwable> defaultOnError(
         final ObservableTransformer<? extends F, E> effectHandler) {
-      return new Consumer<Throwable>() {
-        @Override
-        public void accept(Throwable throwable) throws Exception {
-          RxJavaPlugins.getErrorHandler()
-              .accept(new ConnectionException(effectHandler.getClass().toString(), throwable));
-        }
-      };
+      return throwable ->
+          RxJavaPlugins.onError(
+              new ConnectionException(
+                  "in effect handler: " + effectHandler.getClass().toString(), throwable));
     }
 
     private interface OnErrorFunction<T, R> extends Function<T, R> {
