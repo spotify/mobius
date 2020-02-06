@@ -21,10 +21,10 @@ package com.spotify.mobius.android;
 
 import static org.mockito.Mockito.mock;
 
-import android.arch.lifecycle.Lifecycle;
-import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.LifecycleRegistry;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
 import org.mockito.Mockito;
 
 public class FakeLifecycleOwner implements LifecycleOwner {

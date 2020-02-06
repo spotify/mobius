@@ -19,8 +19,8 @@
  */
 package com.spotify.mobius.android;
 
-import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.Observer;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 

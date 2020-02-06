@@ -19,13 +19,13 @@
  */
 package com.spotify.mobius.android;
 
-import static android.arch.lifecycle.Lifecycle.State.DESTROYED;
+import static androidx.lifecycle.Lifecycle.State.DESTROYED;
 
-import android.arch.lifecycle.Lifecycle;
-import android.arch.lifecycle.LifecycleObserver;
-import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.OnLifecycleEvent;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.OnLifecycleEvent;
 import com.spotify.mobius.runners.WorkRunner;
 import java.util.LinkedList;
 import java.util.Queue;
