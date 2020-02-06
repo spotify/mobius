@@ -69,7 +69,9 @@ subprojects {
             // for android, auto-format, even though that leads to worse error messages for syntax
             // errors
             android.libraryVariants.all { variant ->
-                variant.javaCompiler.dependsOn(rootProject.tasks.format)
+                variant.getJavaCompileProvider().configure {
+                    dependsOn rootProject.tasks.format
+                }
             }
         } else if (proj.plugins.findPlugin('java-library')) {
             proj.apply from: rootProject.file('gradle/binary_compatibility.gradle')
