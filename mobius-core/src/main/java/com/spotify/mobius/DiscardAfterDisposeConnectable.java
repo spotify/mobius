@@ -30,7 +30,7 @@ import javax.annotation.Nonnull;
 
 /**
  * A {@link Connectable} that ensures that {@link Connection}s created by the wrapped {@link
- * Connectable} doesn't emit or receive any values after being disposed.
+ * Connectable} don't emit or receive any values after being disposed.
  *
  * <p>This only acts as a safeguard, you still need to make sure that the Connectable disposes of
  * resources correctly.
