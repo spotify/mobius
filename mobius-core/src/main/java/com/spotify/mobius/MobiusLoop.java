@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
  * <p>It hooks up all the different parts of the main Mobius loop, and dispatches messages
  * internally on the appropriate executors.
  */
-public class MobiusLoop<M, E, F> implements Disposable {
+public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
 
   @Nonnull private final MessageDispatcher<E> eventDispatcher;
   @Nonnull private final MessageDispatcher<F> effectDispatcher;
@@ -139,13 +139,7 @@ public class MobiusLoop<M, E, F> implements Disposable {
     this.eventSourceModelConsumer.setDelegate(eventSource.connect(eventConsumer));
   }
 
-  /**
-   * Dispatch an event to this loop for processing.
-   *
-   * @param event the event to process
-   * @throws IllegalStateException if the loop has been disposed, or if there is an error processing
-   *     the event.
-   */
+  @Override
   public void dispatchEvent(E event) {
     if (disposed)
       throw new IllegalStateException(
@@ -161,22 +155,13 @@ public class MobiusLoop<M, E, F> implements Disposable {
     }
   }
 
+  @Override
   @Nullable
   public M getMostRecentModel() {
     return mostRecentModel;
   }
 
-  /**
-   * Add an observer of model changes to this loop. If {@link #getMostRecentModel()} is non-null,
-   * the observer will immediately be notified of the most recent model. The observer will be
-   * notified of future changes to the model until the loop or the returned {@link Disposable} is
-   * disposed.
-   *
-   * @param observer a non-null observer of model changes
-   * @return a {@link Disposable} that can be used to stop further notifications to the observer
-   * @throws NullPointerException if the observer is null
-   * @throws IllegalStateException if the loop has been disposed
-   */
+  @Override
   public Disposable observe(final Consumer<M> observer) {
     if (disposed)
       throw new IllegalStateException(
