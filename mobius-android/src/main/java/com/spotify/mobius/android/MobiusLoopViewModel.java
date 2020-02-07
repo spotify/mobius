@@ -19,9 +19,9 @@
  */
 package com.spotify.mobius.android;
 
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.ViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
 import com.spotify.mobius.First;
 import com.spotify.mobius.Init;
 import com.spotify.mobius.MobiusLoop;
@@ -54,9 +54,8 @@ import javax.annotation.Nonnull;
  * leads to an {@code IllegalStateException} when posting further effects.
  *
  * <p>This class is {@code public} with a {@code protected} constructor in order to facilitate using
- * it as a key in a {@link android.arch.lifecycle.ViewModelProvider}. It's not intended to be
- * subclassed in order to change its behaviour, and for that reason, all its methods are private or
- * final.
+ * it as a key in a {@link androidx.lifecycle.ViewModelProvider}. It's not intended to be subclassed
+ * in order to change its behaviour, and for that reason, all its methods are private or final.
  *
  * @param <M> The Model with which the Mobius Loop will run
  * @param <E> The Event type accepted by the loop

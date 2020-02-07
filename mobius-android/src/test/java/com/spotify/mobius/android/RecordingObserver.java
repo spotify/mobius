@@ -23,7 +23,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 
-import android.arch.lifecycle.Observer;
+import androidx.lifecycle.Observer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
