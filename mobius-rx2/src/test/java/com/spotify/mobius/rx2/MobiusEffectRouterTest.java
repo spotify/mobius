@@ -30,6 +30,7 @@ import io.reactivex.ObservableTransformer;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.observers.TestObserver;
+import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.subjects.PublishSubject;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Assert;
@@ -209,6 +210,34 @@ public class MobiusEffectRouterTest {
 
     testSubscriber.awaitTerminalEvent();
     testSubscriber.assertError(expectedException);
+  }
+
+  @Test
+  public void shouldHandleNullRxJavaErrorHandler() throws Exception {
+    // given no RxJava error handler
+    RxJavaPlugins.setErrorHandler(null);
+
+    // and a router with a broken effect handler
+    publishSubject = PublishSubject.create();
+    testSubscriber = TestObserver.create();
+
+    final RuntimeException expected = new RuntimeException("expected!");
+    ObservableTransformer<TestEffect, TestEvent> router =
+        RxMobius.<TestEffect, TestEvent>subtypeEffectHandler()
+            .addFunction(
+                A.class,
+                a -> {
+                  throw expected;
+                })
+            .build();
+
+    publishSubject.compose(router).subscribe(testSubscriber);
+
+    // when an event is sent, it doesn't crash (the exception does get printed to stderr)
+    publishSubject.onNext(A.create(1));
+
+    // and the right exception is forwarded to the test subscriber
+    testSubscriber.assertError(t -> t == expected);
   }
 
   private interface TestEffect {}
