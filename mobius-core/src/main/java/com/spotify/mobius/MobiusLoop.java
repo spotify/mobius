@@ -39,6 +39,9 @@ import javax.annotation.Nullable;
  */
 public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
 
+  @Nonnull private final DiscardAfterDisposeWrapper<E> onEventReceived;
+  @Nonnull private final DiscardAfterDisposeWrapper<F> onEffectReceived;
+
   @Nonnull private final MessageDispatcher<E> eventDispatcher;
   @Nonnull private final MessageDispatcher<F> effectDispatcher;
 
@@ -81,25 +84,27 @@ public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
       WorkRunner eventRunner,
       WorkRunner effectRunner) {
 
-    Consumer<E> onEventReceived =
-        new Consumer<E>() {
-          @Override
-          public void accept(E event) {
-            eventProcessor.update(event);
-          }
-        };
+    onEventReceived =
+        DiscardAfterDisposeWrapper.wrapConsumer(
+            new Consumer<E>() {
+              @Override
+              public void accept(E event) {
+                eventProcessor.update(event);
+              }
+            });
 
-    Consumer<F> onEffectReceived =
-        new Consumer<F>() {
-          @Override
-          public void accept(F effect) {
-            try {
-              effectConsumer.accept(effect);
-            } catch (Throwable t) {
-              throw new ConnectionException(effect, t);
-            }
-          }
-        };
+    onEffectReceived =
+        DiscardAfterDisposeWrapper.wrapConsumer(
+            new Consumer<F>() {
+              @Override
+              public void accept(F effect) {
+                try {
+                  effectConsumer.accept(effect);
+                } catch (Throwable t) {
+                  throw new ConnectionException(effect, t);
+                }
+              }
+            });
 
     eventSourceModelConsumer = new QueuingConnection<>();
     Consumer<M> onModelChanged =
@@ -188,10 +193,10 @@ public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
     // Remove model observers so that they receive no further model changes.
     modelObservers.clear();
 
-    // Disable the event and effect dispatchers. This will cause any further
-    // events or effects posted to the dispatchers to be ignored and logged.
-    eventDispatcher.disable();
-    effectDispatcher.disable();
+    // Disable the event and effect handling. This will cause any further
+    // events or effects that are received by the loop to be ignored.
+    onEventReceived.dispose();
+    onEffectReceived.dispose();
 
     // Stop the event source and effect handler.
     eventSourceModelConsumer.dispose();

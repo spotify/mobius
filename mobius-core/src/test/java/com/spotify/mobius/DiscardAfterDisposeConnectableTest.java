@@ -38,15 +38,15 @@ import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SafeConnectableTest {
+public class DiscardAfterDisposeConnectableTest {
 
   private RecordingConsumer<String> recordingConsumer;
-  private Connection<Integer> safeConsumer;
+  private Connection<Integer> connection;
   private Semaphore blockEffectPerformer;
   private Semaphore signalEffectHasBeenPerformed;
   private BlockableConnection blockableConnection;
 
-  private SafeConnectable<Integer, String> underTest;
+  private DiscardAfterDisposeConnectable<Integer, String> underTest;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool();
 
@@ -59,7 +59,7 @@ public class SafeConnectableTest {
     blockableConnection = new BlockableConnection(recordingConsumer);
 
     underTest =
-        new SafeConnectable<>(
+        new DiscardAfterDisposeConnectable<>(
             new Connectable<Integer, String>() {
               @Nonnull
               @Override
@@ -71,7 +71,7 @@ public class SafeConnectableTest {
 
   @Test
   public void nullActualThrowsNPE() throws Exception {
-    assertThatThrownBy(() -> new SafeConnectable<Integer, String>(null))
+    assertThatThrownBy(() -> new DiscardAfterDisposeConnectable<Integer, String>(null))
         .isInstanceOf(NullPointerException.class);
   }
 
@@ -83,7 +83,7 @@ public class SafeConnectableTest {
   @Test
   public void nullDisposableConsumerReturnedToConnectThrowsNPE() throws Exception {
     underTest =
-        new SafeConnectable<>(
+        new DiscardAfterDisposeConnectable<>(
             new Connectable<Integer, String>() {
               @Nonnull
               @Override
@@ -99,30 +99,30 @@ public class SafeConnectableTest {
 
   @Test
   public void delegatesEffectsToActualSink() throws Exception {
-    safeConsumer = underTest.connect(recordingConsumer);
-    safeConsumer.accept(1);
+    connection = underTest.connect(recordingConsumer);
+    connection.accept(1);
     recordingConsumer.assertValues("Value is: 1");
   }
 
   @Test
   public void delegatesDisposeToActualSink() throws Exception {
-    safeConsumer = underTest.connect(recordingConsumer);
-    safeConsumer.dispose();
+    connection = underTest.connect(recordingConsumer);
+    connection.dispose();
     assertThat(blockableConnection.disposed, is(true));
   }
 
   @Test
   public void discardsEventsAfterDisposal() throws Exception {
-    safeConsumer = underTest.connect(recordingConsumer);
+    connection = underTest.connect(recordingConsumer);
 
     // given the effect performer is blocked
     blockableConnection.block = true;
 
     // when an effect is requested
-    Future<?> effectPerformedFuture = executorService.submit(() -> safeConsumer.accept(1));
+    Future<?> effectPerformedFuture = executorService.submit(() -> connection.accept(1));
 
     // and the sink is disposed
-    safeConsumer.dispose();
+    connection.dispose();
 
     // before the effect gets performed
     // (needs permitting the blocked effect performer to proceed)
@@ -140,11 +140,11 @@ public class SafeConnectableTest {
   @Test
   public void discardsEffectsAfterDisposal() throws Exception {
     // given a disposed sink
-    safeConsumer = underTest.connect(recordingConsumer);
-    safeConsumer.dispose();
+    connection = underTest.connect(recordingConsumer);
+    connection.dispose();
 
     // when an effect is performed
-    safeConsumer.accept(1);
+    connection.accept(1);
 
     // then no effects or events happen
     blockableConnection.assertEffects();
