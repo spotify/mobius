@@ -30,6 +30,7 @@ import com.spotify.mobius.android.runners.MainThreadWorkRunner;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
 import com.spotify.mobius.runners.WorkRunner;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
 
 /**
@@ -67,6 +68,7 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   private final MutableLiveQueue<V> viewEffectQueue;
   private final MobiusLoop<M, E, F> loop;
   private final M startModel;
+  private final AtomicBoolean loopActive = new AtomicBoolean(true);
 
   protected MobiusLoopViewModel(
       @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
@@ -144,12 +146,15 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   }
 
   public final void dispatchEvent(@Nonnull E event) {
-    loop.dispatchEvent(event);
+    if (loopActive.get()) {
+      loop.dispatchEvent(event);
+    }
   }
 
   @Override
   protected final void onCleared() {
     super.onCleared();
+    loopActive.set(false);
     loop.dispose();
   }
 
