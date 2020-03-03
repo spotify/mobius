@@ -134,11 +134,11 @@ public class MobiusLoopTest {
     mobiusLoop.observe(observer);
   }
 
-  public static class FakeEffectHandler implements Connectable<TestEffect, TestEvent> {
+  static class FakeEffectHandler implements Connectable<TestEffect, TestEvent> {
 
     private volatile Consumer<TestEvent> eventConsumer = null;
 
-    public void emitEvent(TestEvent event) {
+    void emitEvent(TestEvent event) {
       // throws NPE if not connected; that's OK
       eventConsumer.accept(event);
     }
