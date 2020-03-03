@@ -96,7 +96,7 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
    * @param <F> the effect type
    * @param <V> the view effect type
    */
-  public static <M, E, F, V> MobiusLoopViewModel create(
+  public static <M, E, F, V> MobiusLoopViewModel<M, E, F, V> create(
       @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
       @Nonnull M modelToStartFrom,
       @Nonnull Init<M, F> init) {

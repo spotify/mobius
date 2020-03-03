@@ -50,7 +50,8 @@ ext {
             'jsr305'           : '3.0.2',
             'hamcrestLibrary'  : '1.3',
             'mockito'          : '1.10.19',
-            'androidxLifecycle' : '2.2.0'
+            'androidxLifecycle' : '2.2.0',
+            'androidXCoreTesting' : '2.1.0'
     ]
 }
 
