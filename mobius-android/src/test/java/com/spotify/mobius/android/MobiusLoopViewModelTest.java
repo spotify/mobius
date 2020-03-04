@@ -43,15 +43,13 @@ import org.junit.Test;
 
 public class MobiusLoopViewModelTest {
 
-  private final List<TestEvent> recordedEvents = new LinkedList<>();
-  private final List<TestModel> recordedModels = new LinkedList<>();
+  @Rule public InstantTaskExecutorRule rule = new InstantTaskExecutorRule();
+  private List<TestEvent> recordedEvents = new LinkedList<>();
   private final Update<TestModel, TestEvent, TestEffect> updateFunction =
       (model, event) -> {
-        recordedModels.add(model);
         recordedEvents.add(event);
         return Next.noChange();
       };
-  @Rule public InstantTaskExecutorRule rule = new InstantTaskExecutorRule();
   private MobiusLoopViewModel<TestModel, TestEvent, TestEffect, TestViewEffect> underTest;
   private TestViewEffectHandler<TestEvent, TestEffect, TestViewEffect> testViewEffectHandler;
 
@@ -61,16 +59,17 @@ public class MobiusLoopViewModelTest {
       new RecordingObserver<>();
   private RecordingObserver<Iterable<TestViewEffect>> recordingBackgroundEffectObserver =
       new RecordingObserver<>();
+  private TestModel initialModel;
 
   @Before
   public void setUp() {
     fakeLifecycle = new FakeLifecycleOwner();
-    recordedEvents.clear();
-    recordedModels.clear();
+    recordedEvents = new LinkedList<>();
     testViewEffectHandler = null;
-    recordingModelObserver.clearValues();
-    recordingForegroundViewEffectObserver.clearValues();
-    recordingBackgroundEffectObserver.clearValues();
+    recordingModelObserver = new RecordingObserver<>();
+    recordingForegroundViewEffectObserver = new RecordingObserver<>();
+    recordingBackgroundEffectObserver = new RecordingObserver<>();
+    initialModel = new TestModel("initial model");
     //noinspection Convert2MethodRef
     underTest =
         new MobiusLoopViewModel<>(
@@ -80,7 +79,7 @@ public class MobiusLoopViewModelTest {
                   .eventRunner(ImmediateWorkRunner::new)
                   .effectRunner(ImmediateWorkRunner::new);
             },
-            new TestModel("initial model"),
+            initialModel,
             (TestModel model) -> First.first(model),
             new ImmediateWorkRunner(),
             100);
@@ -98,17 +97,7 @@ public class MobiusLoopViewModelTest {
     fakeLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
 
     assertThat(underTest.getModel().name, equalTo("initial model"));
-  }
-
-  @Test
-  public void testViewModelSendsEventAndModelIntoLoop() {
-    fakeLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
-    testViewEffectHandler.sendEvent(new TestEvent("an initial event"));
-
-    assertThat(recordedModels.size(), equalTo(1));
-    assertThat(recordedModels.get(0).name, equalTo("initial model"));
-    assertThat(recordedEvents.size(), equalTo(1));
-    assertThat(recordedEvents.get(0).name, equalTo("an initial event"));
+    recordingModelObserver.assertValues(initialModel);
   }
 
   @Test
