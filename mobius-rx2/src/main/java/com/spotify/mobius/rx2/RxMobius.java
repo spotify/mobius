@@ -422,7 +422,7 @@ public final class RxMobius {
     /**
      * Optionally set a shared error handler in case a handler throws an uncaught exception.
      *
-     * <p>The default is to use {@link RxJavaPlugins#getErrorHandler()}. Note that any exception
+     * <p>The default is to use {@link RxJavaPlugins#onError(Throwable)}. Note that any exception
      * thrown by a handler is a fatal error and this method doesn't enable safe error handling, only
      * configurable crash reporting.
      *

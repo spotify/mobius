@@ -66,7 +66,7 @@ public final class RxConnectables {
                     new io.reactivex.functions.Consumer<Throwable>() {
                       @Override
                       public void accept(Throwable throwable) throws Exception {
-                        RxJavaPlugins.getErrorHandler().accept(throwable);
+                        RxJavaPlugins.onError(throwable);
                       }
                     },
                     new Action() {
