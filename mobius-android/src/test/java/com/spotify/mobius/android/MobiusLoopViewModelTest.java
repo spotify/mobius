@@ -129,7 +129,7 @@ public class MobiusLoopViewModelTest {
 
   @Test
   public void
-      testViewModelSendsViewEffectsToBackgroundObseerveWhenLifecycleWasPausedThenIsResumed() {
+      testViewModelSendsViewEffectsToBackgroundObserverWhenLifecycleWasPausedThenIsResumed() {
     fakeLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
     fakeLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
     testViewEffectHandler.viewEffectConsumer.accept(new TestViewEffect("view effect 1"));
