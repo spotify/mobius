@@ -50,7 +50,7 @@ public interface LiveQueue<T> {
    * substitutes null for the optional observer. See linked method doc for full info.
    */
   void setObserver(
-      @Nonnull LifecycleOwner lifecycleOwner, @Nonnull Observer<? super T> liveEffectsObserver);
+      @Nonnull LifecycleOwner lifecycleOwner, @Nonnull Observer<T> liveEffectsObserver);
 
   /**
    * The <code>LiveQueue</code> supports only a single observer, so calling this method will
@@ -71,8 +71,8 @@ public interface LiveQueue<T> {
    */
   void setObserver(
       @Nonnull LifecycleOwner lifecycleOwner,
-      @Nonnull Observer<? super T> liveEffectsObserver,
-      @Nullable Observer<Iterable<? super T>> pausedEffectsObserver);
+      @Nonnull Observer<T> liveEffectsObserver,
+      @Nullable Observer<Iterable<T>> pausedEffectsObserver);
 
   /**
    * Removes the current observer and clears any queued effects.<br>

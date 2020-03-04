@@ -30,8 +30,11 @@ import org.mockito.Mockito;
 public class FakeLifecycleOwner implements LifecycleOwner {
   private final LifecycleRegistry lifecycle;
 
+  @SuppressWarnings("FieldCanBeLocal")
+  private final LifecycleOwner owner;
+
   FakeLifecycleOwner() {
-    LifecycleOwner owner = mock(LifecycleOwner.class);
+    owner = mock(LifecycleOwner.class);
     lifecycle = new LifecycleRegistry(owner);
     Mockito.when(owner.getLifecycle()).thenReturn(lifecycle);
   }

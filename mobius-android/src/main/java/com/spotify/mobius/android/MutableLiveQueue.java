@@ -52,8 +52,8 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
   private final Object lock = new Object();
   private final WorkRunner effectsWorkRunner;
   private final BlockingQueue<T> pausedEffectsQueue;
-  @Nullable private Observer<? super T> liveObserver = null;
-  @Nullable private Observer<Iterable<? super T>> pausedObserver = null;
+  @Nullable private Observer<T> liveObserver = null;
+  @Nullable private Observer<Iterable<T>> pausedObserver = null;
   private boolean lifecycleOwnerIsPaused = true;
 
   MutableLiveQueue(WorkRunner effectsWorkRunner, int capacity) {
@@ -72,16 +72,15 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
   }
 
   @Override
-  public void setObserver(
-      @Nonnull LifecycleOwner owner, @Nonnull Observer<? super T> liveEffectsObserver) {
+  public void setObserver(@Nonnull LifecycleOwner owner, @Nonnull Observer<T> liveEffectsObserver) {
     setObserver(owner, liveEffectsObserver, null);
   }
 
   @Override
   public void setObserver(
       @Nonnull LifecycleOwner lifecycleOwner,
-      @Nonnull Observer<? super T> liveObserver,
-      @Nullable Observer<Iterable<? super T>> pausedObserver) {
+      @Nonnull Observer<T> liveObserver,
+      @Nullable Observer<Iterable<T>> pausedObserver) {
     if (lifecycleOwner.getLifecycle().getCurrentState() == DESTROYED) {
       return; // ignore
     }

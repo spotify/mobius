@@ -20,8 +20,8 @@
 package com.spotify.mobius.android;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
 
 import androidx.lifecycle.Lifecycle;
 import com.spotify.mobius.runners.WorkRunners;
@@ -39,7 +39,7 @@ public class MutableLiveQueueTest {
   private FakeLifecycleOwner fakeLifecycleOwner1;
   private FakeLifecycleOwner fakeLifecycleOwner2;
   private RecordingObserver<String> liveObserver;
-  private RecordingObserver<Iterable<? super String>> pausedObserver;
+  private RecordingObserver<Iterable<String>> pausedObserver;
 
   @Before
   public void setup() {
