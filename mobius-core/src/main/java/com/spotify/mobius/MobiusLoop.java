@@ -53,7 +53,17 @@ public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
 
   @Nullable private volatile M mostRecentModel;
 
-  private volatile boolean disposed;
+  private enum RunState {
+    // the loop is running normally
+    RUNNING,
+    // the loop is in the process of shutting down
+    DISPOSING,
+    // the loop has been shut down - any further attempts at interacting with it should be
+    // considered to be errors.
+    DISPOSED
+  }
+
+  private volatile RunState runState = RunState.RUNNING;
 
   static <M, E, F> MobiusLoop<M, E, F> create(
       Update<M, E, F> update,
@@ -146,12 +156,18 @@ public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
 
   @Override
   public void dispatchEvent(E event) {
-    if (disposed)
+    if (runState == RunState.DISPOSED) {
       throw new IllegalStateException(
           String.format(
               "This loop has already been disposed. You cannot dispatch events after "
                   + "disposal - event received: %s=%s, currentModel: %s",
               event.getClass().getName(), event, mostRecentModel));
+    }
+
+    if (runState == RunState.DISPOSING) {
+      // ignore events received while disposing to avoid races during shutdown
+      return;
+    }
 
     try {
       eventDispatcher.accept(checkNotNull(event));
@@ -168,9 +184,15 @@ public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
 
   @Override
   public Disposable observe(final Consumer<M> observer) {
-    if (disposed)
+    if (runState == RunState.DISPOSED) {
       throw new IllegalStateException(
           "This loop has already been disposed. You cannot observe a disposed loop");
+    }
+
+    if (runState == RunState.DISPOSING) {
+      // ignore observation requests on a disposing loop
+      return () -> {};
+    }
 
     modelObservers.add(checkNotNull(observer));
 
@@ -190,6 +212,12 @@ public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
 
   @Override
   public synchronized void dispose() {
+    if (runState == RunState.DISPOSED) {
+      return;
+    }
+
+    runState = RunState.DISPOSING;
+
     // Remove model observers so that they receive no further model changes.
     modelObservers.clear();
 
@@ -206,7 +234,7 @@ public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
     eventDispatcher.dispose();
     effectDispatcher.dispose();
 
-    disposed = true;
+    runState = RunState.DISPOSED;
   }
 
   /**
