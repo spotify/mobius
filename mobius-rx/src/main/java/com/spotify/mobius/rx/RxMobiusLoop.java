@@ -21,6 +21,7 @@ package com.spotify.mobius.rx;
 
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.functions.Consumer;
+import java.util.Set;
 import rx.Emitter;
 import rx.Observable;
 import rx.Observer;
@@ -33,14 +34,16 @@ import rx.functions.Cancellable;
  *
  * <p>Compose it on top of an event of streams to convert it into a stream of models.
  */
-class RxMobiusLoop<E, M> implements Observable.Transformer<E, M> {
+class RxMobiusLoop<E, M, F> implements Observable.Transformer<E, M> {
 
-  private final MobiusLoop.Factory<M, E, ?> loopFactory;
-  private final M loopStart;
+  private final MobiusLoop.Factory<M, E, F> loopFactory;
+  private final M startModel;
+  private final Set<F> startEffects;
 
-  RxMobiusLoop(MobiusLoop.Factory<M, E, ?> loopFactory, M loopStart) {
+  RxMobiusLoop(MobiusLoop.Factory<M, E, F> loopFactory, M loopStart, Set<F> effects) {
     this.loopFactory = loopFactory;
-    this.loopStart = loopStart;
+    this.startModel = loopStart;
+    this.startEffects = effects;
   }
 
   @Override
@@ -49,7 +52,7 @@ class RxMobiusLoop<E, M> implements Observable.Transformer<E, M> {
         new Action1<Emitter<M>>() {
           @Override
           public void call(final Emitter<M> emitter) {
-            final MobiusLoop<M, E, ?> loop = loopFactory.startFrom(loopStart);
+            final MobiusLoop<M, E, ?> loop = loopFactory.startFrom(startModel, startEffects);
 
             loop.observe(
                 new Consumer<M>() {

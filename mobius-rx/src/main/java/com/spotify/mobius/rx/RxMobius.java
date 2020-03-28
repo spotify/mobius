@@ -26,8 +26,10 @@ import com.spotify.mobius.Mobius;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.Update;
 import com.spotify.mobius.functions.Function;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import rx.Observable;
 import rx.Observable.Transformer;
 import rx.Scheduler;
@@ -57,7 +59,28 @@ public final class RxMobius {
    */
   public static <M, E, F> Observable.Transformer<E, M> loopFrom(
       final MobiusLoop.Factory<M, E, F> loopFactory, final M startModel) {
-    return new RxMobiusLoop<>(loopFactory, startModel);
+    return loopFrom(loopFactory, startModel, Collections.emptySet());
+  }
+
+  /**
+   * Create an observable transformer that starts from a given model and given effects.
+   *
+   * <p>Every time the resulting observable is subscribed to, a new MobiusLoop will be started from
+   * the given model and the given effects.
+   *
+   * @param loopFactory gets invoked for each subscription, to create a new MobiusLoop instance
+   * @param startModel the starting point for each new loop
+   * @param startEffects the starting effects for each new loop
+   * @param <M> the model type
+   * @param <E> the event type
+   * @param <F> the effect type
+   * @return a transformer from event to model that you can connect to your UI
+   */
+  public static <M, E, F> Observable.Transformer<E, M> loopFrom(
+      final MobiusLoop.Factory<M, E, F> loopFactory,
+      final M startModel,
+      final Set<F> startEffects) {
+    return new RxMobiusLoop<>(loopFactory, startModel, startEffects);
   }
 
   /**
