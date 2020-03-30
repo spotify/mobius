@@ -19,6 +19,9 @@
  */
 package com.spotify.mobius.rx;
 
+import static org.junit.Assert.assertEquals;
+
+import com.google.common.collect.ImmutableSet;
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
 import com.spotify.mobius.ConnectionLimitExceededException;
@@ -27,21 +30,24 @@ import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.Next;
 import com.spotify.mobius.Update;
 import com.spotify.mobius.functions.Consumer;
-import com.spotify.mobius.test.SimpleConnection;
+import com.spotify.mobius.test.RecordingConnection;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
+import rx.Observable;
 import rx.observers.AssertableSubscriber;
 import rx.subjects.PublishSubject;
 
 public class RxMobiusLoopTest {
 
-  private RxMobiusLoop<Integer, String> loop;
+  private RecordingConnection<Boolean> connection = new RecordingConnection<>();
+  private MobiusLoop.Factory<String, Integer, Boolean> factory;
 
   @Before
   public void setUp() throws Exception {
-    MobiusLoop.Factory<String, Integer, Boolean> factory =
+    factory =
         Mobius.loop(
             new Update<String, Integer, Boolean>() {
               @Nonnull
@@ -55,29 +61,34 @@ public class RxMobiusLoopTest {
               @Override
               public Connection<Boolean> connect(Consumer<Integer> output)
                   throws ConnectionLimitExceededException {
-                return new SimpleConnection<Boolean>() {
-                  @Override
-                  public void accept(Boolean value) {
-                    // no implementation, no effects will happen
-                  }
-                };
+                return connection;
               }
             });
-
-    loop = new RxMobiusLoop<>(factory, "");
   }
 
   @Test
   public void shouldPropagateIncomingErrorsAsUnrecoverable() throws Exception {
+    RxMobiusLoop<Integer, String, Boolean> loop =
+        new RxMobiusLoop<>(factory, "", Collections.emptySet());
     PublishSubject<Integer> input = PublishSubject.create();
 
     AssertableSubscriber<String> subscriber = input.compose(loop).test();
 
     Exception expected = new RuntimeException("expected");
-
     input.onError(expected);
-
     subscriber.awaitTerminalEvent(1, TimeUnit.SECONDS);
     subscriber.assertError(new UnrecoverableIncomingException(expected));
+    assertEquals(0, connection.valueCount());
+  }
+
+  @Test
+  public void startModelAndEffects() {
+    RxMobiusLoop<Integer, String, Boolean> loop =
+        new RxMobiusLoop<>(factory, "StartModel", ImmutableSet.of(true, false));
+    final AssertableSubscriber<String> subscriber = Observable.just(1).compose(loop).test();
+    subscriber.assertValue("StartModel");
+    subscriber.assertNoErrors();
+    assertEquals(2, connection.valueCount());
+    connection.assertValues(true, false);
   }
 }
