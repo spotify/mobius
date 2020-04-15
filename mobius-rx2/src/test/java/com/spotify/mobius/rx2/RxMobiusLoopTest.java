@@ -41,11 +41,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class RxMobiusLoopTest {
-  private RecordingConnection<Boolean> connection = new RecordingConnection<>();
+  private RecordingConnection<Boolean> connection;
   private MobiusLoop.Factory<String, Integer, Boolean> factory;
 
   @Before
   public void setUp() throws Exception {
+    connection = new RecordingConnection<>();
     factory =
         Mobius.loop(
             new Update<String, Integer, Boolean>() {
