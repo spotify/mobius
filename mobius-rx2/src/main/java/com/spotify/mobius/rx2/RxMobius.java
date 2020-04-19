@@ -37,7 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-/** Factory methods for wrapping Mobius core classes in observable tranformers. */
+/** Factory methods for wrapping Mobius core classes in observable transformers. */
 public final class RxMobius {
   private RxMobius() {
     // prevent instantiation
