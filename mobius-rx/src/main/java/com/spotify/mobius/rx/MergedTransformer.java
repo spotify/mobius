@@ -35,7 +35,7 @@ class MergedTransformer<T, R> implements Observable.Transformer<T, R> {
 
   private final Iterable<Observable.Transformer<T, R>> transformers;
 
-  public MergedTransformer(Iterable<Observable.Transformer<T, R>> transformers) {
+  MergedTransformer(Iterable<Observable.Transformer<T, R>> transformers) {
     this.transformers = transformers;
   }
 

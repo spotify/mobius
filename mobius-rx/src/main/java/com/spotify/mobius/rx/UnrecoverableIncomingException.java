@@ -25,9 +25,9 @@ package com.spotify.mobius.rx;
  * undefined state and should be considered a fatal programmer error. Do not try to handle this
  * exception in your code, ensure it never gets thrown.
  */
-public class UnrecoverableIncomingException extends RuntimeException {
+class UnrecoverableIncomingException extends RuntimeException {
 
-  public UnrecoverableIncomingException(Throwable throwable) {
+  UnrecoverableIncomingException(Throwable throwable) {
     super(
         "PROGRAMMER ERROR: Mobius cannot recover from this exception; ensure your event sources don't invoke onError",
         throwable);

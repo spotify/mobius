@@ -25,11 +25,11 @@ import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
  * Indicates that a {@link MobiusEffectRouter} has received an effect that it hasn't received
  * configuration for. This is a programmer error.
  */
-public class UnknownEffectException extends RuntimeException {
+class UnknownEffectException extends RuntimeException {
 
   private final Object effect;
 
-  public UnknownEffectException(Object effect) {
+  UnknownEffectException(Object effect) {
     super(checkNotNull(effect).toString());
 
     this.effect = effect;
