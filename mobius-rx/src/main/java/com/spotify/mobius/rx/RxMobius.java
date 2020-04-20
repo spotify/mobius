@@ -38,7 +38,7 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.plugins.RxJavaHooks;
 
-/** Factory methods for wrapping Mobius core classes in observable tranformers. */
+/** Factory methods for wrapping Mobius core classes in observable transformers. */
 public final class RxMobius {
   private RxMobius() {
     // prevent instantiation
