@@ -29,6 +29,7 @@ testImplementation 'com.spotify.mobius:mobius-test:LATEST_RELEASE'
 
 implementation 'com.spotify.mobius:mobius-rx:LATEST_RELEASE'       // only for RxJava 1 support
 implementation 'com.spotify.mobius:mobius-rx2:LATEST_RELEASE'      // only for RxJava 2 support
+implementation 'com.spotify.mobius:mobius-rx3:LATEST_RELEASE'      // only for RxJava 3 support
 implementation 'com.spotify.mobius:mobius-android:LATEST_RELEASE'  // only for Android support
 implementation 'com.spotify.mobius:mobius-extras:LATEST_RELEASE'   // utilities for common patterns
 ```

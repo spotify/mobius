@@ -1,0 +1,33 @@
+apply plugin: 'java-library'
+
+dependencies {
+    api "io.reactivex.rxjava3:rxjava:${versions.rxJava3}"
+    api project(':mobius-core')
+
+    implementation "com.google.code.findbugs:jsr305:${versions.jsr305}"
+
+    testAnnotationProcessor "com.google.auto.value:auto-value:${versions.autoValue}"
+
+    testImplementation project(':mobius-test')
+    testImplementation "junit:junit:${versions.junit}"
+    testImplementation "com.google.guava:guava:${versions.guava}"
+    testImplementation "org.hamcrest:hamcrest-library:${versions.hamcrestLibrary}"
+    testImplementation "ch.qos.logback:logback-classic:${versions.logback}"
+    testImplementation "org.awaitility:awaitility:${versions.awaitility}"
+    testImplementation "com.google.auto.value:auto-value-annotations:${versions.autoValue}"
+}
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+test {
+    testLogging {
+        events "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+apply from: rootProject.file('gradle/jacoco-coverage.gradle')
