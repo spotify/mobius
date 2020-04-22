@@ -21,17 +21,18 @@ package com.spotify.mobius.rx3;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
+import javax.annotation.Nonnull;
+
 /**
  * Indicates that a {@link MobiusEffectRouter} has received an effect that it hasn't received
  * configuration for. This is a programmer error.
  */
-class UnknownEffectException extends RuntimeException {
+public class UnknownEffectException extends RuntimeException {
 
   private final Object effect;
 
-  UnknownEffectException(Object effect) {
+  public UnknownEffectException(@Nonnull Object effect) {
     super(checkNotNull(effect).toString());
-
     this.effect = effect;
   }
 
