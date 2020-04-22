@@ -21,7 +21,6 @@ package com.spotify.mobius.rx2;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
-import com.spotify.mobius.ConnectionException;
 import com.spotify.mobius.Mobius;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.Update;
@@ -481,9 +480,7 @@ public final class RxMobius {
     private static <F, E> Consumer<Throwable> defaultOnError(
         final ObservableTransformer<? extends F, E> effectHandler) {
       return throwable ->
-          RxJavaPlugins.onError(
-              new ConnectionException(
-                  "in effect handler: " + effectHandler.getClass().toString(), throwable));
+          RxJavaPlugins.onError(EffectHandlerException.in(effectHandler, throwable));
     }
 
     private interface OnErrorFunction<T, R> extends Function<T, R> {
