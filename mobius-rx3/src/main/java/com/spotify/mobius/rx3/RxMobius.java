@@ -21,7 +21,6 @@ package com.spotify.mobius.rx3;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
-import com.spotify.mobius.ConnectionException;
 import com.spotify.mobius.Mobius;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.Update;
@@ -346,9 +345,7 @@ public final class RxMobius {
       return new Consumer<Throwable>() {
         @Override
         public void accept(Throwable throwable) throws Throwable {
-          RxJavaPlugins.onError(
-              new ConnectionException(
-                  "in effect handler: " + effectHandler.getClass().toString(), throwable));
+          RxJavaPlugins.onError(EffectHandlerException.in(effectHandler, throwable));
         }
       };
     }
