@@ -31,6 +31,7 @@ import io.reactivex.rxjava3.functions.Cancellable;
 import io.reactivex.rxjava3.functions.Consumer;
 import java.util.Set;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Wraps a MobiusLoop into an observable transformer.
@@ -41,9 +42,10 @@ class RxMobiusLoop<E, M, F> implements ObservableTransformer<E, M> {
 
   @Nonnull private final MobiusLoop.Factory<M, E, F> loopFactory;
   @Nonnull private final M startModel;
-  @Nonnull private final Set<F> startEffects;
+  @Nullable private final Set<F> startEffects;
 
-  RxMobiusLoop(MobiusLoop.Factory<M, E, F> loopFactory, M startModel, Set<F> startEffects) {
+  RxMobiusLoop(
+      MobiusLoop.Factory<M, E, F> loopFactory, M startModel, @Nullable Set<F> startEffects) {
     this.loopFactory = loopFactory;
     this.startModel = startModel;
     this.startEffects = startEffects;
@@ -55,7 +57,14 @@ class RxMobiusLoop<E, M, F> implements ObservableTransformer<E, M> {
         new ObservableOnSubscribe<M>() {
           @Override
           public void subscribe(@NonNull ObservableEmitter<M> emitter) throws Throwable {
-            final MobiusLoop<M, E, ?> loop = loopFactory.startFrom(startModel, startEffects);
+            final MobiusLoop<M, E, ?> loop;
+
+            if (startEffects == null) {
+              loop = loopFactory.startFrom(startModel);
+            } else {
+              loop = loopFactory.startFrom(startModel, startEffects);
+            }
+
             loop.observe(
                 new com.spotify.mobius.functions.Consumer<M>() {
                   @Override
