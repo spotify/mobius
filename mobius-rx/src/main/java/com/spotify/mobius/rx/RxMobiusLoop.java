@@ -22,6 +22,7 @@ package com.spotify.mobius.rx;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.functions.Consumer;
 import java.util.Set;
+import javax.annotation.Nullable;
 import rx.Emitter;
 import rx.Observable;
 import rx.Observer;
@@ -38,9 +39,9 @@ class RxMobiusLoop<E, M, F> implements Observable.Transformer<E, M> {
 
   private final MobiusLoop.Factory<M, E, F> loopFactory;
   private final M startModel;
-  private final Set<F> startEffects;
+  @Nullable private final Set<F> startEffects;
 
-  RxMobiusLoop(MobiusLoop.Factory<M, E, F> loopFactory, M loopStart, Set<F> effects) {
+  RxMobiusLoop(MobiusLoop.Factory<M, E, F> loopFactory, M loopStart, @Nullable Set<F> effects) {
     this.loopFactory = loopFactory;
     this.startModel = loopStart;
     this.startEffects = effects;
@@ -52,7 +53,13 @@ class RxMobiusLoop<E, M, F> implements Observable.Transformer<E, M> {
         new Action1<Emitter<M>>() {
           @Override
           public void call(final Emitter<M> emitter) {
-            final MobiusLoop<M, E, ?> loop = loopFactory.startFrom(startModel, startEffects);
+            final MobiusLoop<M, E, ?> loop;
+
+            if (startEffects == null) {
+              loop = loopFactory.startFrom(startModel);
+            } else {
+              loop = loopFactory.startFrom(startModel, startEffects);
+            }
 
             loop.observe(
                 new Consumer<M>() {
