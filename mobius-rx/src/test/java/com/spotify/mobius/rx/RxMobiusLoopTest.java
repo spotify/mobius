@@ -19,6 +19,7 @@
  */
 package com.spotify.mobius.rx;
 
+import static com.spotify.mobius.Effects.effects;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableSet;
@@ -112,5 +113,23 @@ public class RxMobiusLoopTest {
     final AssertableSubscriber<String> observer = Observable.just(10).compose(transformer).test();
 
     observer.assertValues("hi-init");
+  }
+
+  @Test
+  public void shouldThrowIfStartingALoopWithInitAndStartEffects() throws Exception {
+    MobiusLoop.Builder<String, Integer, Boolean> withInit =
+        builder.init(
+            new Init<String, Boolean>() {
+              @Nonnull
+              @Override
+              public First<String, Boolean> init(String model) {
+                return First.first(model + "-init");
+              }
+            });
+
+    Observable.Transformer<Integer, String> transformer =
+        RxMobius.loopFrom(withInit, "hi", effects(true));
+
+    Observable.just(10).compose(transformer).test().assertError(IllegalArgumentException.class);
   }
 }
