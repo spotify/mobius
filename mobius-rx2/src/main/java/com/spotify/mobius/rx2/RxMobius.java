@@ -31,7 +31,6 @@ import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.plugins.RxJavaPlugins;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -57,7 +56,7 @@ public final class RxMobius {
    */
   public static <M, E, F> ObservableTransformer<E, M> loopFrom(
       final MobiusLoop.Factory<M, E, F> loopFactory, final M startModel) {
-    return loopFrom(loopFactory, startModel, Collections.emptySet());
+    return new RxMobiusLoop<>(loopFactory, startModel, null);
   }
 
   /**

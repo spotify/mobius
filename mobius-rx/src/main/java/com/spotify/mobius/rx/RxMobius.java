@@ -26,7 +26,6 @@ import com.spotify.mobius.Mobius;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.Update;
 import com.spotify.mobius.functions.Function;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -59,7 +58,7 @@ public final class RxMobius {
    */
   public static <M, E, F> Observable.Transformer<E, M> loopFrom(
       final MobiusLoop.Factory<M, E, F> loopFactory, final M startModel) {
-    return loopFrom(loopFactory, startModel, Collections.emptySet());
+    return new RxMobiusLoop<>(loopFactory, startModel, null);
   }
 
   /**

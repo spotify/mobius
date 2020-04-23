@@ -322,6 +322,8 @@ public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
      * @param startModel the model that the loop should start from
      * @param startEffects the effects that the loop should start with
      * @return the started {@link MobiusLoop}
+     * @throws IllegalStateException if the loop has been configured with an {@link Init}, since
+     *     that would conflict with the initial effects passed in.
      */
     MobiusLoop<M, E, F> startFrom(M startModel, Set<F> startEffects);
   }

@@ -19,12 +19,15 @@
  */
 package com.spotify.mobius.rx3;
 
+import static com.spotify.mobius.Effects.effects;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableSet;
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
 import com.spotify.mobius.ConnectionLimitExceededException;
+import com.spotify.mobius.First;
+import com.spotify.mobius.Init;
 import com.spotify.mobius.Mobius;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.Next;
@@ -32,6 +35,7 @@ import com.spotify.mobius.Update;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.test.RecordingConnection;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.observers.TestObserver;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import java.util.Collections;
@@ -42,12 +46,12 @@ import org.junit.Test;
 
 public class RxMobiusLoopTest {
   private RecordingConnection<Boolean> connection;
-  private MobiusLoop.Factory<String, Integer, Boolean> factory;
+  private MobiusLoop.Builder<String, Integer, Boolean> builder;
 
   @Before
   public void setUp() throws Exception {
     connection = new RecordingConnection<>();
-    factory =
+    builder =
         Mobius.loop(
             new Update<String, Integer, Boolean>() {
               @Nonnull
@@ -69,7 +73,7 @@ public class RxMobiusLoopTest {
   @Test
   public void shouldPropagateIncomingErrorsAsUnrecoverable() throws Exception {
     final RxMobiusLoop<Integer, String, Boolean> loop =
-        new RxMobiusLoop<>(factory, "", Collections.emptySet());
+        new RxMobiusLoop<>(builder, "", Collections.emptySet());
 
     PublishSubject<Integer> input = PublishSubject.create();
     TestObserver<String> subscriber = input.compose(loop).test();
@@ -84,11 +88,51 @@ public class RxMobiusLoopTest {
   @Test
   public void startModelAndEffects() {
     RxMobiusLoop<Integer, String, Boolean> loop =
-        new RxMobiusLoop<>(factory, "StartModel", ImmutableSet.of(true, false));
+        new RxMobiusLoop<>(builder, "StartModel", ImmutableSet.of(true, false));
     final TestObserver<String> testObserver = Observable.just(1).compose(loop).test();
     testObserver.assertValue("StartModel");
     testObserver.assertNoErrors();
     assertEquals(2, connection.valueCount());
     connection.assertValues(true, false);
+  }
+
+  @Test
+  public void shouldSupportStartingALoopWithAnInit() throws Exception {
+    MobiusLoop.Builder<String, Integer, Boolean> withInit =
+        builder.init(
+            new Init<String, Boolean>() {
+              @Nonnull
+              @Override
+              public First<String, Boolean> init(String model) {
+                return First.first(model + "-init");
+              }
+            });
+
+    ObservableTransformer<Integer, String> transformer = RxMobius.loopFrom(withInit, "hi");
+
+    final TestObserver<String> observer = Observable.just(10).compose(transformer).test();
+
+    observer.assertValues("hi-init");
+  }
+
+  @Test
+  public void shouldThrowIfStartingALoopWithInitAndStartEffects() throws Exception {
+    MobiusLoop.Builder<String, Integer, Boolean> withInit =
+        builder.init(
+            new Init<String, Boolean>() {
+              @Nonnull
+              @Override
+              public First<String, Boolean> init(String model) {
+                return First.first(model + "-init");
+              }
+            });
+
+    ObservableTransformer<Integer, String> transformer =
+        RxMobius.loopFrom(withInit, "hi", effects(true));
+
+    Observable.just(10)
+        .compose(transformer)
+        .test()
+        .assertError(t -> t.getMessage().contains("cannot pass in start effects"));
   }
 }
