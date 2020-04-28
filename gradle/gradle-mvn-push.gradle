@@ -1,5 +1,6 @@
 apply plugin: 'maven'
 apply plugin: 'signing'
+apply plugin: 'org.jetbrains.dokka'
 
 def isReleaseBuild() {
     return VERSION_NAME.contains("SNAPSHOT") == false
@@ -79,14 +80,25 @@ afterEvaluate { project ->
 
     def plugins = project.getPlugins()
     if (plugins.hasPlugin('com.android.application') || plugins.hasPlugin('com.android.library')) {
-      task androidJavadocs(type: Javadoc) {
-        source = android.sourceSets.main.java.srcDirs
-        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-      }
-
-      task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-        classifier = 'javadoc'
-        from androidJavadocs.destinationDir
+      if (plugins.hasPlugin('kotlin-android')) {
+          task androidJavadocs(type: dokka.getClass()) {
+              configuration {
+                  classpath += project.files(android.getBootClasspath()).asList()
+              }
+          }
+          task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+              classifier = 'javadoc'
+              from androidJavadocs.outputDirectory
+          }
+      } else {
+          task androidJavadocs(type: Javadoc) {
+              source = android.sourceSets.main.java.srcDirs
+              classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+          }
+          task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+              classifier = 'javadoc'
+              from androidJavadocs.destinationDir
+          }
       }
 
       task androidSourcesJar(type: Jar) {

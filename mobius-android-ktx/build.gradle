@@ -1,0 +1,48 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+repositories {
+    google()
+}
+
+dependencies {
+    api project(':mobius-android')
+
+    implementation "org.slf4j:slf4j-api:${versions.slf4j}"
+    implementation "com.google.code.findbugs:jsr305:${versions.jsr305}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${versions.kotlin}"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:${versions.androidxLifecycle}"
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+static def gitSha() {
+    return 'git rev-parse --short HEAD'.execute().text.trim()
+}
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    sourceSets {
+        main.java.srcDirs += "src/main/kotlin"
+        test.java.srcDirs += "src/test/kotlin"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        buildConfigField "String", "LIBRARY_VERSION", "\"${VERSION_NAME}\""
+        buildConfigField "String", "GIT_SHA", "\"${gitSha()}\""
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')

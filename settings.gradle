@@ -1,3 +1,4 @@
+include ':mobius-android-ktx'
 rootProject.name = 'mobius'
 
 include 'mobius-core'
