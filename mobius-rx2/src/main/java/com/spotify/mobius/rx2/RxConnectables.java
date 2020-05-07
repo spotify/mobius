@@ -47,47 +47,50 @@ public final class RxConnectables {
       final ObservableTransformer<I, O> transformer) {
     checkNotNull(transformer);
 
-    return new Connectable<I, O>() {
-      @Nonnull
-      @Override
-      public Connection<I> connect(final Consumer<O> output) {
-        final PublishSubject<I> subject = PublishSubject.create();
-
-        final Disposable disposable =
-            subject
-                .compose(transformer)
-                .subscribe(
-                    new io.reactivex.functions.Consumer<O>() {
-                      @Override
-                      public void accept(O e) {
-                        output.accept(e);
-                      }
-                    },
-                    new io.reactivex.functions.Consumer<Throwable>() {
-                      @Override
-                      public void accept(Throwable throwable) throws Exception {
-                        RxJavaPlugins.onError(throwable);
-                      }
-                    },
-                    new Action() {
-                      @Override
-                      public void run() throws Exception {
-                        // TODO: complain loudly! shouldn't ever complete
-                      }
-                    });
-
-        return new Connection<I>() {
-          public void accept(I effect) {
-            subject.onNext(effect);
-          }
-
+    Connectable<I, O> actualConnectable =
+        new Connectable<I, O>() {
+          @Nonnull
           @Override
-          public void dispose() {
-            disposable.dispose();
+          public Connection<I> connect(final Consumer<O> output) {
+            final PublishSubject<I> subject = PublishSubject.create();
+
+            final Disposable disposable =
+                subject
+                    .compose(transformer)
+                    .subscribe(
+                        new io.reactivex.functions.Consumer<O>() {
+                          @Override
+                          public void accept(O e) {
+                            output.accept(e);
+                          }
+                        },
+                        new io.reactivex.functions.Consumer<Throwable>() {
+                          @Override
+                          public void accept(Throwable throwable) throws Exception {
+                            RxJavaPlugins.onError(throwable);
+                          }
+                        },
+                        new Action() {
+                          @Override
+                          public void run() throws Exception {
+                            // TODO: complain loudly! shouldn't ever complete
+                          }
+                        });
+
+            return new Connection<I>() {
+              public void accept(I effect) {
+                subject.onNext(effect);
+              }
+
+              @Override
+              public void dispose() {
+                disposable.dispose();
+              }
+            };
           }
         };
-      }
-    };
+
+    return new DiscardAfterDisposeConnectable<>(actualConnectable);
   }
 
   public static <I, O> ObservableTransformer<I, O> toTransformer(
