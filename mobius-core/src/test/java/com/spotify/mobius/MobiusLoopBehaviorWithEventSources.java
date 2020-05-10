@@ -45,9 +45,8 @@ public class MobiusLoopBehaviorWithEventSources extends MobiusLoopTest {
         (s, e) -> {
           if (e instanceof EventWithSafeEffect) {
             return next(s + "->" + e.toString());
-          } else {
-            return noChange();
           }
+          return noChange();
         };
 
     final MobiusLoop<String, TestEvent, TestEffect> loop =
