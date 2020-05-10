@@ -47,10 +47,9 @@ public final class NextMatchers {
         if (item.hasModel()) {
           mismatchDescription.appendText("it had a model: " + item.modelUnsafe());
           return false;
-
-        } else {
-          return true;
         }
+
+        return true;
       }
 
       @Override
@@ -112,15 +111,15 @@ public final class NextMatchers {
         if (!item.hasModel()) {
           mismatchDescription.appendText("it had no model");
           return false;
+        }
 
-        } else if (!matcher.matches(item.modelUnsafe())) {
+        if (!matcher.matches(item.modelUnsafe())) {
           mismatchDescription.appendText("the model ");
           matcher.describeMismatch(item.modelUnsafe(), mismatchDescription);
           return false;
-
-        } else {
-          return true;
         }
+
+        return true;
       }
 
       @Override
@@ -143,9 +142,9 @@ public final class NextMatchers {
         if (item.hasEffects()) {
           mismatchDescription.appendText("it had effects: " + item.effects());
           return false;
-        } else {
-          return true;
         }
+
+        return true;
       }
 
       @Override
@@ -170,8 +169,9 @@ public final class NextMatchers {
         if (!item.hasEffects()) {
           mismatchDescription.appendText("it had no effects");
           return false;
+        }
 
-        } else if (!matcher.matches(item.effects())) {
+        if (!matcher.matches(item.effects())) {
           mismatchDescription.appendText("the effects were ");
           matcher.describeMismatch(item.effects(), mismatchDescription);
           return false;
