@@ -1,0 +1,55 @@
+/*
+ * -\-\-
+ * Mobius
+ * --
+ * Copyright (c) 2017-2018 Spotify AB
+ * --
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * -/-/-
+ */
+package com.spotify.mobius2.android;
+
+import static org.mockito.Mockito.mock;
+
+import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
+import org.mockito.Mockito;
+
+public class FakeLifecycleOwner implements LifecycleOwner {
+  private final LifecycleRegistry lifecycle;
+
+  @SuppressWarnings("FieldCanBeLocal")
+  private final LifecycleOwner owner;
+
+  FakeLifecycleOwner() {
+    owner = mock(LifecycleOwner.class);
+    lifecycle = new LifecycleRegistry(owner);
+    Mockito.when(owner.getLifecycle()).thenReturn(lifecycle);
+  }
+
+  public Lifecycle.State getCurrentState() {
+    return lifecycle.getCurrentState();
+  }
+
+  public void handleLifecycleEvent(Lifecycle.Event event) {
+    lifecycle.handleLifecycleEvent(event);
+  }
+
+  @NonNull
+  @Override
+  public Lifecycle getLifecycle() {
+    return lifecycle;
+  }
+}

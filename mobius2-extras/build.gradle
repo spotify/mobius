@@ -1,0 +1,34 @@
+apply plugin: 'java-library'
+
+dependencies {
+    annotationProcessor "com.google.auto.value:auto-value:${versions.autoValue}"
+
+    api project(':mobius2-core')
+    implementation "com.google.auto.value:auto-value-annotations:${versions.autoValue}"
+    implementation "org.slf4j:slf4j-api:${versions.slf4j}"
+    implementation "com.google.code.findbugs:jsr305:${versions.jsr305}"
+
+    testAnnotationProcessor "com.google.auto.value:auto-value:${versions.autoValue}"
+
+    testImplementation project(':mobius2-test')
+    testImplementation "junit:junit:${versions.junit}"
+    testImplementation "com.google.guava:guava:${versions.guava}"
+    testImplementation "org.awaitility:awaitility:${versions.awaitility}"
+    testImplementation "org.assertj:assertj-core:${versions.assertjcore}"
+    testImplementation "org.hamcrest:hamcrest-library:${versions.hamcrestLibrary}"
+}
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+test {
+    testLogging {
+        events "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+apply from: rootProject.file('gradle/jacoco-coverage.gradle')
