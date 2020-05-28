@@ -48,16 +48,13 @@ class MessageDispatcher<M> implements Consumer<M>, Disposable {
   @Override
   public void accept(final M message) {
     runner.post(
-        new Runnable() {
-          @Override
-          public void run() {
-            try {
-              consumer.accept(message);
-
-            } catch (Throwable throwable) {
-              LOGGER.error(
-                  "Consumer threw an exception when accepting message: {}", message, throwable);
-            }
+        () -> {
+          try {
+            consumer.accept(message);
+          } catch (Throwable throwable) {
+            MobiusHooks.handleError(
+                new RuntimeException(
+                    "Consumer threw an exception when accepting message: " + message, throwable));
           }
         });
   }
