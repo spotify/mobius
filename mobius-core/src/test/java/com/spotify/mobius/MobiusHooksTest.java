@@ -24,9 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.spotify.mobius.MobiusHooks.ErrorHandler;
-import java.util.LinkedList;
-import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,24 +67,14 @@ public class MobiusHooksTest {
 
   @Test
   public void shouldAllowChangingTheHandler() throws Exception {
-    MyErrorHandler myErrorHandler = new MyErrorHandler();
-    MobiusHooks.setErrorHandler(myErrorHandler);
+    TestErrorHandler testErrorHandler = new TestErrorHandler();
+    MobiusHooks.setErrorHandler(testErrorHandler);
 
     final RuntimeException theError = new RuntimeException("hey there");
 
     MobiusHooks.handleError(theError);
 
-    assertThat(myErrorHandler.handledErrors).containsExactly(theError);
+    assertThat(testErrorHandler.handledErrors).containsExactly(theError);
     assertThat(appender.list).isEmpty();
-  }
-
-  private static class MyErrorHandler implements ErrorHandler {
-
-    private List<Throwable> handledErrors = new LinkedList<>();
-
-    @Override
-    public void handleError(Throwable error) {
-      handledErrors.add(error);
-    }
   }
 }
