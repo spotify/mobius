@@ -1,0 +1,45 @@
+apply plugin: 'com.android.library'
+
+
+repositories {
+    google()
+}
+
+dependencies {
+    api project(':mobius2-core')
+
+    implementation "org.slf4j:slf4j-api:${versions.slf4j}"
+    implementation "com.google.code.findbugs:jsr305:${versions.jsr305}"
+    implementation "androidx.lifecycle:lifecycle-livedata:${versions.androidxLifecycle}"
+    implementation "androidx.lifecycle:lifecycle-viewmodel:${versions.androidxLifecycle}"
+
+    testImplementation project(':mobius2-test')
+    testImplementation "junit:junit:${versions.junit}"
+    testImplementation "androidx.arch.core:core-testing:${versions.androidXCoreTesting}"
+    testImplementation "androidx.lifecycle:lifecycle-runtime:${versions.androidxLifecycle}"
+    testImplementation "org.assertj:assertj-core:${versions.assertjcore}"
+    testImplementation "org.hamcrest:hamcrest-library:${versions.hamcrestLibrary}"
+    testImplementation "org.mockito:mockito-core:${versions.mockito}"
+}
+
+static def gitSha() {
+    return 'git rev-parse --short HEAD'.execute().text.trim()
+}
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    compileOptions {
+      sourceCompatibility JavaVersion.VERSION_1_8
+      targetCompatibility JavaVersion.VERSION_1_8
+    }
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        buildConfigField "String", "LIBRARY_VERSION", "\"${VERSION_NAME}\""
+        buildConfigField "String", "GIT_SHA", "\"${gitSha()}\""
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
