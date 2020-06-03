@@ -15,7 +15,7 @@ buildscript {
 }
 
 File baselineJar = null
-def baselineVersion = "1.3.4"
+def baselineVersion = "1.5.0"
 def projectGroup = project.group
 def projectName = project.name
 
