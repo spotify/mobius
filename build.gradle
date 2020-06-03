@@ -121,4 +121,5 @@ allprojects {
 
 nexusStaging {
     packageGroup = "com.spotify"
+    numberOfRetries = 30
 }
