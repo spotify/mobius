@@ -25,8 +25,6 @@ import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.runners.WorkRunner;
 import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Dispatches messages to a given runner.
@@ -35,10 +33,10 @@ import org.slf4j.LoggerFactory;
  */
 class MessageDispatcher<M> implements Consumer<M>, Disposable {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(MessageDispatcher.class);
-
   @Nonnull private final WorkRunner runner;
   @Nonnull private final Consumer<M> consumer;
+
+  private volatile boolean disposed = false;
 
   MessageDispatcher(WorkRunner runner, Consumer<M> consumer) {
     this.runner = checkNotNull(runner);
@@ -47,6 +45,10 @@ class MessageDispatcher<M> implements Consumer<M>, Disposable {
 
   @Override
   public void accept(final M message) {
+    if (disposed) {
+      return;
+    }
+
     runner.post(
         () -> {
           try {
@@ -61,6 +63,7 @@ class MessageDispatcher<M> implements Consumer<M>, Disposable {
 
   @Override
   public void dispose() {
+    disposed = true;
     runner.dispose();
   }
 }
