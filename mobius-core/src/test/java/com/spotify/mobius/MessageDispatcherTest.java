@@ -27,13 +27,20 @@ import static org.hamcrest.Matchers.containsString;
 import com.spotify.mobius.runners.WorkRunners;
 import java.util.LinkedList;
 import java.util.List;
+import org.junit.Before;
 import org.junit.Test;
 
 public class MessageDispatcherTest {
 
+  private List<String> messages;
+
+  @Before
+  public void setUp() throws Exception {
+    messages = new LinkedList<>();
+  }
+
   @Test
   public void shouldForwardMessagesToConsumer() throws Exception {
-    List<String> messages = new LinkedList<>();
 
     new MessageDispatcher<String>(WorkRunners.immediate(), messages::add).accept("hey hello");
 
@@ -66,5 +73,20 @@ public class MessageDispatcherTest {
             matching(
                 containsString("here's an event that should be reported as the cause of failure")),
             atIndex(0));
+  }
+
+  @Test
+  public void shouldIgnoreMessagesAfterDispose() throws Exception {
+    // given a message dispatcher that has been disposed
+    MessageDispatcher<String> messageDispatcher =
+        new MessageDispatcher<>(WorkRunners.singleThread(), messages::add);
+
+    messageDispatcher.dispose();
+
+    // when a message arrives
+    messageDispatcher.accept("foo");
+
+    // it is ignored
+    assertThat(messages).isEmpty();
   }
 }
