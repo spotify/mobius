@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
 class DiscardAfterDisposeWrapper<I> implements Consumer<I>, Disposable {
   private final Consumer<I> consumer;
   @Nullable private final Disposable disposable;
-  private boolean disposed;
+  private volatile boolean disposed;
 
   static <I> DiscardAfterDisposeWrapper<I> wrapConnection(Connection<I> connection) {
     checkNotNull(connection);
@@ -50,7 +50,7 @@ class DiscardAfterDisposeWrapper<I> implements Consumer<I>, Disposable {
   }
 
   @Override
-  public synchronized void accept(I effect) {
+  public void accept(I effect) {
     if (disposed) {
       return;
     }
@@ -58,7 +58,7 @@ class DiscardAfterDisposeWrapper<I> implements Consumer<I>, Disposable {
   }
 
   @Override
-  public synchronized void dispose() {
+  public void dispose() {
     disposed = true;
     if (disposable != null) {
       disposable.dispose();
