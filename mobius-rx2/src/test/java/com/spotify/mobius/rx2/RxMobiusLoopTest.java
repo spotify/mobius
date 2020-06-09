@@ -93,7 +93,9 @@ public class RxMobiusLoopTest {
     RxMobiusLoop<Integer, String, Boolean> loop =
         new RxMobiusLoop<>(builder, "StartModel", ImmutableSet.of(true, false));
     final TestObserver<String> testObserver = Observable.just(1).compose(loop).test();
-    testObserver.assertValue("StartModel");
+
+    testObserver.awaitCount(2);
+    testObserver.assertValues("StartModel", "StartModel1");
     testObserver.assertNoErrors();
     assertEquals(2, connection.valueCount());
     connection.assertValues(true, false);
@@ -115,7 +117,8 @@ public class RxMobiusLoopTest {
 
     final TestObserver<String> observer = Observable.just(10).compose(transformer).test();
 
-    observer.assertValues("hi-init");
+    observer.awaitCount(2);
+    observer.assertValues("hi-init", "hi-init10");
   }
 
   @Test

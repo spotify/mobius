@@ -86,11 +86,13 @@ public class RxMobiusLoopTest {
   }
 
   @Test
-  public void startModelAndEffects() {
+  public void startModelAndEffects() throws Exception {
     RxMobiusLoop<Integer, String, Boolean> loop =
         new RxMobiusLoop<>(builder, "StartModel", ImmutableSet.of(true, false));
     final AssertableSubscriber<String> subscriber = Observable.just(1).compose(loop).test();
-    subscriber.assertValue("StartModel");
+
+    waitForSubscriberValueCount(subscriber, 2);
+    subscriber.assertValues("StartModel", "StartModel1");
     subscriber.assertNoErrors();
     assertEquals(2, connection.valueCount());
     connection.assertValues(true, false);
@@ -112,7 +114,19 @@ public class RxMobiusLoopTest {
 
     final AssertableSubscriber<String> observer = Observable.just(10).compose(transformer).test();
 
-    observer.assertValues("hi-init");
+    waitForSubscriberValueCount(observer, 2);
+    observer.assertValues("hi-init", "hi-init10");
+  }
+
+  private static void waitForSubscriberValueCount(
+      AssertableSubscriber<String> subscriber, int count) throws InterruptedException {
+    for (int i = 0; i < 50; i++) {
+      if (subscriber.getValueCount() == count) {
+        break;
+      }
+
+      Thread.sleep(50);
+    }
   }
 
   @Test
