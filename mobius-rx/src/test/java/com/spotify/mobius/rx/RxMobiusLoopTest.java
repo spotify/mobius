@@ -95,7 +95,7 @@ public class RxMobiusLoopTest {
     subscriber.assertValues("StartModel", "StartModel1");
     subscriber.assertNoErrors();
     assertEquals(2, connection.valueCount());
-    connection.assertValues(true, false);
+    connection.assertValuesInAnyOrder(true, false);
   }
 
   @Test
