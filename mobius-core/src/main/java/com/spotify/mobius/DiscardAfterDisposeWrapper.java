@@ -27,12 +27,14 @@ import javax.annotation.Nullable;
 
 /**
  * Wraps a {@link Connection} or a {@link Consumer} and blocks them from receiving any further
- * values after the wrapper has been disposed.
+ * values after the wrapper has been disposed. Does not prevent races between {@link
+ * #accept(Object)} and {@link #dispose()} for wrapped {@link Connection}s; the behaviour if such a
+ * race happens is up to the original connection.
  */
 class DiscardAfterDisposeWrapper<I> implements Consumer<I>, Disposable {
   private final Consumer<I> consumer;
   @Nullable private final Disposable disposable;
-  private boolean disposed;
+  private volatile boolean disposed;
 
   static <I> DiscardAfterDisposeWrapper<I> wrapConnection(Connection<I> connection) {
     checkNotNull(connection);
@@ -49,7 +51,7 @@ class DiscardAfterDisposeWrapper<I> implements Consumer<I>, Disposable {
   }
 
   @Override
-  public synchronized void accept(I effect) {
+  public void accept(I effect) {
     if (disposed) {
       return;
     }
@@ -57,7 +59,7 @@ class DiscardAfterDisposeWrapper<I> implements Consumer<I>, Disposable {
   }
 
   @Override
-  public synchronized void dispose() {
+  public void dispose() {
     disposed = true;
     if (disposable != null) {
       disposable.dispose();
