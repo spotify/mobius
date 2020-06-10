@@ -122,7 +122,7 @@ public class TransformersTest {
 
   @Test
   public void processingLongEffectsDoesNotBlockProcessingShorterEffects() {
-    final List<String> effects = Arrays.asList("Hello", "Rx2");
+    final List<String> effects = Arrays.asList("Hello", "Rx");
 
     PublishSubject<String> upstream = PublishSubject.create();
     Function<String, Integer> sleepyFunction =
@@ -150,9 +150,9 @@ public class TransformersTest {
       if (duration(f) > maxDuration) maxDuration = duration(f);
     }
     // Since effects are processed in parallel thanks to FlatMap
-    // we only wait the max time and add 100 milliseconds to
-    // avoid test flakiness thanks to time
-    return Duration.ofMillis(maxDuration + 100);
+    // we only wait the max time and add some time to
+    // avoid test flakiness due to time
+    return Duration.ofMillis(maxDuration + 500);
   }
 
   private int duration(String f) {
