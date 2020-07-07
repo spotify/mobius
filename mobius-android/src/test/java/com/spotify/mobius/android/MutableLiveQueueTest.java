@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 import androidx.lifecycle.Lifecycle;
 import com.spotify.mobius.runners.WorkRunners;
+import com.spotify.mobius.test.TestWorkRunner;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -72,6 +73,22 @@ public class MutableLiveQueueTest {
   }
 
   @Test
+  public void shouldNotSendToLiveObserverIfClearedBeforeRunnerExecutes() {
+    final TestWorkRunner testWorkRunner = new TestWorkRunner();
+    mutableLiveQueue = new MutableLiveQueue<>(testWorkRunner, QUEUE_CAPACITY);
+    fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
+
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, liveObserver);
+    mutableLiveQueue.post("one");
+    mutableLiveQueue.clearObserver();
+    testWorkRunner.runAll();
+
+    assertThat(mutableLiveQueue.hasActiveObserver(), equalTo(false));
+    assertThat(liveObserver.valueCount(), equalTo(0));
+    assertThat(pausedObserver.valueCount(), equalTo(0));
+  }
+
+  @Test
   public void shouldNotQueueEventsWithNoObserver() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
 
@@ -108,6 +125,23 @@ public class MutableLiveQueueTest {
 
     liveObserver.assertValues("one");
     pausedObserver.assertValues(queueOf("two"));
+  }
+
+  @Test
+  public void shouldNotSendQueuedEffectsIfPausedObserverClearedBeforeRunnerCanExecute() {
+    final TestWorkRunner testWorkRunner = new TestWorkRunner();
+    mutableLiveQueue = new MutableLiveQueue<>(testWorkRunner, QUEUE_CAPACITY);
+    fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
+
+    mutableLiveQueue.setObserver(fakeLifecycleOwner2, liveObserver, pausedObserver);
+    mutableLiveQueue.post("one");
+    fakeLifecycleOwner2.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
+    mutableLiveQueue.clearObserver();
+    testWorkRunner.runAll();
+
+    assertThat(mutableLiveQueue.hasActiveObserver(), equalTo(false));
+    assertThat(liveObserver.valueCount(), equalTo(0));
+    assertThat(pausedObserver.valueCount(), equalTo(0));
   }
 
   @Test

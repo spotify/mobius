@@ -121,7 +121,7 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
                   + data);
         }
       } else {
-        effectsWorkRunner.post(() -> liveObserver.onChanged(data));
+        effectsWorkRunner.post(() -> sendToLiveObserver(data));
       }
     }
   }
@@ -148,13 +148,29 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
   }
 
   private void sendQueuedEffects() {
+    final Queue<T> queueToSend = new LinkedList<>();
     synchronized (lock) {
       if (lifecycleOwnerIsPaused || pausedObserver == null || pausedEffectsQueue.isEmpty()) {
         return;
       }
-      final Queue<T> queueToSend = new LinkedList<>();
       pausedEffectsQueue.drainTo(queueToSend);
-      effectsWorkRunner.post(() -> pausedObserver.onChanged(queueToSend));
+    }
+    effectsWorkRunner.post(() -> sendToPausedObserver(queueToSend));
+  }
+
+  private void sendToLiveObserver(T data) {
+    synchronized (lock) {
+      if (liveObserver != null) {
+        liveObserver.onChanged(data);
+      }
+    }
+  }
+
+  private void sendToPausedObserver(Queue<T> queuedData) {
+    synchronized (lock) {
+      if (pausedObserver != null) {
+        pausedObserver.onChanged(queuedData);
+      }
     }
   }
 }
