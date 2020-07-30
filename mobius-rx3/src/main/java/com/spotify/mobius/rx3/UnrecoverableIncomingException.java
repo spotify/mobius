@@ -19,6 +19,8 @@
  */
 package com.spotify.mobius.rx3;
 
+import java.util.Arrays;
+
 /**
  * Used to indicate that an {@link RxMobiusLoop} transformer has received an {@link
  * io.reactivex.rxjava3.core.Observer#onError(Throwable)} call, which is illegal. This exception
@@ -39,6 +41,14 @@ class UnrecoverableIncomingException extends RuntimeException {
       return false;
     }
 
-    return o == this || getCause().equals(((UnrecoverableIncomingException) o).getCause());
+    final UnrecoverableIncomingException other = (UnrecoverableIncomingException) o;
+    return o == this
+        || (getCause() == null && other.getCause() == null)
+        || getCause().equals(other.getCause());
+  }
+
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(new Object[] {getCause()});
   }
 }
