@@ -76,6 +76,7 @@ public final class RxConnectables {
                     });
 
         return new Connection<I>() {
+          @Override
           public void accept(I effect) {
             subject.onNext(effect);
           }

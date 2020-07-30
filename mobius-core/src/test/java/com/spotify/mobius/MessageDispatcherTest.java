@@ -25,7 +25,7 @@ import static org.assertj.core.data.Index.atIndex;
 import static org.hamcrest.Matchers.containsString;
 
 import com.spotify.mobius.runners.WorkRunners;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +36,7 @@ public class MessageDispatcherTest {
 
   @Before
   public void setUp() throws Exception {
-    messages = new LinkedList<>();
+    messages = new ArrayList<>();
   }
 
   @Test

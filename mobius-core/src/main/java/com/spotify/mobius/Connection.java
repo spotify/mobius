@@ -36,6 +36,7 @@ public interface Connection<I> extends Disposable, Consumer<I> {
    *
    * @param value the value that should be sent to the connection
    */
+  @Override
   void accept(I value);
 
   /**
@@ -44,5 +45,6 @@ public interface Connection<I> extends Disposable, Consumer<I> {
    * <p>The connection will no longer be valid after dispose has been called. No further values will
    * be accepted, and any repeated calls to dispose should be ignored.
    */
+  @Override
   void dispose();
 }

@@ -141,9 +141,15 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
           clearObserver();
         }
         break;
+      default:
+        // ignore other events
     }
   }
 
+  // errorprone recommends using ArrayDeque instead of LinkedList here, but ArrayDeque doesn't
+  // implement equals, so it's not very useful for testing, and performance isn't going to be an
+  // issue here
+  @SuppressWarnings("JdkObsolete")
   private void sendQueuedEffects() {
     final Queue<T> queueToSend = new LinkedList<>();
     synchronized (lock) {

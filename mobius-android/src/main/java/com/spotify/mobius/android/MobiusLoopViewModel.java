@@ -25,7 +25,6 @@ import androidx.lifecycle.ViewModel;
 import com.spotify.mobius.First;
 import com.spotify.mobius.Init;
 import com.spotify.mobius.MobiusLoop;
-import com.spotify.mobius.MobiusLoop.Factory;
 import com.spotify.mobius.android.runners.MainThreadWorkRunner;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Function;
@@ -71,13 +70,14 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   private final AtomicBoolean loopActive = new AtomicBoolean(true);
 
   protected MobiusLoopViewModel(
-      @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
+      @Nonnull Function<Consumer<V>, MobiusLoop.Factory<M, E, F>> loopFactoryProvider,
       @Nonnull M modelToStartFrom,
       @Nonnull Init<M, F> init,
       @Nonnull WorkRunner mainLoopWorkRunner,
       int maxEffectQueueSize) {
     viewEffectQueue = new MutableLiveQueue<>(mainLoopWorkRunner, maxEffectQueueSize);
-    final Factory<M, E, F> loopFactory = loopFactoryProvider.apply(this::acceptViewEffect);
+    final MobiusLoop.Factory<M, E, F> loopFactory =
+        loopFactoryProvider.apply(this::acceptViewEffect);
     final First<M, F> first = init.init(modelToStartFrom);
     loop = loopFactory.startFrom(first.model(), first.effects());
     startModel = first.model();
@@ -97,7 +97,7 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
    * @param <V> the view effect type
    */
   public static <M, E, F, V> MobiusLoopViewModel<M, E, F, V> create(
-      @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
+      @Nonnull Function<Consumer<V>, MobiusLoop.Factory<M, E, F>> loopFactoryProvider,
       @Nonnull M modelToStartFrom,
       @Nonnull Init<M, F> init) {
     return create(loopFactoryProvider, modelToStartFrom, init, 100);
@@ -117,7 +117,7 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
    * @param <V> the view effect type
    */
   public static <M, E, F, V> MobiusLoopViewModel<M, E, F, V> create(
-      @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
+      @Nonnull Function<Consumer<V>, MobiusLoop.Factory<M, E, F>> loopFactoryProvider,
       @Nonnull M modelToStartFrom,
       @Nonnull Init<M, F> init,
       int maxEffectsToQueue) {

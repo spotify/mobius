@@ -34,14 +34,14 @@ import javax.annotation.Nullable;
 public interface LiveQueue<T> {
 
   /**
-   * @return <code>true</code> if the current observer is in a Resumed state<br>
-   *     <code>false</code> if the current observer is not Resumed, or there is no current observer
+   * Returns <code>true</code> if the current observer is in a Resumed state<br>
+   * <code>false</code> if the current observer is not Resumed, or there is no current observer
    */
   boolean hasActiveObserver();
 
   /**
-   * @return <code>true</code> if there is an observer of this <code>LiveQueue</code><br>
-   *     <code>false</code> if there is no current observer assigned
+   * Returns <code>true</code> if there is an observer of this <code>LiveQueue</code><br>
+   * <code>false</code> if there is no current observer assigned
    */
   boolean hasObserver();
 

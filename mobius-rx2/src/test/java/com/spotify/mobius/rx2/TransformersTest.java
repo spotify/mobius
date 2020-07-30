@@ -26,6 +26,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.Schedulers;
@@ -135,13 +136,15 @@ public class TransformersTest {
         };
 
     final List<Integer> results = new ArrayList<>();
-    upstream
-        .compose(Transformers.fromFunction(sleepyFunction, Schedulers.io()))
-        .subscribe(results::add);
+    final Disposable disposable =
+        upstream
+            .compose(Transformers.fromFunction(sleepyFunction, Schedulers.io()))
+            .subscribe(results::add);
 
     Observable.fromIterable(effects).subscribe(upstream);
 
     await().atMost(durationForEffects(effects)).until(() -> results.equals(expected(effects)));
+    disposable.dispose();
   }
 
   private Duration durationForEffects(List<String> effects) {

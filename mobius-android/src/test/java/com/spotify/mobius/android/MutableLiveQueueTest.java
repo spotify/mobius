@@ -217,6 +217,10 @@ public class MutableLiveQueueTest {
         .hasMessageContaining(String.valueOf(QUEUE_CAPACITY));
   }
 
+  // errorprone recommends using ArrayDeque instead of LinkedList here, but ArrayDeque doesn't
+  // implement equals, so it's not very useful for testing, and performance isn't going to be an
+  // issue here or in the production code.
+  @SuppressWarnings("JdkObsolete")
   private Queue<String> queueOf(String... args) {
     return new LinkedList<>(Arrays.asList(args));
   }

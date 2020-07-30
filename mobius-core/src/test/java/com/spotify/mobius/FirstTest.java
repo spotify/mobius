@@ -58,6 +58,7 @@ public class FirstTest {
   }
 
   @Test
+  @SuppressWarnings("AutoValueSubclassLeaked")
   public void shouldHaveCorrectEqualsWithEffects() throws Exception {
     First<String, String> av1 = new AutoValue_First<>("hi", ImmutableSet.of("hello", "there"));
     First<String, String> f1 = First.first("hi", effects("hello", "there"));

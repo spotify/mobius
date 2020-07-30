@@ -22,7 +22,7 @@ package com.spotify.mobius;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.spotify.mobius.functions.Consumer;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -39,7 +39,7 @@ public class DiscardAfterDisposeWrapperTest {
     CountDownLatch waitForAccept = new CountDownLatch(1);
     CountDownLatch waitToAccept = new CountDownLatch(1);
 
-    List<String> accepted = new LinkedList<>();
+    List<String> accepted = new ArrayList<>();
 
     Consumer<String> consumer =
         (String s) -> {

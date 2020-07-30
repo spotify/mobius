@@ -47,20 +47,11 @@ import org.slf4j.LoggerFactory;
 public class MobiusTest {
 
   private static final Update<String, Integer, Boolean> UPDATE =
-      new Update<String, Integer, Boolean>() {
-        @Nonnull
-        @Override
-        public Next<String, Boolean> update(String model, Integer event) {
-          return Next.next(model + String.valueOf(event), effects((Boolean) (event % 2 == 0)));
-        }
-      };
+      (model, event) -> Next.next(model + event, effects(event % 2 == 0));
 
   private static final Connectable<Boolean, Integer> HANDLER =
-      new Connectable<Boolean, Integer>() {
-        @Nonnull
-        @Override
-        public Connection<Boolean> connect(final Consumer<Integer> output) {
-          return new SimpleConnection<Boolean>() {
+      output ->
+          new SimpleConnection<Boolean>() {
             @Override
             public void accept(Boolean value) {
               if (value) {
@@ -68,8 +59,7 @@ public class MobiusTest {
               }
             }
           };
-        }
-      };
+
   private static final String MY_MODEL = "start";
   private MobiusLoop<String, Integer, Boolean> loop;
 

@@ -94,6 +94,7 @@ class MobiusLoopController<M, E, F>
     return currentState.onGetModel();
   }
 
+  @Override
   public void postUpdateView(final M model) {
     mainThreadRunner.post(
         new Runnable() {

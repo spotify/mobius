@@ -124,6 +124,7 @@ public class NextTest {
   }
 
   @Test
+  @SuppressWarnings("AutoValueSubclassLeaked")
   public void testEquals() throws Exception {
     Next<String, String> m1 = new AutoValue_Next<>("hi", ImmutableUtil.<String>emptySet());
     Next<String, String> m2 = Next.next("hi");

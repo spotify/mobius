@@ -27,6 +27,7 @@ import com.spotify.mobius.functions.Consumer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class RecordingConsumer<V> implements Consumer<V> {
 
@@ -43,10 +44,18 @@ public class RecordingConsumer<V> implements Consumer<V> {
 
   public boolean waitForChange(long timeoutMs) {
     synchronized (lock) {
-      try {
-        lock.wait(timeoutMs);
-        return true;
+      long now = System.nanoTime();
+      long deadline = now + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
 
+      try {
+        int valuesBefore = values.size();
+
+        while (values.size() == valuesBefore && now < deadline) {
+          lock.wait(timeoutMs);
+          now = System.nanoTime();
+        }
+
+        return true;
       } catch (InterruptedException e) {
         return false;
       }

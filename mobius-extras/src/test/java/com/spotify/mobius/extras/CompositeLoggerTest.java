@@ -27,9 +27,9 @@ import com.google.auto.value.AutoValue;
 import com.spotify.mobius.First;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.Next;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +50,7 @@ public class CompositeLoggerTest {
     logger2 = new RecordingLogger<>();
     logger3 = new RecordingLogger<>();
     underTest = CompositeLogger.from(logger1, logger2, logger3);
-    logEntries = Collections.synchronizedList(new LinkedList<>());
+    logEntries = Collections.synchronizedList(new ArrayList<>());
     taggingLogger1 = new TaggingLogger<>("1", logEntries);
     taggingLogger2 = new TaggingLogger<>("2", logEntries);
   }
@@ -94,8 +94,7 @@ public class CompositeLoggerTest {
   }
 
   @Test
-  public void delegatesExceptionDuringUpdateToAllLoggers()
-      throws InstantiationException, IllegalAccessException {
+  public void delegatesExceptionDuringUpdateToAllLoggers() throws Exception {
     ExceptionDuringUpdate<String, Integer> testCase =
         ExceptionDuringUpdate.create("Something bad happened", 6, Exception.class);
     underTest.exceptionDuringUpdate(testCase.model(), testCase.event(), testCase.createException());
@@ -267,14 +266,17 @@ public class CompositeLoggerTest {
   abstract static class ExceptionDuringInit<M> implements LogEvent {
     abstract M model();
 
-    abstract Class exceptionClazz();
+    abstract Class<? extends Throwable> exceptionClazz();
 
-    public static <M> ExceptionDuringInit<M> create(M model, Class exceptionClazz) {
+    public static <M> ExceptionDuringInit<M> create(
+        M model, Class<? extends Throwable> exceptionClazz) {
       return new AutoValue_CompositeLoggerTest_ExceptionDuringInit<>(model, exceptionClazz);
     }
 
-    Throwable createException() throws IllegalAccessException, InstantiationException {
-      return (Throwable) exceptionClazz().newInstance();
+    Throwable createException()
+        throws IllegalAccessException, InstantiationException, NoSuchMethodException,
+            InvocationTargetException {
+      return exceptionClazz().getDeclaredConstructor().newInstance();
     }
   }
 
@@ -308,16 +310,18 @@ public class CompositeLoggerTest {
 
     abstract E event();
 
-    abstract Class exceptionClazz();
+    abstract Class<? extends Throwable> exceptionClazz();
 
     public static <M, E> ExceptionDuringUpdate<M, E> create(
-        M model, E event, Class exceptionClazz) {
+        M model, E event, Class<? extends Throwable> exceptionClazz) {
       return new AutoValue_CompositeLoggerTest_ExceptionDuringUpdate<>(
           model, event, exceptionClazz);
     }
 
-    Throwable createException() throws IllegalAccessException, InstantiationException {
-      return (Throwable) exceptionClazz().newInstance();
+    Throwable createException()
+        throws IllegalAccessException, InstantiationException, NoSuchMethodException,
+            InvocationTargetException {
+      return exceptionClazz().getDeclaredConstructor().newInstance();
     }
   }
 }

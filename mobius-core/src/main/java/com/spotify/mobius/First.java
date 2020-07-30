@@ -28,11 +28,11 @@ import javax.annotation.Nonnull;
 @AutoValue
 public abstract class First<M, F> {
 
-  /** @return the initial model to use */
+  /** the initial model to use */
   @Nonnull
   public abstract M model();
 
-  /** @return the possibly empty set of effects to initially dispatch */
+  /** the possibly empty set of effects to initially dispatch */
   @Nonnull
   public abstract Set<F> effects();
 

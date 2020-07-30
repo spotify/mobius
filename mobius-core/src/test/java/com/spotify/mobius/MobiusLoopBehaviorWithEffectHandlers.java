@@ -89,9 +89,8 @@ public class MobiusLoopBehaviorWithEffectHandlers extends MobiusLoopTest {
               public void accept(TestEffect effect) {
                 try {
                   eventConsumer.accept(future.get());
-
                 } catch (InterruptedException | ExecutionException e) {
-                  e.printStackTrace();
+                  throw new RuntimeException(e);
                 }
               }
             },

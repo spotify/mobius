@@ -56,8 +56,8 @@ public class MergeConnectablesTest {
 
   @Test
   public void propagatesMultipleConnections() {
-    final Connection<B> conn1 = merged.connect(consumer);
-    final Connection<B> conn2 = merged.connect(consumer);
+    merged.connect(consumer);
+    merged.connect(consumer);
 
     assertEquals(2, c1.connectionsCount);
     assertEquals(2, c2.connectionsCount);
