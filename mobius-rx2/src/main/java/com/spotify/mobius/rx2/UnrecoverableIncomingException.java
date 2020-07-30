@@ -19,6 +19,8 @@
  */
 package com.spotify.mobius.rx2;
 
+import java.util.Arrays;
+
 /**
  * Used to indicate that an {@link RxMobiusLoop} transformer has received an {@link
  * io.reactivex.Observer#onError(Throwable)} call, which is illegal. This exception means Mobius is
@@ -39,6 +41,14 @@ public class UnrecoverableIncomingException extends RuntimeException {
       return false;
     }
 
-    return o == this || getCause().equals(((UnrecoverableIncomingException) o).getCause());
+    final UnrecoverableIncomingException other = (UnrecoverableIncomingException) o;
+    return o == this
+        || (getCause() == null && other.getCause() == null)
+        || getCause().equals(other.getCause());
+  }
+
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(new Object[] {getCause()});
   }
 }
