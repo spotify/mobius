@@ -94,4 +94,30 @@ public class MobiusLoopViewModelTestUtilClasses {
       };
     }
   }
+
+  /** An Effect Handler that simply sends a TestViewEffect to the given view effect consumer. */
+  static class ViewEffectSendingEffectHandler implements Connectable<TestEffect, TestEvent> {
+    private Consumer<TestViewEffect> viewEffectConsumer;
+
+    public ViewEffectSendingEffectHandler(Consumer<TestViewEffect> viewEffectConsumer) {
+      this.viewEffectConsumer = viewEffectConsumer;
+    }
+
+    @Nonnull
+    @Override
+    public Connection<TestEffect> connect(Consumer<TestEvent> output)
+        throws ConnectionLimitExceededException {
+      return new Connection<TestEffect>() {
+        @Override
+        public void accept(TestEffect value) {
+          viewEffectConsumer.accept(new TestViewEffect(value.name));
+        }
+
+        @Override
+        public void dispose() {
+          // do nothing
+        }
+      };
+    }
+  }
 }
