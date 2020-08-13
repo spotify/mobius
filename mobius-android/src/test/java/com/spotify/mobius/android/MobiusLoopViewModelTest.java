@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import androidx.lifecycle.Lifecycle;
+import com.spotify.mobius.Connectable;
 import com.spotify.mobius.First;
 import com.spotify.mobius.Mobius;
 import com.spotify.mobius.Next;
@@ -33,10 +34,14 @@ import com.spotify.mobius.android.MobiusLoopViewModelTestUtilClasses.TestEvent;
 import com.spotify.mobius.android.MobiusLoopViewModelTestUtilClasses.TestModel;
 import com.spotify.mobius.android.MobiusLoopViewModelTestUtilClasses.TestViewEffect;
 import com.spotify.mobius.android.MobiusLoopViewModelTestUtilClasses.TestViewEffectHandler;
+import com.spotify.mobius.android.MobiusLoopViewModelTestUtilClasses.ViewEffectSendingEffectHandler;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.runners.ImmediateWorkRunner;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -141,5 +146,39 @@ public class MobiusLoopViewModelTest {
     underTest.onCleared();
     underTest.dispatchEvent(new TestEvent("don't record me"));
     assertThat(recordedEvents.size(), equalTo(0));
+  }
+
+  @Test
+  public void testViewEffectsPostedImmediatelyAreSentCorrectly() {
+    //noinspection Convert2MethodRef
+    underTest =
+        new MobiusLoopViewModel<>(
+            (Consumer<TestViewEffect> consumer) -> {
+              Connectable<TestEffect, TestEvent> viewEffectSendingEffectHandler =
+                  new ViewEffectSendingEffectHandler(consumer);
+              testViewEffectHandler = new TestViewEffectHandler<>(consumer);
+              return Mobius.loop(updateFunction, viewEffectSendingEffectHandler)
+                  .eventRunner(ImmediateWorkRunner::new)
+                  .effectRunner(ImmediateWorkRunner::new);
+            },
+            initialModel,
+            (TestModel model) -> First.first(model, effects(new TestEffect("oops"))),
+            new ImmediateWorkRunner(),
+            100);
+    underTest
+        .getViewEffects()
+        .setObserver(
+            fakeLifecycle,
+            recordingForegroundViewEffectObserver,
+            recordingBackgroundEffectObserver);
+    fakeLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
+    assertThat(recordingForegroundViewEffectObserver.valueCount(), equalTo(0));
+    assertThat(recordingBackgroundEffectObserver.valueCount(), equalTo(1));
+  }
+
+  private Set<TestEffect> effects(TestEffect... effects) {
+    final Set<TestEffect> result = new HashSet<>(effects.length);
+    Collections.addAll(result, effects);
+    return result;
   }
 }

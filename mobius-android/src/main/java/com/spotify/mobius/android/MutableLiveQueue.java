@@ -109,9 +109,6 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
    */
   void post(@Nonnull final T data) {
     synchronized (lock) {
-      if (liveObserver == null) {
-        return;
-      }
       if (lifecycleOwnerIsPaused) {
         if (!pausedEffectsQueue.offer(data)) {
           throw new IllegalStateException(

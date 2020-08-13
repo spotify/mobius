@@ -89,7 +89,7 @@ public class MutableLiveQueueTest {
   }
 
   @Test
-  public void shouldNotQueueEventsWithNoObserver() {
+  public void shouldQueueEventsWithNoObserver() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
 
     mutableLiveQueue.post("one");
@@ -97,7 +97,7 @@ public class MutableLiveQueueTest {
     mutableLiveQueue.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
 
     assertThat(liveObserver.valueCount(), equalTo(0));
-    assertThat(pausedObserver.valueCount(), equalTo(0));
+    assertThat(pausedObserver.valueCount(), equalTo(1));
   }
 
   @Test

@@ -76,11 +76,11 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
       @Nonnull Init<M, F> init,
       @Nonnull WorkRunner mainLoopWorkRunner,
       int maxEffectQueueSize) {
+    viewEffectQueue = new MutableLiveQueue<>(mainLoopWorkRunner, maxEffectQueueSize);
     final Factory<M, E, F> loopFactory = loopFactoryProvider.apply(this::acceptViewEffect);
     final First<M, F> first = init.init(modelToStartFrom);
     loop = loopFactory.startFrom(first.model(), first.effects());
     startModel = first.model();
-    viewEffectQueue = new MutableLiveQueue<>(mainLoopWorkRunner, maxEffectQueueSize);
     loop.observe(this::onModelChanged);
   }
 
@@ -116,7 +116,7 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
    * @param <F> the effect type
    * @param <V> the view effect type
    */
-  public static <M, E, F, V> MobiusLoopViewModel create(
+  public static <M, E, F, V> MobiusLoopViewModel<M, E, F, V> create(
       @Nonnull Function<Consumer<V>, Factory<M, E, F>> loopFactoryProvider,
       @Nonnull M modelToStartFrom,
       @Nonnull Init<M, F> init,
