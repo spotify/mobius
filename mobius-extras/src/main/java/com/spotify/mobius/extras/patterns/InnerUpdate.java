@@ -60,6 +60,7 @@ public abstract class InnerUpdate<M, E, F, MI, EI, FI> implements Update<M, E, F
   protected abstract InnerEffectHandler<M, F, FI> innerEffectHandler();
 
   @Nonnull
+  @Override
   public final Next<M, F> update(M model, E event) {
     MI innerModel = checkNotNull(modelExtractor().apply(model));
     EI innerEvent = checkNotNull(eventExtractor().apply(event));

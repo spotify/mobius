@@ -20,6 +20,7 @@ plugins {
     id 'com.github.sherter.google-java-format' version '0.8'
     id 'com.github.hierynomus.license' version '0.15.0'
     id 'io.codearte.nexus-staging' version '0.21.2'
+    id 'net.ltgt.errorprone' version '1.2.1'
 }
 
 repositories {
@@ -52,15 +53,24 @@ ext {
             'hamcrestLibrary'  : '1.3',
             'mockito'          : '1.10.19',
             'androidxLifecycle' : '2.2.0',
-            'androidXCoreTesting' : '2.1.0'
+            'androidXCoreTesting' : '2.1.0',
+            'errorProne'          : '2.4.0',
+            'errorProneJavac'     : '9+181-r4173-1',
     ]
 }
 
 subprojects {
     ext.VERSION_NAME = properties.version
+    apply plugin: 'net.ltgt.errorprone'
 
     repositories {
         jcenter()
+        mavenCentral()
+    }
+
+    dependencies {
+        errorprone("com.google.errorprone:error_prone_core:${versions.errorProne}")
+        errorproneJavac("com.google.errorprone:javac:${versions.errorProneJavac}")
     }
 
     group = GROUP
@@ -83,6 +93,15 @@ subprojects {
         }
         // ensure that builds fail if code is not formatted properly
         proj.tasks.check.dependsOn(rootProject.tasks.verifyFormat)
+
+        tasks.withType(JavaCompile).configureEach {
+            options.errorprone.disableWarningsInGeneratedCode = true
+            options.errorprone.disable("AutoValueImmutableFields")
+        }
+
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Werror"
+        }
     }
 }
 

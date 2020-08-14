@@ -20,13 +20,13 @@
 package com.spotify.mobius;
 
 import com.spotify.mobius.MobiusHooks.ErrorHandler;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Error handler for use in tests */
 class TestErrorHandler implements ErrorHandler {
 
-  List<Throwable> handledErrors = new LinkedList<>();
+  List<Throwable> handledErrors = new ArrayList<>();
 
   @Override
   public void handleError(Throwable error) {

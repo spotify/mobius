@@ -22,7 +22,7 @@ package com.spotify.mobius.extras;
 import com.spotify.mobius.EventSource;
 import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -55,7 +55,7 @@ public final class QueueingEventSubject<E> implements EventSource<E>, Consumer<E
   @Nonnull
   @Override
   public Disposable subscribe(Consumer<E> eventConsumer) {
-    List<E> queued = new LinkedList<>();
+    List<E> queued = new ArrayList<>();
 
     // avoid calling the consumer from the synchronized section
     synchronized (this) {

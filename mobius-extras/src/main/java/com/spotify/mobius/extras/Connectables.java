@@ -56,7 +56,7 @@ public final class Connectables {
    * {@link com.spotify.mobius.MobiusLoop} would be outputting {@code Long} models that you need to
    * convert to Strings before they can be accepted by the UI.
    *
-   * <pre>
+   * <pre>{@code
    * public class Formatter {
    *    public static String format(Long timestamp) { ... }
    * }
@@ -85,7 +85,7 @@ public final class Connectables {
    * MyUi myUi = ... ;
    *
    * controller.connect(Connectables.contramap(Formatter::format, myUi));
-   * </pre>
+   * }</pre>
    *
    * @param mapper the mapping function to apply
    * @param connectable the underlying connectable
@@ -117,45 +117,45 @@ public final class Connectables {
    * href="http://hackage.haskell.org/package/profunctors-5.4/docs/Data-Profunctor.html#v:dimap">Profunctor
    * </a> typeclass
    *
-   * <pre>
-   *  class A {
-   *      final B b;
-   *      A(B b) { this.b = b; }
-   *      B b() { return b }
-   *  }
+   * <pre>{@code
+   * class A {
+   *     final B b;
+   *     A(B b) { this.b = b; }
+   *     B b() { return b }
+   * }
    *
-   *  abstract class B {
-   *      abstract int x();
-   *  }
+   * abstract class B {
+   *     abstract int x();
+   * }
    *
-   *  abstract class C {
-   *      abstract String y();
-   *  }
+   * abstract class C {
+   *     abstract String y();
+   * }
    *
-   *  class D {
-   *      final C c;
-   *      D(C c) { this.c = c; }
-   *  }
+   * class D {
+   *     final C c;
+   *     D(C c) { this.c = c; }
+   * }
    *
-   *  Connectable innerConnectable = o -> new Connection() {
-   *      public void accept(B b) {
-   *          o.accept(new C(b.x().toString()));
-   *      }
+   * Connectable innerConnectable = o -> new Connection() {
+   *     public void accept(B b) {
+   *         o.accept(new C(b.x().toString()));
+   *     }
    *
-   *      public void dispose() {
+   *     public void dispose() {
    *
-   *      }
-   *  }
+   *     }
+   * }
    *
-   *  Connectable outerConnectable = dimap(A::b, D::new, innerConnectable);
-   *  RecordingConsumer consumer = new RecordingConsumer<>();
-   *  Connection connection = outerConnectable.connect(consumer);
-   *  connection.accept(new A(new B(5))); // connects to innerConnectable and forwards value
-   *  consumer.assertValues(new D(new C("5")))
+   * Connectable outerConnectable = dimap(A::b, D::new, innerConnectable);
+   * RecordingConsumer consumer = new RecordingConsumer<>();
+   * Connection connection = outerConnectable.connect(consumer);
+   * connection.accept(new A(new B(5))); // connects to innerConnectable and forwards value
+   * consumer.assertValues(new D(new C("5")))
    *
-   *  connection.accept(new A(null)); // disconnects from innerConnectable
-   *  connection.dispose(); // also disconnects from inner connectable
-   * </pre>
+   * connection.accept(new A(null)); // disconnects from innerConnectable
+   * connection.dispose(); // also disconnects from inner connectable
+   * }</pre>
    */
   @Nonnull
   public static <A, B, C, D> com.spotify.mobius.Connectable<A, D> dimap(

@@ -37,9 +37,9 @@ import com.spotify.mobius.android.MobiusLoopViewModelTestUtilClasses.TestViewEff
 import com.spotify.mobius.android.MobiusLoopViewModelTestUtilClasses.ViewEffectSendingEffectHandler;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.runners.ImmediateWorkRunner;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import org.junit.Before;
@@ -49,7 +49,7 @@ import org.junit.Test;
 public class MobiusLoopViewModelTest {
 
   @Rule public InstantTaskExecutorRule rule = new InstantTaskExecutorRule();
-  private List<TestEvent> recordedEvents = new LinkedList<>();
+  private List<TestEvent> recordedEvents = new ArrayList<>();
   private final Update<TestModel, TestEvent, TestEffect> updateFunction =
       (model, event) -> {
         recordedEvents.add(event);
@@ -69,7 +69,7 @@ public class MobiusLoopViewModelTest {
   @Before
   public void setUp() {
     fakeLifecycle = new FakeLifecycleOwner();
-    recordedEvents = new LinkedList<>();
+    recordedEvents = new ArrayList<>();
     testViewEffectHandler = null;
     recordingModelObserver = new RecordingObserver<>();
     recordingForegroundViewEffectObserver = new RecordingObserver<>();

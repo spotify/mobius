@@ -41,7 +41,7 @@ public class UnknownEffectException extends RuntimeException {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(o instanceof UnknownEffectException)) {
       return false;
     }
 

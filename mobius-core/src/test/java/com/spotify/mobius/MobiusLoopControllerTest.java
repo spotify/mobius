@@ -571,6 +571,7 @@ public class MobiusLoopControllerTest {
     private volatile Thread workerThread = null;
 
     @Override
+    @SuppressWarnings("FutureReturnValueIgnored")
     public void post(final Runnable runnable) {
       executorService.submit(
           new Runnable() {

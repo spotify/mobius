@@ -26,7 +26,6 @@ import com.spotify.mobius.MobiusLoop.Logger;
 import com.spotify.mobius.Next;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -55,7 +54,7 @@ public class CompositeLogger<M, E, F> implements Logger<M, E, F> {
 
   private CompositeLogger(List<Logger<M, E, F>> loggers) {
     this.loggers = loggers;
-    this.loggersReversed = new LinkedList<>(loggers);
+    this.loggersReversed = new ArrayList<>(loggers);
     Collections.reverse(loggersReversed);
   }
 

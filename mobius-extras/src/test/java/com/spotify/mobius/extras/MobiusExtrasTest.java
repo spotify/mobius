@@ -25,19 +25,12 @@ import static org.hamcrest.core.Is.is;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.functions.BiFunction;
 import java.time.Duration;
-import javax.annotation.Nonnull;
 import org.junit.Test;
 
 public class MobiusExtrasTest {
 
   private static final BiFunction<String, Integer, String> BEGINNER_UPDATE =
-      new BiFunction<String, Integer, String>() {
-        @Nonnull
-        @Override
-        public String apply(String model, Integer event) {
-          return model + String.valueOf(event);
-        }
-      };
+      (model, event) -> model + event;
 
   private static final String MY_MODEL = "start";
 
@@ -48,6 +41,6 @@ public class MobiusExtrasTest {
 
     loop.dispatchEvent(8);
 
-    await().atMost(Duration.ofSeconds(1)).until(() -> loop.getMostRecentModel(), is("start8"));
+    await().atMost(Duration.ofSeconds(1)).until(loop::getMostRecentModel, is("start8"));
   }
 }

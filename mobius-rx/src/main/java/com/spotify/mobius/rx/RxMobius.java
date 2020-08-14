@@ -457,6 +457,7 @@ public final class RxMobius {
 
     private class DefaultOnError implements Func1<Transformer<? extends F, E>, Action1<Throwable>> {
 
+      @Override
       public Action1<Throwable> call(final Transformer<? extends F, E> effectHandler) {
         return new Action1<Throwable>() {
           @Override

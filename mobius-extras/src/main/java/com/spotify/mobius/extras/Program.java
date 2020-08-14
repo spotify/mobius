@@ -53,7 +53,7 @@ public abstract class Program<M, E, F> {
   @Nullable
   public abstract String loggingTag();
 
-  /** @return a {@link MobiusLoop.Builder} based on this program */
+  /** Returns a {@link MobiusLoop.Builder} based on this program */
   public MobiusLoop.Builder<M, E, F> createLoop() {
     MobiusLoop.Builder<M, E, F> builder = Mobius.loop(update(), effectHandler());
 

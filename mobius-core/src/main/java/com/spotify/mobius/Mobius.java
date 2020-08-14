@@ -21,7 +21,6 @@ package com.spotify.mobius;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
-import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.functions.Producer;
 import com.spotify.mobius.internal_util.ImmutableUtil;
 import com.spotify.mobius.runners.WorkRunner;
@@ -40,21 +39,14 @@ public final class Mobius {
   }
 
   private static final Connectable<?, ?> NOOP_EVENT_SOURCE =
-      new Connectable<Object, Object>() {
-
-        @Nonnull
-        @Override
-        public Connection<Object> connect(Consumer<Object> output)
-            throws ConnectionLimitExceededException {
-          return new Connection<Object>() {
+      output ->
+          new Connection<Object>() {
             @Override
             public void accept(Object value) {}
 
             @Override
             public void dispose() {}
           };
-        }
-      };
 
   private static final MobiusLoop.Logger<?, ?, ?> NOOP_LOGGER =
       new MobiusLoop.Logger<Object, Object, Object>() {

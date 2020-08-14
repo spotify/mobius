@@ -19,13 +19,12 @@
  */
 package com.spotify.mobius.android;
 
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertThat;
 
 import androidx.lifecycle.Observer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class RecordingObserver<V> implements Observer<V> {
@@ -41,18 +40,6 @@ public class RecordingObserver<V> implements Observer<V> {
     }
   }
 
-  public boolean waitForChange(long timeoutMs) {
-    synchronized (lock) {
-      try {
-        lock.wait(timeoutMs);
-        return true;
-
-      } catch (InterruptedException e) {
-        return false;
-      }
-    }
-  }
-
   public int valueCount() {
     synchronized (lock) {
       return values.size();
@@ -62,7 +49,7 @@ public class RecordingObserver<V> implements Observer<V> {
   @SafeVarargs
   public final void assertValues(V... expectedValues) {
     synchronized (lock) {
-      assertThat(values, equalTo(Arrays.asList(expectedValues)));
+      assertThat(values, contains(expectedValues));
     }
   }
 

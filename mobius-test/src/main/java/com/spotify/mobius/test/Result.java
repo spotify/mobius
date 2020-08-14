@@ -28,13 +28,13 @@ import javax.annotation.Nonnull;
 public abstract class Result<M, F> {
 
   /**
-   * @return the final model - note that was not necessarily produced by the last Next, in case that
-   *     returned an empty model.
+   * Returns the final model - note that was not necessarily produced by the last Next, in case that
+   * returned an empty model.
    */
   @Nonnull
   public abstract M model();
 
-  /** @return the Next that resulted from the last processed event */
+  /** Returns the Next that resulted from the last processed event */
   @Nonnull
   public abstract Next<M, F> lastNext();
 

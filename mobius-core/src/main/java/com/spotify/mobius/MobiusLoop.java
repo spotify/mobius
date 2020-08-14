@@ -248,60 +248,61 @@ public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
   public interface Builder<M, E, F> extends Factory<M, E, F> {
 
     /**
+     * Returns a new {@link Builder} with the supplied {@link Init}, and the same values as the
+     * current one for the other fields.
+     *
      * @deprecated Pass your initial effects to {@link #startFrom(Object, Set)} instead.
-     * @return a new {@link Builder} with the supplied {@link Init}, and the same values as the
-     *     current one for the other fields.
      */
     @Nonnull
     @Deprecated
     Builder<M, E, F> init(Init<M, F> init);
 
     /**
-     * @return a new {@link Builder} with the supplied {@link EventSource}, and the same values as
-     *     the current one for the other fields. NOTE: Invoking this method will replace the current
-     *     {@link EventSource} with the supplied one. If you want to pass multiple event sources,
-     *     please use {@link #eventSources(EventSource, EventSource[])}.
+     * Returns a new {@link Builder} with the supplied {@link EventSource}, and the same values as
+     * the current one for the other fields. NOTE: Invoking this method will replace the current
+     * {@link EventSource} with the supplied one. If you want to pass multiple event sources, please
+     * use {@link #eventSources(EventSource, EventSource[])}.
      */
     @Nonnull
     Builder<M, E, F> eventSource(EventSource<E> eventSource);
 
     /**
-     * @return a new {@link Builder} with an {@link EventSource} that merges the supplied event
-     *     sources, and the same values as the current one for the other fields.
+     * Returns a new {@link Builder} with an {@link EventSource} that merges the supplied event
+     * sources, and the same values as the current one for the other fields.
      */
     @Nonnull
     Builder<M, E, F> eventSources(EventSource<E> eventSource, EventSource<E>... eventSources);
 
     /**
-     * @return a new {@link Builder} with the supplied {@link Connectable<M,E>}, and the same values
-     *     as the current one for the other fields. NOTE: Invoking this method will replace the
-     *     current event source with the supplied one. If a loop has a {@link Connectable<M,E>} as
-     *     its event source, it will connect to it and will invoke the {@link Connection<M>} accept
-     *     method every time the model changes. This allows us to conditionally subscribe to
-     *     different sources based on the current state. If you provide a regular {@link
-     *     EventSource<E>}, it will be wrapped in a {@link Connectable} and that implementation will
-     *     subscribe to that event source only once when the loop is initialized.
+     * Returns a new {@link Builder} with the supplied {@link Connectable<M,E>}, and the same values
+     * as the current one for the other fields. NOTE: Invoking this method will replace the current
+     * event source with the supplied one. If a loop has a {@link Connectable<M,E>} as its event
+     * source, it will connect to it and will invoke the {@link Connection<M>} accept method every
+     * time the model changes. This allows us to conditionally subscribe to different sources based
+     * on the current state. If you provide a regular {@link EventSource<E>}, it will be wrapped in
+     * a {@link Connectable} and that implementation will subscribe to that event source only once
+     * when the loop is initialized.
      */
     @Nonnull
     Builder<M, E, F> eventSource(Connectable<M, E> eventSource);
 
     /**
-     * @return a new {@link Builder} with the supplied logger, and the same values as the current
-     *     one for the other fields.
+     * Returns a new {@link Builder} with the supplied logger, and the same values as the current
+     * one for the other fields.
      */
     @Nonnull
     Builder<M, E, F> logger(Logger<M, E, F> logger);
 
     /**
-     * @return a new {@link Builder} with the supplied event runner, and the same values as the
-     *     current one for the other fields.
+     * Returns a new {@link Builder} with the supplied event runner, and the same values as the
+     * current one for the other fields.
      */
     @Nonnull
     Builder<M, E, F> eventRunner(Producer<WorkRunner> eventRunner);
 
     /**
-     * @return a new {@link Builder} with the supplied effect runner, and the same values as the
-     *     current one for the other fields.
+     * Returns a new {@link Builder} with the supplied effect runner, and the same values as the
+     * current one for the other fields.
      */
     @Nonnull
     Builder<M, E, F> effectRunner(Producer<WorkRunner> effectRunner);

@@ -23,25 +23,19 @@ import static com.spotify.mobius.Mobius.loop;
 
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
-import com.spotify.mobius.ConnectionLimitExceededException;
 import com.spotify.mobius.Mobius;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.Next;
 import com.spotify.mobius.Update;
 import com.spotify.mobius.functions.BiFunction;
-import com.spotify.mobius.functions.Consumer;
 import javax.annotation.Nonnull;
 
 /** Factory methods for the mobius-extra library. */
 public final class MobiusExtras {
 
   private static final Connectable<?, ?> NOOP_CONNECTABLE =
-      new Connectable<Object, Object>() {
-        @Nonnull
-        @Override
-        public Connection<Object> connect(Consumer<Object> output)
-            throws ConnectionLimitExceededException {
-          return new Connection<Object>() {
+      output ->
+          new Connection<Object>() {
             @Override
             public void accept(Object value) {
               // Do nothing.
@@ -52,8 +46,6 @@ public final class MobiusExtras {
               // Do nothing.
             }
           };
-        }
-      };
 
   private MobiusExtras() {
     // prevent instantiation

@@ -65,7 +65,7 @@ public class InitSpec<M, F> {
     };
   }
 
-  /** An alias for {@link #when(M)} to be used with Kotlin */
+  /** An alias for {@link #when(Object)} to be used with Kotlin */
   public Then<M, F> whenInit(M model) {
     return when(model);
   }

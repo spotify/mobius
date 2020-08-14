@@ -20,12 +20,12 @@
 package com.spotify.mobius.test;
 
 import com.spotify.mobius.runners.WorkRunner;
-import java.util.LinkedList;
+import java.util.ArrayDeque;
 import java.util.Queue;
 
 public class TestWorkRunner implements WorkRunner {
 
-  private final Queue<Runnable> queue = new LinkedList<>();
+  private final Queue<Runnable> queue = new ArrayDeque<>();
   private boolean disposed;
 
   @Override

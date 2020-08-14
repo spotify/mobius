@@ -37,6 +37,8 @@ public class ExecutorServiceWorkRunner implements WorkRunner {
     this.service = service;
   }
 
+  // we handle exceptions by wrapping the submitted runnables in something that will report them
+  @SuppressWarnings("FutureReturnValueIgnored")
   @Override
   public void post(Runnable runnable) {
     service.submit(runnable);
