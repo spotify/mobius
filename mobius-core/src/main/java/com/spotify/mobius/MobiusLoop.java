@@ -194,13 +194,13 @@ public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
       return () -> {};
     }
 
-    modelObservers.add(checkNotNull(observer));
-
     final M currentModel = mostRecentModel;
     if (currentModel != null) {
       // Start by emitting the most recently received model.
       observer.accept(currentModel);
     }
+
+    modelObservers.add(checkNotNull(observer));
 
     return new Disposable() {
       @Override

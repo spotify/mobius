@@ -54,11 +54,16 @@ class MobiusLoopController<M, E, F>
     return currentState.isRunning();
   }
 
-  private synchronized void dispatchEvent(E event) {
+  // note on synchronization: since this method should never change the controller state, only that
+  // of the controlled loop, which has its own concurrency protection, it doesn't need to be
+  // synchronized.
+  private void dispatchEvent(E event) {
     currentState.onDispatchEvent(event);
   }
 
-  private synchronized void updateView(M model) {
+  // note on synchronization: since this method should never change the controller state, and will
+  // be called from the `mainThreadRunner` only, it doesn't need to be synchronized.
+  private void updateView(M model) {
     currentState.onUpdateView(model);
   }
 
