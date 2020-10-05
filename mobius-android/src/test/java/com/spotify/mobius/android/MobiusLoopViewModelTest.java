@@ -78,7 +78,7 @@ public class MobiusLoopViewModelTest {
     //noinspection Convert2MethodRef
     underTest =
         new MobiusLoopViewModel<>(
-            (Consumer<TestViewEffect> consumer) -> {
+            (Consumer<TestViewEffect> consumer, ViewModelEventSourceFilter<TestModel> filter) -> {
               testViewEffectHandler = new TestViewEffectHandler<>(consumer);
               return Mobius.loop(updateFunction, testViewEffectHandler)
                   .eventRunner(ImmediateWorkRunner::new)
@@ -153,7 +153,7 @@ public class MobiusLoopViewModelTest {
     //noinspection Convert2MethodRef
     underTest =
         new MobiusLoopViewModel<>(
-            (Consumer<TestViewEffect> consumer) -> {
+            (Consumer<TestViewEffect> consumer, ViewModelEventSourceFilter<TestModel> filter) -> {
               Connectable<TestEffect, TestEvent> viewEffectSendingEffectHandler =
                   new ViewEffectSendingEffectHandler(consumer);
               testViewEffectHandler = new TestViewEffectHandler<>(consumer);

@@ -84,6 +84,22 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
     loop.observe(this::onModelChanged);
   }
 
+  protected MobiusLoopViewModel(
+      @Nonnull MobiusLoopFactoryProvider<M, E, F, V> loopFactoryProvider,
+      @Nonnull M modelToStartFrom,
+      @Nonnull Init<M, F> init,
+      @Nonnull WorkRunner mainLoopWorkRunner,
+      int maxEffectQueueSize) {
+    viewEffectQueue = new MutableLiveQueue<>(mainLoopWorkRunner, maxEffectQueueSize);
+    final MobiusLoop.Factory<M, E, F> loopFactory =
+        loopFactoryProvider.create(
+            this::acceptViewEffect, new ViewModelEventSourceFilter<>(modelData));
+    final First<M, F> first = init.init(modelToStartFrom);
+    loop = loopFactory.startFrom(first.model(), first.effects());
+    startModel = first.model();
+    loop.observe(this::onModelChanged);
+  }
+
   /**
    * Creates a new MobiusLoopViewModel instance with a default maximum effect queue size.
    *
@@ -129,6 +145,49 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
         maxEffectsToQueue);
   }
 
+  /**
+   * Creates a new MobiusLoopViewModel instance with a default maximum effect queue size.
+   *
+   * @param loopFactoryProvider The provider for the factory, that gets passed all dependencies
+   * @param modelToStartFrom The initial model for the loop
+   * @param init the {@link Init} function of the loop
+   * @param <M> the model type
+   * @param <E> the event type
+   * @param <F> the effect type
+   * @param <V> the view effect type
+   */
+  public static <M, E, F, V> MobiusLoopViewModel<M, E, F, V> create(
+      @Nonnull MobiusLoopFactoryProvider<M, E, F, V> loopFactoryProvider,
+      @Nonnull M modelToStartFrom,
+      @Nonnull Init<M, F> init) {
+    return create(loopFactoryProvider, modelToStartFrom, init, 100);
+  }
+
+  /**
+   * Creates a new MobiusLoopViewModel instance.
+   *
+   * @param loopFactoryProvider The provider for the factory, that gets passed all dependencies
+   * @param modelToStartFrom the initial model for the loop
+   * @param init the {@link Init} function of the loop
+   * @param maxEffectsToQueue the maximum number of effects to queue while paused
+   * @param <M> the model type
+   * @param <E> the event type
+   * @param <F> the effect type
+   * @param <V> the view effect type
+   */
+  public static <M, E, F, V> MobiusLoopViewModel<M, E, F, V> create(
+      @Nonnull MobiusLoopFactoryProvider<M, E, F, V> loopFactoryProvider,
+      @Nonnull M modelToStartFrom,
+      @Nonnull Init<M, F> init,
+      int maxEffectsToQueue) {
+    return new MobiusLoopViewModel<>(
+        loopFactoryProvider,
+        modelToStartFrom,
+        init,
+        MainThreadWorkRunner.create(),
+        maxEffectsToQueue);
+  }
+
   @Nonnull
   public final M getModel() {
     M model = loop.getMostRecentModel();
@@ -154,8 +213,18 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   @Override
   protected final void onCleared() {
     super.onCleared();
+    onClearedInternal();
     loopActive.set(false);
     loop.dispose();
+  }
+
+  /**
+   * Override this function instead of onCleared, since that is marked final to ensure some
+   * operations always happen.<br>
+   * This function will be called from onCleared, right before the loop is disposed.
+   */
+  protected void onClearedInternal() {
+    /* noop */
   }
 
   private void onModelChanged(M model) {
