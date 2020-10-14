@@ -24,9 +24,12 @@ import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.test.RecordingConsumer;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class RxEventSourcesTest {
+
+  @Rule public final RxErrorsRule rxErrorsRule = new RxErrorsRule();
 
   @Test
   public void eventsAreForwardedInOrder() throws Exception {
@@ -54,5 +57,17 @@ public class RxEventSourcesTest {
 
     consumer.waitForChange(50);
     consumer.assertValues(1, 2);
+  }
+
+  @Test
+  public void errorsAreForwardedToErrorHandler() throws Exception {
+    PublishSubject<Integer> subject = PublishSubject.create();
+    final EventSource<Integer> source = RxEventSources.fromObservables(subject);
+    RecordingConsumer<Integer> consumer = new RecordingConsumer<>();
+
+    source.subscribe(consumer);
+    subject.onError(new RuntimeException("crash!"));
+
+    rxErrorsRule.assertSingleErrorWithCauseMessage("crash!");
   }
 }

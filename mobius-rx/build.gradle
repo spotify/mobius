@@ -14,6 +14,7 @@ dependencies {
     testImplementation "org.hamcrest:hamcrest-library:${versions.hamcrestLibrary}"
     testImplementation "ch.qos.logback:logback-classic:${versions.logback}"
     testImplementation "org.awaitility:awaitility:${versions.awaitility}"
+    testImplementation "org.assertj:assertj-core:${versions.assertjcore}"
     testImplementation "com.google.auto.value:auto-value-annotations:${versions.autoValue}"
 }
 
