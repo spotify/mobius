@@ -32,7 +32,6 @@ import io.reactivex.ObservableTransformer;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Cancellable;
-import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.subjects.PublishSubject;
 import javax.annotation.Nonnull;
 
@@ -62,18 +61,6 @@ public final class RxConnectables {
                           @Override
                           public void accept(O e) {
                             output.accept(e);
-                          }
-                        },
-                        new io.reactivex.functions.Consumer<Throwable>() {
-                          @Override
-                          public void accept(Throwable throwable) throws Exception {
-                            RxJavaPlugins.onError(throwable);
-                          }
-                        },
-                        new Action() {
-                          @Override
-                          public void run() throws Exception {
-                            // TODO: complain loudly! shouldn't ever complete
                           }
                         });
 

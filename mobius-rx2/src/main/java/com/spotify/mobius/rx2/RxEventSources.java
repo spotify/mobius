@@ -27,7 +27,6 @@ import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.functions.Cancellable;
-import io.reactivex.plugins.RxJavaPlugins;
 import javax.annotation.Nonnull;
 
 /**
@@ -61,12 +60,6 @@ public final class RxEventSources {
                   @Override
                   public void accept(E e) throws Exception {
                     eventConsumer.accept(e);
-                  }
-                },
-                new io.reactivex.functions.Consumer<Throwable>() {
-                  @Override
-                  public void accept(Throwable e) throws Exception {
-                    RxJavaPlugins.onError(e);
                   }
                 });
 
