@@ -28,7 +28,6 @@ import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Cancellable;
 import io.reactivex.rxjava3.functions.Consumer;
-import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import javax.annotation.Nonnull;
 
 /** RxEventSources. */
@@ -60,12 +59,6 @@ public final class RxEventSources {
                   @Override
                   public void accept(E value) throws Throwable {
                     eventConsumer.accept(value);
-                  }
-                },
-                new Consumer<Throwable>() {
-                  @Override
-                  public void accept(Throwable error) throws Throwable {
-                    RxJavaPlugins.onError(error);
                   }
                 });
         return new com.spotify.mobius.disposables.Disposable() {

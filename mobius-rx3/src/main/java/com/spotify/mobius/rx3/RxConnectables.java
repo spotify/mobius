@@ -33,7 +33,6 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Action;
 import io.reactivex.rxjava3.functions.Cancellable;
 import io.reactivex.rxjava3.functions.Consumer;
-import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import javax.annotation.Nonnull;
 
@@ -63,16 +62,6 @@ public final class RxConnectables {
                       public void accept(O value) throws Throwable {
                         output.accept(value);
                       }
-                    },
-                    new Consumer<Throwable>() {
-                      @Override
-                      public void accept(Throwable error) throws Throwable {
-                        RxJavaPlugins.onError(error);
-                      }
-                    },
-                    new Action() {
-                      @Override
-                      public void run() throws Throwable {}
                     });
 
         return new Connection<I>() {
