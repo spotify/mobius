@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.equalTo;
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import androidx.lifecycle.Lifecycle;
 import com.spotify.mobius.Connectable;
+import com.spotify.mobius.EventSource;
 import com.spotify.mobius.First;
 import com.spotify.mobius.Mobius;
 import com.spotify.mobius.Next;
@@ -78,7 +79,7 @@ public class MobiusLoopViewModelTest {
     //noinspection Convert2MethodRef
     underTest =
         new MobiusLoopViewModel<>(
-            (Consumer<TestViewEffect> consumer) -> {
+            (Consumer<TestViewEffect> consumer, EventSource<Boolean> filter) -> {
               testViewEffectHandler = new TestViewEffectHandler<>(consumer);
               return Mobius.loop(updateFunction, testViewEffectHandler)
                   .eventRunner(ImmediateWorkRunner::new)
@@ -150,10 +151,9 @@ public class MobiusLoopViewModelTest {
 
   @Test
   public void testViewEffectsPostedImmediatelyAreSentCorrectly() {
-    //noinspection Convert2MethodRef
     underTest =
         new MobiusLoopViewModel<>(
-            (Consumer<TestViewEffect> consumer) -> {
+            (Consumer<TestViewEffect> consumer, EventSource<Boolean> filter) -> {
               Connectable<TestEffect, TestEvent> viewEffectSendingEffectHandler =
                   new ViewEffectSendingEffectHandler(consumer);
               testViewEffectHandler = new TestViewEffectHandler<>(consumer);

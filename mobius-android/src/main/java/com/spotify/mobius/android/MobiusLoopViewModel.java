@@ -20,8 +20,8 @@
 package com.spotify.mobius.android;
 
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
+import com.spotify.mobius.EventSource;
 import com.spotify.mobius.First;
 import com.spotify.mobius.Init;
 import com.spotify.mobius.MobiusLoop;
@@ -63,7 +63,7 @@ import javax.annotation.Nonnull;
  * @param <V> The View Effect which will be emitted by this view model
  */
 public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
-  private final MutableLiveData<M> modelData = new MutableLiveData<>();
+  private final ObservableMutableLiveData<M> modelData = new ObservableMutableLiveData<>();
   private final MutableLiveQueue<V> viewEffectQueue;
   private final MobiusLoop<M, E, F> loop;
   private final M startModel;
@@ -75,9 +75,24 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
       @Nonnull Init<M, F> init,
       @Nonnull WorkRunner mainLoopWorkRunner,
       int maxEffectQueueSize) {
+    this(
+        (Consumer<V> viewEffectConsumer, EventSource<Boolean> activeModelEventSource) ->
+            loopFactoryProvider.apply(viewEffectConsumer),
+        modelToStartFrom,
+        init,
+        mainLoopWorkRunner,
+        maxEffectQueueSize);
+  }
+
+  protected MobiusLoopViewModel(
+      @Nonnull MobiusLoopFactoryProvider<M, E, F, V> loopFactoryProvider,
+      @Nonnull M modelToStartFrom,
+      @Nonnull Init<M, F> init,
+      @Nonnull WorkRunner mainLoopWorkRunner,
+      int maxEffectQueueSize) {
     viewEffectQueue = new MutableLiveQueue<>(mainLoopWorkRunner, maxEffectQueueSize);
     final MobiusLoop.Factory<M, E, F> loopFactory =
-        loopFactoryProvider.apply(this::acceptViewEffect);
+        loopFactoryProvider.create(this::acceptViewEffect, modelData);
     final First<M, F> first = init.init(modelToStartFrom);
     loop = loopFactory.startFrom(first.model(), first.effects());
     startModel = first.model();
@@ -129,6 +144,49 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
         maxEffectsToQueue);
   }
 
+  /**
+   * Creates a new MobiusLoopViewModel instance with a default maximum effect queue size.
+   *
+   * @param loopFactoryProvider The provider for the factory, that gets passed all dependencies
+   * @param modelToStartFrom The initial model for the loop
+   * @param init the {@link Init} function of the loop
+   * @param <M> the model type
+   * @param <E> the event type
+   * @param <F> the effect type
+   * @param <V> the view effect type
+   */
+  public static <M, E, F, V> MobiusLoopViewModel<M, E, F, V> create(
+      @Nonnull MobiusLoopFactoryProvider<M, E, F, V> loopFactoryProvider,
+      @Nonnull M modelToStartFrom,
+      @Nonnull Init<M, F> init) {
+    return create(loopFactoryProvider, modelToStartFrom, init, 100);
+  }
+
+  /**
+   * Creates a new MobiusLoopViewModel instance.
+   *
+   * @param loopFactoryProvider The provider for the factory, that gets passed all dependencies
+   * @param modelToStartFrom the initial model for the loop
+   * @param init the {@link Init} function of the loop
+   * @param maxEffectsToQueue the maximum number of effects to queue while paused
+   * @param <M> the model type
+   * @param <E> the event type
+   * @param <F> the effect type
+   * @param <V> the view effect type
+   */
+  public static <M, E, F, V> MobiusLoopViewModel<M, E, F, V> create(
+      @Nonnull MobiusLoopFactoryProvider<M, E, F, V> loopFactoryProvider,
+      @Nonnull M modelToStartFrom,
+      @Nonnull Init<M, F> init,
+      int maxEffectsToQueue) {
+    return new MobiusLoopViewModel<>(
+        loopFactoryProvider,
+        modelToStartFrom,
+        init,
+        MainThreadWorkRunner.create(),
+        maxEffectsToQueue);
+  }
+
   @Nonnull
   public final M getModel() {
     M model = loop.getMostRecentModel();
@@ -154,8 +212,18 @@ public class MobiusLoopViewModel<M, E, F, V> extends ViewModel {
   @Override
   protected final void onCleared() {
     super.onCleared();
+    onClearedInternal();
     loopActive.set(false);
     loop.dispose();
+  }
+
+  /**
+   * Override this function instead of onCleared, since that is marked final to ensure some
+   * operations always happen.<br>
+   * This function will be called from onCleared, right before the loop is disposed.
+   */
+  protected void onClearedInternal() {
+    /* noop */
   }
 
   private void onModelChanged(M model) {
