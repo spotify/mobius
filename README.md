@@ -60,7 +60,7 @@ class CounterLogic {
 }
 ```
 
-With these building blocks, we can start to think about our applications as transitions between discrete states in response to events. But we believe there still one piece missing from the puzzle - namely the side-effects which are associated with moving between states. For instance, pressing a "refresh" button might put our application into a "loading" state, with the side-effect of also fetching the latest data from our backend.
+With these building blocks, we can start to think about our applications as transitions between discrete states in response to events. But we believe there is still one piece missing from the puzzle - namely the side-effects which are associated with moving between states. For instance, pressing a "refresh" button might put our application into a "loading" state, with the side-effect of also fetching the latest data from our backend.
 
 In Mobius, we aptly call these side-effects *Effect*s. In the case of our counter, let's say that when the user tries to decrement below 0, we play a sound effect instead. Let's create an `enum` that represents all the possible effects (which in this case is only one):
 ```java
