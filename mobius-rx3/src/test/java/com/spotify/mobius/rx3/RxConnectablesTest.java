@@ -23,6 +23,8 @@ import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
 import com.spotify.mobius.ConnectionLimitExceededException;
 import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.test.RecordingConsumer;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.observers.TestObserver;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import java.util.concurrent.TimeUnit;
@@ -95,5 +97,12 @@ public class RxConnectablesTest {
 
     observer.awaitDone(1, TimeUnit.SECONDS);
     observer.assertError(expected);
+  }
+
+  @Test
+  public void fromTransformerForwarding() {
+    final RecordingConsumer<Integer> consumer = new RecordingConsumer<>();
+    RxConnectables.fromTransformer(upstream -> Observable.just(1)).connect(consumer);
+    consumer.assertValues(1);
   }
 }
