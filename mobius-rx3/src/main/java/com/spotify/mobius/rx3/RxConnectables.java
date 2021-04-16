@@ -47,36 +47,38 @@ public final class RxConnectables {
   public static <I, O> Connectable<I, O> fromTransformer(
       @NonNull final ObservableTransformer<I, O> transformer) {
     checkNotNull(transformer);
-    return new Connectable<I, O>() {
-      @Nonnull
-      @Override
-      public Connection<I> connect(com.spotify.mobius.functions.Consumer<O> output) {
-        final PublishSubject<I> subject = PublishSubject.create();
-
-        final Disposable disposable =
-            subject
-                .compose(transformer)
-                .subscribe(
-                    new Consumer<O>() {
-                      @Override
-                      public void accept(O value) throws Throwable {
-                        output.accept(value);
-                      }
-                    });
-
-        return new Connection<I>() {
+    final Connectable<I, O> acctualConnectable =
+        new Connectable<I, O>() {
+          @Nonnull
           @Override
-          public void accept(I effect) {
-            subject.onNext(effect);
-          }
+          public Connection<I> connect(com.spotify.mobius.functions.Consumer<O> output) {
+            final PublishSubject<I> subject = PublishSubject.create();
 
-          @Override
-          public void dispose() {
-            disposable.dispose();
+            final Disposable disposable =
+                subject
+                    .compose(transformer)
+                    .subscribe(
+                        new Consumer<O>() {
+                          @Override
+                          public void accept(O value) throws Throwable {
+                            output.accept(value);
+                          }
+                        });
+
+            return new Connection<I>() {
+              @Override
+              public void accept(I effect) {
+                subject.onNext(effect);
+              }
+
+              @Override
+              public void dispose() {
+                disposable.dispose();
+              }
+            };
           }
         };
-      }
-    };
+    return new DiscardAfterDisposeConnectable<>(acctualConnectable);
   }
 
   @NonNull
