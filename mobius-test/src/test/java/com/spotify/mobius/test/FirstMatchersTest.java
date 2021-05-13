@@ -129,7 +129,8 @@ public class FirstMatchersTest {
 
     matcher.describeMismatch(first, desc);
 
-    assertEquals("bad effects: a collection containing <2> was <1>", desc.toString());
+    assertEquals(
+        "bad effects: a collection containing <2> mismatches were: [was <1>]", desc.toString());
   }
 
   @Test
