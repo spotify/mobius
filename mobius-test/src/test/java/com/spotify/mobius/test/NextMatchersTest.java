@@ -184,7 +184,8 @@ public class NextMatchersTest {
 
     matcher.describeMismatch(next, desc);
 
-    assertEquals("the effects were a collection containing <2> was <1>", desc.toString());
+    assertEquals(
+        "the effects were a collection containing <2> mismatches were: [was <1>]", desc.toString());
   }
 
   @Test
