@@ -97,6 +97,7 @@ subprojects {
         tasks.withType(JavaCompile).configureEach {
             options.errorprone.disableWarningsInGeneratedCode = true
             options.errorprone.disable("AutoValueImmutableFields")
+            options.errorprone.disable("AutoValueSubclassLeaked")
         }
 
         tasks.withType(JavaCompile) {
