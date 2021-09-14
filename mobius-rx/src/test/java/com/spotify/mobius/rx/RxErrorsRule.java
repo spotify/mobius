@@ -21,7 +21,6 @@ package com.spotify.mobius.rx;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sun.istack.internal.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.rules.TestWatcher;
@@ -34,16 +33,16 @@ public class RxErrorsRule extends TestWatcher {
   private final List<Throwable> mErrors = new ArrayList<>(0);
 
   @Override
-  protected void starting(@NotNull Description description) {
+  protected void starting(Description description) {
     RxJavaHooks.setOnError(mErrors::add);
   }
 
   @Override
-  protected void finished(@NotNull Description description) {
+  protected void finished(Description description) {
     RxJavaHooks.setOnError(null);
   }
 
-  public void assertSingleErrorWithMessage(@NotNull String message) {
+  public void assertSingleErrorWithMessage(String message) {
     assertThat(mErrors).hasSize(1);
     assertThat(mErrors.get(0).getMessage()).isEqualTo(message);
   }
