@@ -81,9 +81,9 @@ class CounterLogic implements Update<Integer, CounterEvent, CounterEffect> {
         if (model == 0) {
           Set<CounterEffect> soundEffect = effects(CounterEffect.PLAY_SOUND);
           return dispatch(soundEffect);
-        } else {
-          return next(model - 1);
         }
+        return next(model - 1);
+
     }
     throw new IllegalStateException("Unhandled event: " + event);
   }
