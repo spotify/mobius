@@ -22,12 +22,9 @@ package com.spotify.mobius.rx3;
 import com.spotify.mobius.EventSource;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.ObservableEmitter;
-import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.functions.Cancellable;
-import io.reactivex.rxjava3.functions.Consumer;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
 
 /** RxEventSources. */
@@ -53,18 +50,20 @@ public final class RxEventSources {
       @Override
       public com.spotify.mobius.disposables.Disposable subscribe(
           com.spotify.mobius.functions.Consumer<E> eventConsumer) {
+        final AtomicBoolean disposed = new AtomicBoolean();
         final Disposable disposable =
             eventSource.subscribe(
-                new Consumer<E>() {
-                  @Override
-                  public void accept(E value) throws Throwable {
-                    eventConsumer.accept(value);
+                value -> {
+                  synchronized (disposed) {
+                    if (!disposed.get()) {
+                      eventConsumer.accept(value);
+                    }
                   }
                 });
-        return new com.spotify.mobius.disposables.Disposable() {
-          @Override
-          public void dispose() {
+        return () -> {
+          synchronized (disposed) {
             disposable.dispose();
+            disposed.set(true);
           }
         };
       }
@@ -81,25 +80,10 @@ public final class RxEventSources {
   @NonNull
   public static <E> Observable<E> toObservable(final EventSource<E> eventSource) {
     return Observable.create(
-        new ObservableOnSubscribe<E>() {
-          @Override
-          public void subscribe(@NonNull ObservableEmitter<E> emitter) throws Throwable {
-            final com.spotify.mobius.disposables.Disposable disposable =
-                eventSource.subscribe(
-                    new com.spotify.mobius.functions.Consumer<E>() {
-                      @Override
-                      public void accept(E value) {
-                        emitter.onNext(value);
-                      }
-                    });
-            emitter.setCancellable(
-                new Cancellable() {
-                  @Override
-                  public void cancel() throws Throwable {
-                    disposable.dispose();
-                  }
-                });
-          }
+        emitter -> {
+          final com.spotify.mobius.disposables.Disposable disposable =
+              eventSource.subscribe(emitter::onNext);
+          emitter.setCancellable(disposable::dispose);
         });
   }
 }
