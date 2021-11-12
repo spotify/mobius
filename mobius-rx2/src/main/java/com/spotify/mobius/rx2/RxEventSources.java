@@ -27,6 +27,7 @@ import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.functions.Cancellable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
 
 /**
@@ -54,19 +55,20 @@ public final class RxEventSources {
       @Nonnull
       @Override
       public Disposable subscribe(final Consumer<E> eventConsumer) {
-        final io.reactivex.disposables.Disposable subscription =
+        final AtomicBoolean disposed = new AtomicBoolean();
+        final io.reactivex.disposables.Disposable disposable =
             eventSource.subscribe(
-                new io.reactivex.functions.Consumer<E>() {
-                  @Override
-                  public void accept(E e) throws Exception {
-                    eventConsumer.accept(e);
+                value -> {
+                  synchronized (disposed) {
+                    if (!disposed.get()) {
+                      eventConsumer.accept(value);
+                    }
                   }
                 });
-
-        return new Disposable() {
-          @Override
-          public void dispose() {
-            subscription.dispose();
+        return () -> {
+          synchronized (disposed) {
+            disposable.dispose();
+            disposed.set(true);
           }
         };
       }
