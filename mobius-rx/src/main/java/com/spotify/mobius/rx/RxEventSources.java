@@ -24,11 +24,11 @@ import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 import com.spotify.mobius.EventSource;
 import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
 import rx.Emitter;
 import rx.Emitter.BackpressureMode;
 import rx.Observable;
-import rx.Observer;
 import rx.Subscription;
 import rx.functions.Action1;
 import rx.functions.Cancellable;
@@ -59,29 +59,21 @@ public final class RxEventSources {
       @Nonnull
       @Override
       public Disposable subscribe(final Consumer<E> eventConsumer) {
+        final AtomicBoolean disposed = new AtomicBoolean();
         final Subscription subscription =
             eventSource.subscribe(
-                new Observer<E>() {
-                  @Override
-                  public void onCompleted() {
-                    // TODO: complain loudly! shouldn't ever complete
+                value -> {
+                  synchronized (disposed) {
+                    if (!disposed.get()) {
+                      eventConsumer.accept(value);
+                    }
                   }
-
-                  @Override
-                  public void onError(Throwable e) {
-                    RxJavaHooks.onError(e);
-                  }
-
-                  @Override
-                  public void onNext(E e) {
-                    eventConsumer.accept(e);
-                  }
-                });
-
-        return new Disposable() {
-          @Override
-          public void dispose() {
+                },
+                RxJavaHooks::onError);
+        return () -> {
+          synchronized (disposed) {
             subscription.unsubscribe();
+            disposed.set(true);
           }
         };
       }
