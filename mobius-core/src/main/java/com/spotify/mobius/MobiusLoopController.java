@@ -44,9 +44,30 @@ class MobiusLoopController<M, E, F>
 
     this.loopFactory = checkNotNull(loopFactory);
     this.defaultModel = checkNotNull(defaultModel);
-    this.init = init;
+    this.init = maybeWrapInit(init, loopFactory);
     this.mainThreadRunner = checkNotNull(mainThreadRunner);
     goToStateInit(defaultModel);
+  }
+
+  private Init<M, F> maybeWrapInit(
+      @Nullable Init<M, F> delegate, MobiusLoop.Factory<M, E, F> loopFactory) {
+    if (delegate == null) {
+      return null;
+    }
+
+    // In this configuration, the controller has an `Init` function, which it will invoke when
+    // starting the loop (this means the loop cannot also have an `Init`; or an exception will be
+    // thrown). We want to ensure that the same Mobius.Logger is used for logging before and after
+    // Init as the rest of the loop events. The APIs don't allow us to do that in a nice way, so
+    // this casting is a hack around that issue. In practice, the below instanceof check will never
+    // fail.
+    if (!(loopFactory instanceof Mobius.Builder)) {
+      return delegate;
+    }
+
+    Mobius.Builder<M, E, F> builder = (Mobius.Builder<M, E, F>) loopFactory;
+
+    return new LoggingInit<>(delegate, builder.getLogger());
   }
 
   @Override
