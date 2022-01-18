@@ -176,7 +176,7 @@ public final class Mobius {
     return new MobiusLoopController<>(loopFactory, defaultModel, init, modelRunner);
   }
 
-  private static final class Builder<M, E, F> implements MobiusLoop.Builder<M, E, F> {
+  static final class Builder<M, E, F> implements MobiusLoop.Builder<M, E, F> {
 
     private static final MyThreadFactory THREAD_FACTORY = new MyThreadFactory();
 
@@ -300,6 +300,12 @@ public final class Mobius {
       }
 
       return startFromInternal(startModel, startEffects);
+    }
+
+    // hack to enable MobiusController to log around init invocations with the same
+    // logger as the main loop has.
+    MobiusLoop.Logger<M, E, F> getLogger() {
+      return logger;
     }
 
     private MobiusLoop<M, E, F> startFromInternal(M startModel, Set<F> startEffects) {

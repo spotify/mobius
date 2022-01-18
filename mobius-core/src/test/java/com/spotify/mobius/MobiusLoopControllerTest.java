@@ -20,10 +20,11 @@
 package com.spotify.mobius;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -32,6 +33,8 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
+import com.spotify.mobius.CapturingLogger.AfterUpdateArgs;
+import com.spotify.mobius.CapturingLogger.BeforeUpdateArgs;
 import com.spotify.mobius.functions.Consumer;
 import com.spotify.mobius.runners.ImmediateWorkRunner;
 import com.spotify.mobius.runners.WorkRunner;
@@ -563,6 +566,62 @@ public class MobiusLoopControllerTest {
       underTest.connect(view());
 
       assertThatThrownBy(() -> underTest.start()).isInstanceOf(IllegalArgumentException.class);
+    }
+  }
+
+  public static class Logging {
+    private final CapturingLogger<String, String, String> logger = new CapturingLogger<>();
+
+    private final MobiusLoop.Builder<String, String, String> builder =
+        Mobius.<String, String, String>loop(
+                (model, event) -> Next.next(model + event), effectHandler)
+            .eventRunner(WorkRunners::immediate)
+            .effectRunner(WorkRunners::immediate)
+            .logger(logger);
+
+    private MobiusLoop.Controller<String, String> underTest;
+
+    @Before
+    public void setUp() throws Exception {
+      underTest =
+          new MobiusLoopController<>(
+              builder,
+              "the first",
+              model -> First.first("init: " + model),
+              WorkRunners.immediate());
+    }
+
+    @Test
+    public void shouldLogBeforeAndAfterInit() {
+      underTest.connect(view());
+      underTest.start();
+
+      assertThat(logger.beforeInit, hasItem("the first"));
+      assertThat(
+          logger.afterInit,
+          hasItem(
+              CapturingLogger.AfterInitArgs.create("the first", First.first("init: the first"))));
+    }
+
+    @Test
+    public void shouldLogBeforeAndAfterUpdate() {
+      Connection<String> renderer = mock(Connection.class);
+
+      AtomicReference<Consumer<String>> consumer = new AtomicReference<>();
+
+      underTest.connect(
+          eventConsumer -> {
+            consumer.set(eventConsumer);
+            return renderer;
+          });
+
+      underTest.start();
+      consumer.get().accept("!");
+
+      assertThat(logger.beforeUpdate, hasItem(BeforeUpdateArgs.create("init: the first", "!")));
+      assertThat(
+          logger.afterUpdate,
+          hasItem(AfterUpdateArgs.create("init: the first", "!", Next.next("init: the first!"))));
     }
   }
 
