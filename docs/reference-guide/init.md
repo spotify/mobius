@@ -1,10 +1,10 @@
 # Init
 
-The `init(Model)` function is called first when a [Mobius loop](./Mobius-Loop.md) is started, and
-can be seen as a special version of the [Update](./Update.md) function. It takes
-a [Model](./Model.md) just like Update, but it does not have any Event as an argument. It returns
+The `init(Model)` function is called first when a [Mobius loop](./mobius-loop.md) is started, and
+can be seen as a special version of the [Update](./update.md) function. It takes
+a [Model](./model.md) just like Update, but it does not have any Event as an argument. It returns
 a `First` instead of a `Next`, the difference being that a `First` always contains a Model, while
-a `Next` sometimes contain nothing or only [Effects](./Effect.md).
+a `Next` sometimes contain nothing or only [Effects](./effect.md).
 
 One good way to think of the Init function is as a request to “resume execution from a particular
 Model”. This means put the loop in a valid state and send off any required Effects to activate it.
@@ -20,5 +20,5 @@ to the loop ending up in undesired states that the user can’t get out of.
 
 ## Guidelines for the Init function
 
-The same guidelines apply as [for the Update function](./Update.md).
+The same guidelines apply as [for the Update function](./update.md).
 

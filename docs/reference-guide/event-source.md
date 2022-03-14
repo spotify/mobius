@@ -1,7 +1,7 @@
 # Event Source
 
-An Event Source is used to send external signals into a [Mobius Loop](./Mobius-Loop.md)
-as [Events](./Event.md). The typical use case is to listen for things like:
+An Event Source is used to send external signals into a [Mobius Loop](./mobius-loop.md)
+as [Events](./event.md). The typical use case is to listen for things like:
 
 - Network connectivity changes (online/offline)
 - Timers (periodic ticks, eg. once per second)
@@ -13,7 +13,7 @@ In principle an Event Source could be used to send events from the UI (like clic
 discouraged. Instead prefer using `MobiusLoop.dispatchEvent(...)` or a `Connectable` if you
 use `MobiusLoop.Controller`.
 
-Structurally an Event Source is very similar to [Effect Handlers](./Effect-Handler.md) but an Event
+Structurally an Event Source is very similar to [Effect Handlers](./effect-handler.md) but an Event
 Source does not need any Effects to be triggered before starting to send Events.
 
 You can configure it by calling `.eventSource(...)` on a `MobiusLoop.Builder`:

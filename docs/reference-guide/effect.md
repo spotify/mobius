@@ -1,12 +1,12 @@
 # Effect
 
-Effect objects are used by the [Update](./Update.md) function to request that the
-[Effect Handler](./Effect-Handler.md) executes impure code. Impure code either has measurable
+Effect objects are used by the [Update](./update.md) function to request that the
+[Effect Handler](./effect-handler.md) executes impure code. Impure code either has measurable
 side-effects or has an output that isn't completely determined by its input parameters. For example,
 this can be sending a request to a backend service, reading something from disk, changing the value
 of a shared (global/singleton) object, etc.
 
-The objects themselves are [immutable](../patterns/Immutability.md) data objects just like the Model
+The objects themselves are [immutable](../patterns/immutability.md) data objects just like the Model
 and Event objects. Effects and Events are similar in that they are both messages. The difference is
 in the direction as seen from the Update function - an Event is something that happened that the
 business logic needs to react to, whereas an Effect is something that the business logic wants to

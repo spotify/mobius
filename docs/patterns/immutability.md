@@ -2,8 +2,8 @@
 
 Most objects in Mobius are required to be immutable. Immutability imposes a constraint on what your
 objects can do, therefore making them easier to reason about. The Mobius framework is in fact based
-on the principle that [Model](../reference-guide/Model.md), [Event](../reference-guide/Event.md),
-and [Effect](../reference-guide/Effect.md) objects are immutable – it wouldn’t be possible to have
+on the principle that [Model](../reference-guide/model.md), [Event](../reference-guide/event.md),
+and [Effect](../reference-guide/effect.md) objects are immutable – it wouldn’t be possible to have
 Mobius without this constraint.
 
 For an object to be immutable, it is not enough to make all member fields final. Any object referred

@@ -1,14 +1,14 @@
 # Effect Handler
 
-Effect Handlers receive [Effects](./Effect.md), execute them, and may produce [Events](./Event.md)
+Effect Handlers receive [Effects](./effect.md), execute them, and may produce [Events](./event.md)
 as a result.
 
-A [Mobius loop](./Mobius-Loop.md) has a single Effect Handler, which usually is composed of
-individual [Effect Handlers](./Effect-Handler.md) for each kind of Effect. 
-(See [Mobius and RxJava](../getting-started/Mobius-and-RxJava.md) for how to compose RxJava-based
+A [Mobius loop](./mobius-loop.md) has a single Effect Handler, which usually is composed of
+individual [Effect Handlers](./effect-handler.md) for each kind of Effect. 
+(See [Mobius and RxJava](../getting-started/mobius-and-rx-java.md) for how to compose RxJava-based
 Effect Handlers.)
 
-If the Effect handler needs data from the [Model](./Model.md), that should always be passed along
+If the Effect handler needs data from the [Model](./model.md), that should always be passed along
 with the Effect. It would be possible for an Effect Handler to subscribe to Model updates, but that
 would introduce races and reduce simplicity.
 

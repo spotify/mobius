@@ -32,4 +32,4 @@ are aware of:
 - [RxRedux](https://github.com/freeletics/RxRedux)
 - [Grox](https://github.com/groupon/grox)
 - [Presenter First](https://en.wikipedia.org/wiki/Presenter_first_(software_approach)) - similar
-  to [the Mobius Workflow](./The-Mobius-Workflow.md).
+  to [the Mobius Workflow](./the-mobius-workflow.md).

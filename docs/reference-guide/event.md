@@ -1,16 +1,16 @@
 # Event
 
-Events are [immutable](../patterns/Immutability.md) data objects that represent that something has
-happened. Events are what drive a [Mobius loop](./Mobius-Loop.md) forward, and it is only when an
+Events are [immutable](../patterns/immutability.md) data objects that represent that something has
+happened. Events are what drive a [Mobius loop](./mobius-loop.md) forward, and it is only when an
 Event is received that business logic is executed and state is evolved.
 
-The purpose of Events is to allow the [Update](./Update.md) function to know about when things
+The purpose of Events is to allow the [Update](./update.md) function to know about when things
 happen and allow it to make decisions. This means that sending an Event is the only way to get new
-data into the Update function, and the only way to cause the [Model](./Model.md) to change. In other
+data into the Update function, and the only way to cause the [Model](./model.md) to change. In other
 words, all data you want to put into the Model when the loop is running has to be sent to Mobius
 using an Event, or be derived from data received in Events.
 
-Events are also the only thing that can trigger an [Effect](./Effect.md). This is because that just
+Events are also the only thing that can trigger an [Effect](./effect.md). This is because that just
 like with Model changes, it's the Update function that decides when Effects should happen, and those
 decisions are always triggered by Events.
 
@@ -35,13 +35,13 @@ feedback, and external:
   actions or intentions rather than desired behaviour. A couple of examples of this kind of Event
   are: `SearchQueryChanged`, `SkipTrackRequested`, `ShuffleClicked`.
 
-- **Effect feedback events**. [Effect Handlers](./Effect-Handler.md) will often need to communicate
+- **Effect feedback events**. [Effect Handlers](./effect-handler.md) will often need to communicate
   back progress of their effects. That feedback also takes the form of an Event. For example,
   loading data from a backend service could result in a `DataLoaded` event if the HTTP call succeeds
   or a `DataLoadingFailed` event if the call fails.
 
 - **External events**. Some Events are neither interactions nor a result of an Effect - those are
-  the external Events that you receive from an [Event Source](./Event-Source.md). One way to think
+  the external Events that you receive from an [Event Source](./event-source.md). One way to think
   about the external Events are that they are feedback Events from the outside world. Examples of
   this kind of events are: ConnectivityChanged, LoginStateChanged, HeadphonesDisconnected.
 
@@ -51,7 +51,7 @@ when an Event reaches the Update function.
 
 ## Guidelines for Events
 
-- See the guide about [defining Events and Effects](../patterns/Events-and-Effects.md).
+- See the guide about [defining Events and Effects](../patterns/events-and-effects.md).
 
 - Events should have names based on user intent, and they will typically be in past tense. For
   example: `LoginRequested`, `QueryChanged`, `AddressChanged`, etc. 

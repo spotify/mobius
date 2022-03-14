@@ -1,10 +1,10 @@
 # Model
 
-The Model is an [immutable](../patterns/Immutability.md) representation of the internal state and
-configuration of a [Mobius loop](./Mobius-Loop.md). It contains two kinds of data, often
+The Model is an [immutable](../patterns/immutability.md) representation of the internal state and
+configuration of a [Mobius loop](./mobius-loop.md). It contains two kinds of data, often
 overlapping: what you need to make business logic decisions, and what you need to present in the UI.
-The current Model and the incoming [Event](./Event.md) is the only input that
-the [Update](./Update.md) function is allowed to consider, so anything needed to make decisions or
+The current Model and the incoming [Event](./event.md) is the only input that
+the [Update](./update.md) function is allowed to consider, so anything needed to make decisions or
 to generate output must be available there.
 
 Because the Model is immutable, you will be required to create new instances of your Model whenever

@@ -371,4 +371,4 @@ Luckily, asynchronicity and cleaning up is precisely what RxJava is good at!
 If you squint a bit, you might be able to tell that the effect handler resembles Observable
 transformers from RxJava. They are in fact compatible: the mobius-rx / mobius-rx2 modules contain
 utilities to convert to and from Observable transformers, so that you can use transformers as effect
-handlers. You’ll get some examples of this in the [next section](../getting-started/Mobius-and-RxJava.md).
+handlers. You’ll get some examples of this in the [next section](../getting-started/mobius-and-rx-java.md).

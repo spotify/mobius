@@ -8,7 +8,7 @@
 
 Mobius is a functional reactive framework for managing state evolution and side-effects, with add-ons for connecting to Android UIs and RxJava Observables. It emphasizes separation of concerns, testability, and isolating stateful parts of the code.
 
-To learn more, see the [wiki](https://github.com/spotify/mobius/wiki) for a user guide. To see Mobius in action, check out the [sample TODO](https://github.com/spotify/mobius-android-sample) app based on the app from [Android Architecture Blueprints](https://github.com/googlesamples/android-architecture). You can also
+To learn more, visit the [website][mkdocs] for a user guide. To see Mobius in action, check out the [sample TODO](https://github.com/spotify/mobius-android-sample) app based on the app from [Android Architecture Blueprints](https://github.com/googlesamples/android-architecture). You can also
 watch a [talk from Android @Scale introducing Mobius](https://www.facebook.com/atscaleevents/videos/2025571921049235/).
 
 ## Status
@@ -139,7 +139,7 @@ public static void main(String[] args) {
 }
 ```
 
-This covers the fundamentals of Mobius. To learn more, head on over to our [official website](https://spotify.github.io/mobius/).
+This covers the fundamentals of Mobius. To learn more, head on over to our [website][mkdocs].
 
 ## Building
 
@@ -155,4 +155,5 @@ We're using Google's auto-formatter to format the code. The build pipeline is se
 
 This project adheres to the [Open Code of Conduct][code-of-conduct]. By participating, you are expected to honor this code.
 
+[mkdocs]: https://vestrel00.github.io/mobius/
 [code-of-conduct]: https://github.com/spotify/code-of-conduct/blob/master/code-of-conduct.md

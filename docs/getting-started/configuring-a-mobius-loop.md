@@ -48,7 +48,7 @@ MobiusLoop<Model, Event, Effect> loop =
 NOTE: deprecated; prefer using either the MobiusController, or `startFrom(model, effects)` instead.
 
 An init function resembles an update function, but it is only executed once when the loop starts (
-read in the [concepts guide about init](../Concepts.md#starting-and-resuming-a-loop) for details on
+read in the [concepts guide about init](../concepts.md#starting-and-resuming-a-loop) for details on
 why you might want to have an init function). The differences to update is that the init function
 doesn't get any event (you could say there is an implicit "the loop is starting" event) and that it
 returns a First instead of a Next. A First must contain a model, but apart from that the two classes
@@ -58,7 +58,7 @@ same.
 ### `eventSource(...)`
 
 The `EventSource` of your program is supposed to be used for external events 
-(see [Events in depth](../reference-guide/Event.md) for more details). If you have multiple external
+(see [Events in depth](../reference-guide/event.md) for more details). If you have multiple external
 event sources, they must be merged into a single EventSource before being hooked with with Mobius.
 
 Consider an event source as an effect handler without incoming effect objects and that it just emits

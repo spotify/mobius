@@ -12,16 +12,16 @@ also be UI-less and for instance be tied to the lifecycle of an application or a
 
 ![](./assets/images/mobius-diagram.png)
 
-> A Mobius loop receives [Events](./reference-guide/Event.md), which are passed to an 
-> [Update](./reference-guide/Update.md) function together with the current 
-> [Model](./reference-guide/Model.md). As a result of running the Update function, the Model might 
-> change, and [Effects](./reference-guide/Effect.md) might get dispatched. The Model can be observed
+> A Mobius loop receives [Events](./reference-guide/event.md), which are passed to an 
+> [Update](./reference-guide/update.md) function together with the current 
+> [Model](./reference-guide/model.md). As a result of running the Update function, the Model might 
+> change, and [Effects](./reference-guide/effect.md) might get dispatched. The Model can be observed
 > by the user interface, and the Effects are received and executed by an 
-> [Effect Handler](./reference-guide/Effect-Handler.md).
+> [Effect Handler](./reference-guide/effect-handler.md).
 
 'Pure' in the diagram refers to pure functions, functions whose output only depends on their inputs,
 and whose execution has no observable side effects.
-See [Pure vs Impure Functions](./patterns/Pure-vs-Impure-Functions.md) for more details.
+See [Pure vs Impure Functions](./patterns/pure-vs-impure-functions.md) for more details.
 
 ## Event
 
@@ -33,7 +33,7 @@ example:
 - Responses from backend services.
 - System events like changes in network availability.
 
-Events in Mobius are implemented as [immutable](./patterns/Immutability.md) data objects.
+Events in Mobius are implemented as [immutable](./patterns/immutability.md) data objects.
 
 Events often have different payloads (or no payload). So a `QueryUpdated` event almost certainly has
 the actual query string attached, whereas a `ClearHistory` event probably doesn’t need any payload.
@@ -150,6 +150,6 @@ a button, etc.
 ## Where Next?
 
 If you would like a hands-on example, take a look at the 
-[Getting Started guide](./getting-started/Creating-a-loop.md),
+[Getting Started guide](./getting-started/creating-a-loop.md),
 and if you prefer understanding more of the theory, then continue learning more about
-the [objectives](./Objectives.md) of Mobius.
+the [objectives](./objectives.md) of Mobius.

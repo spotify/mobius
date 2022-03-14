@@ -98,7 +98,7 @@ Mobius helps to achieve these kinds of tests through:
   and [InitSpec](https://github.com/spotify/mobius/blob/master/mobius-test/src/main/java/com/spotify/mobius/test/InitSpec.java)
   especially) that make it convenient to write good outside-in tests.
 
-- A [recommended workflow](./The-Mobius-Workflow.md) that includes writing business logic tests before
+- A [recommended workflow](./the-mobius-workflow.md) that includes writing business logic tests before
   implementing it. This helps ensure there is no coupling with the production code - since it hasn’t
   been written yet, it’s not possible to couple your tests to it.
 

@@ -418,5 +418,5 @@ work that needs to be dealt with before you start.
 ## Step 4: Build it
 
 Time to write some more code! Check out
-the [getting started guide](./getting-started/Creating-a-loop.md) for examples on how to build
+the [getting started guide](./getting-started/creating-a-loop.md) for examples on how to build
 effect handlers and connect your UI to Mobius.
