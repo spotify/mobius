@@ -2,11 +2,11 @@
 site_name: 'Mobius'
 site_description: 'A functional reactive framework for managing state evolution and side-effects.'
 site_author: 'Spotify'
-site_url: 'https://github.com/vestrel00/mobius'
+site_url: 'https://github.com/spotify/mobius'
 
 # Repository
-repo_name: 'vestrel00/mobius'
-repo_url: 'https://github.com/vestrel00/mobius'
+repo_name: 'spotify/mobius'
+repo_url: 'https://github.com/spotify/mobius'
 edit_uri: 'tree/main/docs/'
 remote_branch: gh-pages
 
