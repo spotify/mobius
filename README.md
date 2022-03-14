@@ -139,7 +139,7 @@ public static void main(String[] args) {
 }
 ```
 
-This covers the fundamentals of Mobius. To learn more, head on over to our [wiki](/../../wiki).
+This covers the fundamentals of Mobius. To learn more, head on over to our [official website](https://spotify.github.io/mobius/).
 
 ## Building
 

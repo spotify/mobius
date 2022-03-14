@@ -1,9 +1,16 @@
-Just as Events and Effects, Model objects are opaque to the Mobius framework itself. They should be immutable, but other than that they can be anything.
+Just as Events and Effects, Model objects are opaque to the Mobius framework itself. They should be
+immutable, but other than that they can be anything.
 
-Since the update function in Mobius represents state transitions in a state machine, it’s natural to see the model as representing the current state of that machine. When defining a model for the state machine, a spectrum of approaches is available to us, ranging from a strict finite-state-machine approach, to a more loosely defined “put everything in a bucket” approach.
+Since the update function in Mobius represents state transitions in a state machine, it’s natural to
+see the model as representing the current state of that machine. When defining a model for the state
+machine, a spectrum of approaches is available to us, ranging from a strict finite-state-machine
+approach, to a more loosely defined “put everything in a bucket” approach.
 
 ### All states use different classes
-When you consider finite-state machines, having one class per state makes sense. The machine can only be in one state at the time, and each state only possesses data that makes sense in that state. Let’s draft a small example of this using DataEnum:
+
+When you consider finite-state machines, having one class per state makes sense. The machine can
+only be in one state at the time, and each state only possesses data that makes sense in that state.
+Let’s draft a small example of this using DataEnum:
 
 ```java
 @DataEnum
@@ -14,14 +21,25 @@ interface Model_dataenum {
 }
 ```
 
-We now have three classes, `WaitingForData`, `Loaded`, and `Error`, and at a given time our model can only be one of them.
+We now have three classes, `WaitingForData`, `Loaded`, and `Error`, and at a given time our model
+can only be one of them.
 
-As you see, the `data` field only exists in the `Loaded` state, so you don’t have to check for `null` when accessing it, because you will only be `Loaded` if `data` is non-null. This approach is perfect for small loops with few states, or when you want to be assured that all corner cases are covered.
+As you see, the `data` field only exists in the `Loaded` state, so you don’t have to check
+for `null` when accessing it, because you will only be `Loaded` if `data` is non-null. This approach
+is perfect for small loops with few states, or when you want to be assured that all corner cases are
+covered.
 
-However, there are some drawbacks to this approach, particularly when there are many states that start overlapping. For example, if there is an “offline” state, you might want to distinguish offline-but-no-data from offline-but-with-data ‒ this quickly leads to an explosion of the number of states and state transitions that must covered, and you might end up with plenty of boilerplate just to copy data from one state to another.
+However, there are some drawbacks to this approach, particularly when there are many states that
+start overlapping. For example, if there is an “offline” state, you might want to distinguish
+offline-but-no-data from offline-but-with-data ‒ this quickly leads to an explosion of the number of
+states and state transitions that must covered, and you might end up with plenty of boilerplate just
+to copy data from one state to another.
 
 ### All states use the same class
-This approach is on the other end of the spectrum compared to the previous one. You use flags to keep track of whether data is loaded, etc., and store everything at the object’s “top level”. Let’s look at AutoValue for this example, and let’s include offline as an extra flag, too:
+
+This approach is on the other end of the spectrum compared to the previous one. You use flags to
+keep track of whether data is loaded, etc., and store everything at the object’s “top level”. Let’s
+look at AutoValue for this example, and let’s include offline as an extra flag, too:
 
 ```java
 @AutoValue
@@ -38,16 +56,26 @@ public abstract class Model {
 }
 ```
 
-> Note: You might end up with a lot fields that can be `null`. There can also be invalid state combinations (in the case above, both loaded and error can be true at the same time), or cases with both data and an error message. This is of course an exaggerated case, but when you approach this end of the spectrum, you might get more special cases that must be handled carefully.
+> Note: You might end up with a lot fields that can be `null`. There can also be invalid state 
+> combinations (in the case above, both loaded and error can be true at the same time), or cases 
+> with both data and an error message. This is of course an exaggerated case, but when you approach 
+> this end of the spectrum, you might get more special cases that must be handled carefully.
 
-This kind of model tends to be easier to modify than the previous approach when requirements change and new states are required, and it is a lot easier to create new versions of model objects from old ones, especially if you use AutoValue's `toBuilder()`.
+This kind of model tends to be easier to modify than the previous approach when requirements change
+and new states are required, and it is a lot easier to create new versions of model objects from old
+ones, especially if you use AutoValue's `toBuilder()`.
 
-It is often advantageous to start with this kind of model, as it is the most straightforward one to create and the easiest one to evolve as requirements change.
+It is often advantageous to start with this kind of model, as it is the most straightforward one to
+create and the easiest one to evolve as requirements change.
 
 ### Hybrid approach
-One good way to gain the conveniences of a single model, but still avoid invalid states, is to borrow some ideas from both previous approaches and go for a hybrid solution.
 
-The first model provided a good way to deal with the regular states, and it was its offline scenario that messed things up. So instead of duplicate all states of the first model, let’s combine the first approach with the second one:
+One good way to gain the conveniences of a single model, but still avoid invalid states, is to
+borrow some ideas from both previous approaches and go for a hybrid solution.
+
+The first model provided a good way to deal with the regular states, and it was its offline scenario
+that messed things up. So instead of duplicate all states of the first model, let’s combine the
+first approach with the second one:
 
 ```java
 @DataEnum
@@ -66,14 +94,26 @@ public abstract class Model {
 }
 ```
 
-Now it’s possible to be both loaded and offline at the same time! We’ve combined two state machines by putting them next to each other ‒ one keeps track of data loading, and the other keeps track of whether you’re offline. Also, this approach scales up to multiple parallel state machines, or even state-machines-within-state-machines.
+Now it’s possible to be both loaded and offline at the same time! We’ve combined two state machines
+by putting them next to each other ‒ one keeps track of data loading, and the other keeps track of
+whether you’re offline. Also, this approach scales up to multiple parallel state machines, or even
+state-machines-within-state-machines.
 
-Note that this isn’t necessarily a perfect model: for example, maybe the waiting-for-data and offline states are incompatible. If it’s really important for you to deal with this state in the model, you’d have to go for something a bit more like the first approach, but if it’s just a single combination that is troublesome now, the hybrid solution is often a worthwhile trade-off.
+Note that this isn’t necessarily a perfect model: for example, maybe the waiting-for-data and
+offline states are incompatible. If it’s really important for you to deal with this state in the
+model, you’d have to go for something a bit more like the first approach, but if it’s just a single
+combination that is troublesome now, the hybrid solution is often a worthwhile trade-off.
 
-The hybrid provides a more flexible model that is easier to modify when requirements change, and you’re still avoiding most edge cases (for example, in this version data is never null, and you can’t have both data and an error message).
+The hybrid provides a more flexible model that is easier to modify when requirements change, and
+you’re still avoiding most edge cases (for example, in this version data is never null, and you
+can’t have both data and an error message).
 
 ## Some useful tricks for model objects
-Since model objects are supposed to be immutable, you need to create new ones whenever you want to change anything. Since this will be a common occurrence, and you want code to be easy to read, you should create helper methods to carry out these changes. In this section we will look at some ways you can do this.
+
+Since model objects are supposed to be immutable, you need to create new ones whenever you want to
+change anything. Since this will be a common occurrence, and you want code to be easy to read, you
+should create helper methods to carry out these changes. In this section we will look at some ways
+you can do this.
 
 Let’s imagine we have a Model for a todo-list. It might look something like this:
 
@@ -105,10 +145,14 @@ public abstract class Model {
 }
 ```
 
-> Note: Avoid arrays and Lists in the model like this, since they are mutable. Instead you should use something like `ImmutableList` from Guava. That being said, we use `List`s in these examples to keep them short.
+> Note: Avoid arrays and Lists in the model like this, since they are mutable. Instead you should 
+> use something like `ImmutableList` from Guava. That being said, we use `List`s in these examples 
+> to keep them short.
 
 ### Java: AutoValue
-If you use AutoValue (recommended when you use Java), `builder()` and `toBuilder()` will be your best friends. Define a builder like this:
+
+If you use AutoValue (recommended when you use Java), `builder()` and `toBuilder()` will be your
+best friends. Define a builder like this:
 
 ```java
 @AutoValue
@@ -133,7 +177,8 @@ public abstract class Task {
 }
 ```
 
-> Note: Writing this by hand can get cumbersome. You can make your job easier by using one of the AutoValue plugins for IntelliJ to generate it automatically.
+> Note: Writing this by hand can get cumbersome. You can make your job easier by using one of the 
+> AutoValue plugins for IntelliJ to generate it automatically.
 
 Now we either create a new `Task` from scratch with a fluent API:
 
@@ -165,10 +210,10 @@ public static Builder builder() {
 If you use Kotlin, things get a bit easier: use data classes and their `.copy()` method:
 
 ```kotlin
-data class Task(val description: String, val complete: Boolean);
+data class Task(val description: String, val complete: Boolean)
 
-val task1 = Task("hello", false);
-val task2 = task1.copy(complete=true);
+val task1 = Task("hello", false)
+val task2 = task1.copy(complete=true)
 ```
 
 ### `with`-methods
@@ -201,7 +246,8 @@ static Next<Model, Effect> update(Model model, Event event) {
 }
 ```
 
-A lot of the noise is due to us working with immutable objects, but it doesn’t have to be this messy. There is a lot going on in this function and it’s not easy to see what it is:
+A lot of the noise is due to us working with immutable objects, but it doesn’t have to be this
+messy. There is a lot going on in this function and it’s not easy to see what it is:
 
 - The old task is fetched from the old list of tasks
 - A new task is created from the old task
@@ -246,7 +292,8 @@ public abstract class Task {
 }
 ```
 
-This enables us to easily create copies of a `Task` with a different value for `complete()`. We can also use the same pattern to replace a single task in `Model`:
+This enables us to easily create copies of a `Task` with a different value for `complete()`. We can
+also use the same pattern to replace a single task in `Model`:
 
 ```java
 @AutoValue
@@ -279,4 +326,6 @@ public abstract class Model {
 }
 ```
 
-We still have to do more or less the same things, but this a more fluent API for the job. We are also able to reuse some of these helper methods. For example, `Model.replaceTask(...)` will be useful if we want to change the description of a task.
+We still have to do more or less the same things, but this a more fluent API for the job. We are
+also able to reuse some of these helper methods. For example, `Model.replaceTask(...)` will be
+useful if we want to change the description of a task.

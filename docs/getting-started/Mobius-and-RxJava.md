@@ -1,25 +1,43 @@
-The primary use case for RxJava in Mobius is to execute effects, but because both are reactive frameworks, they play quite well together in general. Since the update function in Mobius deals with keeping track of state and deciding what should happen when, you can remove a lot of such logic from your Observable chains. In a sense, Mobius can help you deal with state and state transitions in RxJava.
+The primary use case for RxJava in Mobius is to execute effects, but because both are reactive
+frameworks, they play quite well together in general. Since the update function in Mobius deals with
+keeping track of state and deciding what should happen when, you can remove a lot of such logic from
+your Observable chains. In a sense, Mobius can help you deal with state and state transitions in
+RxJava.
 
-For example, search-as-you-type is complicated to do with RxJava. Every time the text changes, you send a request to the backend:
+For example, search-as-you-type is complicated to do with RxJava. Every time the text changes, you
+send a request to the backend:
 
 ```java
 Observable<String> input = // ...
 Observable<Result> result = input.flatMap(text -> api.searchForText(text));
 ```
 
-This would mostly work, but the problem is that **flatMap** doesn’t define in which order responses come back, so you might get the wrong result arriving last!
+This would mostly work, but the problem is that **flatMap** doesn’t define in which order responses
+come back, so you might get the wrong result arriving last!
 
-You can use **concatMap**, but then you would instead block on waiting for all intermediate results, so it’d get choppy if you type fast. You can use **switchMap**, but that aborts outstanding requests when the text changes, so if you type faster than responses arrive, you won't see anything until you stop typing.
+You can use **concatMap**, but then you would instead block on waiting for all intermediate results,
+so it’d get choppy if you type fast. You can use **switchMap**, but that aborts outstanding requests
+when the text changes, so if you type faster than responses arrive, you won't see anything until you
+stop typing.
 
 Let’s say that the following is the behaviour we want:
 
-> As long as we haven’t received the result that matches what’s currently entered into the text box, display all results as they come in, but when we get the response that matches the text box, ignore all further results.
+> As long as we haven’t received the result that matches what’s currently entered into the text box,
+> display all results as they come in, but when we get the response that matches the text box, 
+> ignore all further results.
 
-It is certainly possible to solve this type of problem with RxJava, but designing such observable chains often end up requiring an in-depth understanding of RxJava, using very specific combinations of operators, and understanding which values will be emitted where and when.
+It is certainly possible to solve this type of problem with RxJava, but designing such observable
+chains often end up requiring an in-depth understanding of RxJava, using very specific combinations
+of operators, and understanding which values will be emitted where and when.
 
-If you’re dealing with a problem that inherently is complex, Mobius won’t necessarily make it less complex. However since Mobius has a single synchronization point through which all events go (that is, the update function), you are usually able to express desired behaviours as rules by using DataEnum’s `map(...)` function and simple `if`-statements. These rules typically are easier to test and modify than a big RxJava chain, since it's just a pure function that describes them.
+If you’re dealing with a problem that inherently is complex, Mobius won’t necessarily make it less
+complex. However since Mobius has a single synchronization point through which all events go (that
+is, the update function), you are usually able to express desired behaviours as rules by using
+DataEnum’s `map(...)` function and simple `if`-statements. These rules typically are easier to test
+and modify than a big RxJava chain, since it's just a pure function that describes them.
 
-Let’s take a look at how the search-as-you-type behaviour can be implemented with Mobius. First we need our data objects:
+Let’s take a look at how the search-as-you-type behaviour can be implemented with Mobius. First we
+need our data objects:
 
 ```java
 @AutoValue
@@ -106,11 +124,19 @@ static Next<Model, Effect> update(Model model, Event event) {
 }
 ```
 
-This is not necessarily the best solution to search-as-you-type, but it reveals how we can express our behaviours as rules in the update function. One benefit of the simplicity of the update function is that it gives us a lot of flexibility. For example, you can easily modify it to use more complex criteria for when an result should be ignored (for example, what if we’re erasing text in the field and get a late result for a longer query?), or add a sequence number to each effect and ignore anything that arrives out of order.
+This is not necessarily the best solution to search-as-you-type, but it reveals how we can express
+our behaviours as rules in the update function. One benefit of the simplicity of the update function
+is that it gives us a lot of flexibility. For example, you can easily modify it to use more complex
+criteria for when an result should be ignored (for example, what if we’re erasing text in the field
+and get a late result for a longer query?), or add a sequence number to each effect and ignore
+anything that arrives out of order.
 
-We can also implement request throttling, etc., in the update function, but it’s usually easier to do that with RxJava.
+We can also implement request throttling, etc., in the update function, but it’s usually easier to
+do that with RxJava.
 
-Let’s create an effect handler for `Effect.SearchRequest` to see what this looks like. With RxJava you implement effect-handling with `Observable` transformers, or by using references to methods that have the same signature as transformers:
+Let’s create an effect handler for `Effect.SearchRequest` to see what this looks like. With RxJava
+you implement effect-handling with `Observable` transformers, or by using references to methods that
+have the same signature as transformers:
 
 ```java
 public Observable<Event> effectHandler(Observable<Effect> effects) {
@@ -123,7 +149,9 @@ public Observable<Event> effectHandler(Observable<Effect> effects) {
 }
 ```
 
-We can use `RxConnectables.fromTransformer(...)` to convert the transformer into a Connectable and pass it to `Mobius.loop(...)`, but it’s usually easier to just use `RxMobius.loop(...)` which does that for you:
+We can use `RxConnectables.fromTransformer(...)` to convert the transformer into a Connectable and
+pass it to `Mobius.loop(...)`, but it’s usually easier to just use `RxMobius.loop(...)` which does
+that for you:
 
 ```java
 MobiusLoop<Model, Event, Effect> loop =
@@ -133,7 +161,13 @@ MobiusLoop<Model, Event, Effect> loop =
 
 
 ## RxMobius.subtypeEffectHandler()
-One nice thing about the subclasses-approach of defining effects in Mobius is that we can use the type of each effect to determine what it is. RxMobius has a utility that leverages this and enables you to register an effect handler per effect type. We can write the handler for each individual effect as a transformer, just like we did before, but instead of taking an Effect as argument it takes specific effect types as its argument (for example, `Effect.SearchRequest`). The handler will then only get effects of that type passed to it, and no casting is required:
+
+One nice thing about the subclasses-approach of defining effects in Mobius is that we can use the
+type of each effect to determine what it is. RxMobius has a utility that leverages this and enables
+you to register an effect handler per effect type. We can write the handler for each individual
+effect as a transformer, just like we did before, but instead of taking an Effect as argument it
+takes specific effect types as its argument (for example, `Effect.SearchRequest`). The handler will
+then only get effects of that type passed to it, and no casting is required:
 
 ```java
 public Observable<Event> handleSearchRequest(
@@ -148,7 +182,8 @@ public Observable<Event> handleSearchRequest(
 }
 ```
 
-After writing individual handlers for all effects, we can then create a subtype effect handler and register the handlers:
+After writing individual handlers for all effects, we can then create a subtype effect handler and
+register the handlers:
 
 ```java
 ObservableTransformer<Effect, Event> rxEffectHandler =
@@ -164,9 +199,12 @@ ObservableTransformer<Effect, Event> rxEffectHandler =
         .build();
 ```
 
-This means that eg. whenever a SearchRequest effect is received, it gets routed to the `handleSearchRequest` observable transformer. All events from transformers are then merged back into one stream and sent back to the update function.
+This means that eg. whenever a SearchRequest effect is received, it gets routed to
+the `handleSearchRequest` observable transformer. All events from transformers are then merged back
+into one stream and sent back to the update function.
 
-The effect handler that `subtypeEffectHandler()` creates is an observable transformer too, so when creating our loop we will again use `RxMobius.loop()` instead of `Mobius.loop()`:
+The effect handler that `subtypeEffectHandler()` creates is an observable transformer too, so when
+creating our loop we will again use `RxMobius.loop()` instead of `Mobius.loop()`:
 
 ```java
 MobiusLoop<Model, Event, Effect> loop =

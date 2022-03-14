@@ -1,9 +1,18 @@
 ## Connecting a MobiusLoop to Android
-As discussed when talking about configuration, a `MobiusLoop.Factory` is useful if you want to be able to start the same loop many times from different starting points. One example of this is when using a `MobiusLoop` in Android.
 
-Whether you’re using Activities, Fragments, or some other abstraction, you typically have some concept of restoring state. There may or may not be a saved state available when your component starts, but if there is some saved state, you should start from it instead from starting from a default state. On top of that, there is usually pause/resume where you have to pause execution and resume from where you left off.
+As discussed when talking about configuration, a `MobiusLoop.Factory` is useful if you want to be
+able to start the same loop many times from different starting points. One example of this is when
+using a `MobiusLoop` in Android.
 
-These cases are examples of starting from different model objects, and the reason why we use `MobiusLoop.Factory` when connecting Mobius to Android. It allows Mobius to keep track of state for you, and create new loops as required.
+Whether you’re using Activities, Fragments, or some other abstraction, you typically have some
+concept of restoring state. There may or may not be a saved state available when your component
+starts, but if there is some saved state, you should start from it instead from starting from a
+default state. On top of that, there is usually pause/resume where you have to pause execution and
+resume from where you left off.
+
+These cases are examples of starting from different model objects, and the reason why we
+use `MobiusLoop.Factory` when connecting Mobius to Android. It allows Mobius to keep track of state
+for you, and create new loops as required.
 
 For our example we will start by creating a factory:
 
@@ -15,9 +24,12 @@ MobiusLoop.Factory<MyModel, MyEvent, MyEffect> loopFactory =
        .logger(AndroidLogger.tag("my_app"));
 ```
 
-In this example we hook up the loop factory to a Fragment, but the same pattern applies for other Android components with a lifecycle. We will create a `MobiusLoop.Controller` to help us control the lifecycle of loops, which you normally do by calling `Mobius.controller(...)`.
+In this example we hook up the loop factory to a Fragment, but the same pattern applies for other
+Android components with a lifecycle. We will create a `MobiusLoop.Controller` to help us control the
+lifecycle of loops, which you normally do by calling `Mobius.controller(...)`.
 
-However, in order to get model callbacks on the UI thread, we’ll use `MobiusAndroid.controller()` instead. You can find it in the mobius-android module, and create it like this:
+However, in order to get model callbacks on the UI thread, we’ll use `MobiusAndroid.controller()`
+instead. You can find it in the mobius-android module, and create it like this:
 
 ```java
 MobiusLoop.Controller<MyModel, MyEvent> controller =
@@ -25,7 +37,9 @@ MobiusLoop.Controller<MyModel, MyEvent> controller =
 ```
 
 ## Connecting the MobiusLoop.Controller to a Fragment
-Now that we’ve created a `MobiusLoop.Controller`, we need to hook it up to the lifecycle events of our Fragment:
+
+Now that we’ve created a `MobiusLoop.Controller`, we need to hook it up to the lifecycle events of
+our Fragment:
 
 ```java
 public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -71,11 +85,17 @@ public void onSaveInstanceState(@NonNull Bundle outState) {
 }
 ```
 
-In this example we’re storing state using the regular state restore mechanism of Android, but you could just as well use ViewModel (from Android Architecture Components) or any other mechanism to keep track of model objects during configuration changes.
+In this example we’re storing state using the regular state restore mechanism of Android, but you
+could just as well use ViewModel (from Android Architecture Components) or any other mechanism to
+keep track of model objects during configuration changes.
 
-Most of this isn’t particularly strange or unexpected, but there is one part we’ve left out: `this::connectViews`.
+Most of this isn’t particularly strange or unexpected, but there is one part we’ve left
+out: `this::connectViews`.
 
-The argument to `MobiusLoop.Controller.connect(...)` is actually a `Connectable`, the same interface that we used for effect handlers earlier. However this one is a `Connectable<M, E>` instead of a `Connectable<F, E>` - in other words, it receives Models instead of Effects. We implement it in a way similar to how we implemented the effect handler:
+The argument to `MobiusLoop.Controller.connect(...)` is actually a `Connectable`, the same interface
+that we used for effect handlers earlier. However this one is a `Connectable<M, E>` instead of
+a `Connectable<F, E>` - in other words, it receives Models instead of Effects. We implement it in a
+way similar to how we implemented the effect handler:
 
 ```java
 private Connection<MyModel> connectViews(Consumer<MyEvent> eventConsumer) {
@@ -97,14 +117,22 @@ private Connection<MyModel> connectViews(Consumer<MyEvent> eventConsumer) {
 }
 ```
 
-This becomes the one place where we hook up event listeners to the UI and update the UI based on the model.
+This becomes the one place where we hook up event listeners to the UI and update the UI based on the
+model.
 
-And that’s it: a new MobiusLoop gets created whenever the Fragment starts, and it’ll stop and restart from where it left off whenever the fragment is paused/resumed. Furthermore, it supports state restore, and it cleans up after itself when the Fragment is destroyed.
+And that’s it: a new MobiusLoop gets created whenever the Fragment starts, and it’ll stop and
+restart from where it left off whenever the fragment is paused/resumed. Furthermore, it supports
+state restore, and it cleans up after itself when the Fragment is destroyed.
 
 ## Using RxJava with `MobiusLoop.Controller`
-Just like RxJava helped us with effect handlers, it can also make our life easier when connecting a UI. Both the effect handlers and the UI that you connect to `MobiusLoop.Controller` use the same interface, so all utilities for `Connectables` can be used here, too. When it comes to RxJava, we have `RxConnectables` that enable us to turn an `Observable` transformer into a `Connectable`.
 
-Using [rxbinding](https://github.com/JakeWharton/RxBinding) makes implementing `connectViews` a very nice experience. The connectViews we had before will now look like this:
+Just like RxJava helped us with effect handlers, it can also make our life easier when connecting a
+UI. Both the effect handlers and the UI that you connect to `MobiusLoop.Controller` use the same
+interface, so all utilities for `Connectables` can be used here, too. When it comes to RxJava, we
+have `RxConnectables` that enable us to turn an `Observable` transformer into a `Connectable`.
+
+Using [rxbinding](https://github.com/JakeWharton/RxBinding) makes implementing `connectViews` a very
+nice experience. The connectViews we had before will now look like this:
 
 ```java
 public Observable<MyEvent> connectViews(Observable<MyModel> models) {
@@ -131,7 +159,9 @@ public View onCreateView(LayoutInflater inflater, ViewGroup container,
 }
 ```
 
-And that’s it! If you have many event streams, you can combine them with `Observable.merge(...)` / `Observable.mergeArray(...)`, and if there are many subscriptions to the model, you can put them all in a `CompositeDisposable`:
+And that’s it! If you have many event streams, you can combine them with `Observable.merge(...)`
+/ `Observable.mergeArray(...)`, and if there are many subscriptions to the model, you can put them
+all in a `CompositeDisposable`:
 
 ```java
 public Observable<MyEvent> connectViews(Observable<MyModel> models) {
