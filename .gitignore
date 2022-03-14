@@ -7,3 +7,5 @@
 build
 .DS_STORE
 local.properties
+docs/index.md
+site/

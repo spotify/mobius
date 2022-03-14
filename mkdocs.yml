@@ -1,0 +1,82 @@
+# Site
+site_name: 'Mobius'
+site_description: 'A functional reactive framework for managing state evolution and side-effects.'
+site_author: 'Spotify'
+site_url: 'https://github.com/vestrel00/mobius'
+
+# Repository
+repo_name: 'vestrel00/mobius'
+repo_url: 'https://github.com/vestrel00/mobius'
+edit_uri: 'tree/main/docs/'
+remote_branch: gh-pages
+
+# Navigation
+nav:
+  - 'Overview': index.md
+  - 'Concepts': concepts.md
+  - 'Objectives': objectives.md
+  - 'Mobius Workflow': the-mobius-workflow.md
+  - 'FAQ': faq.md
+  - 'Getting Started':
+      - 'Creating a loop': getting-started/creating-a-loop.md
+      - 'Mobius an RxJava': getting-started/mobius-and-rx-java.md
+      - 'Mobius and Android': getting-started/mobius-and-android.md
+      - 'Configuring a MobiusLoop': getting-started/configuring-a-mobius-loop.md
+      - 'Logging and Error Handling': getting-started/logging-and-error-handling.md
+  - 'Reference Guide':
+      - 'Mobius Loop': reference-guide/mobius-loop.md
+      - 'Model': reference-guide/model.md
+      - 'Event': reference-guide/event.md
+      - 'Effect': reference-guide/effect.md
+      - 'Update': reference-guide/update.md
+      - 'Effect Handler': reference-guide/effect-handler.md
+      - 'Init': reference-guide/init.md
+      - 'Event Source': reference-guide/event-source.md
+  - 'Patterns':
+      - 'Immutability': patterns/immutability.md
+      - 'Pure vs Impure Functions': patterns/pure-vs-impure-functions.md
+      - 'Models': patterns/models.md
+      - 'Events and Effects': patterns/events-and-effects.md
+  - 'Prior Art': prior-art.md
+
+# Theme
+theme:
+  name: 'material'
+  language: 'en'
+  icon:
+    logo: fontawesome/brands/spotify
+    repo: fontawesome/brands/github
+  font:
+    text: 'Roboto'
+    code: 'JetBrains Mono'
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: 'light blue'
+      accent: 'blue'
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: 'light blue'
+      accent: 'blue'
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+
+# Plugins
+plugins:
+  - search
+
+# Extensions
+markdown_extensions:
+  # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown/?h=toc#table-of-contents
+  - toc:
+      permalink: true
+  # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
