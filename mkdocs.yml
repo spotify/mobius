@@ -38,6 +38,7 @@ nav:
       - 'Models': patterns/models.md
       - 'Events and Effects': patterns/events-and-effects.md
   - 'Prior Art': prior-art.md
+  - 'License': license.md
 
 # Theme
 theme:

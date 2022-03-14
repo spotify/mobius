@@ -8,4 +8,5 @@ build
 .DS_STORE
 local.properties
 docs/index.md
+docs/license.md
 site/
