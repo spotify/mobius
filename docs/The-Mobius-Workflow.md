@@ -1,3 +1,5 @@
+# The Mobius Workflow
+
 While developing the Mobius framework, we often found ourselves using real problems as examples when
 teaching how to use Mobius. After a while, we noticed that we always used the same structure to
 model the problems and, as a consequence, everyone in the team got a better understanding of what

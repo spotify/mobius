@@ -1,3 +1,5 @@
+# Defining Events and Effects
+
 Event and Effect objects are very similar. They have different roles in
 a [Mobius loop](../reference-guide/Mobius-Loop.md), but both are [immutable](./Immutability.md) data
 objects that get passed around as messages. As a consequence, both events and effects usually get

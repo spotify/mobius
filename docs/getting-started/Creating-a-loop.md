@@ -1,3 +1,5 @@
+# Creating a loop
+
 Let's build a simple "hello world" in Mobius. We'll create a simple counter that counts up or down
 when we send events to the loop. We need to keep track of the current value of the counter, so we'll
 be using an `Integer` as our model, and define an enum with events for increasing and decreasing the

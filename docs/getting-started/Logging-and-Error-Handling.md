@@ -1,4 +1,6 @@
-# Logging
+# Logging and Error Handling
+
+## Logging
 
 In addition to the business-logic level logging capabilities that you can get from configuring
 a `MobiusLoop` instance with a `MobiusLoop.Logger`, Mobius also uses [SLF4J](http://slf4j.org/) for
@@ -8,7 +10,7 @@ in the [SLF4J documentation](http://slf4j.org/manual.html#swapping). We don't us
 logging framework at Spotify, so we do not have any recommendation for what to use for Android, but
 there seem to be a few options.
 
-# Error Handling
+## Error Handling
 
 Mobius generally tries to expose programmer errors (normally manifesting as `RuntimeException`s) by
 simply crashing. When using `WorkRunner`s, crashing isn't really possible, because what actually

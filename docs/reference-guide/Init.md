@@ -1,3 +1,5 @@
+# Init
+
 The `init(Model)` function is called first when a [Mobius loop](./Mobius-Loop.md) is started, and
 can be seen as a special version of the [Update](./Update.md) function. It takes
 a [Model](./Model.md) just like Update, but it does not have any Event as an argument. It returns

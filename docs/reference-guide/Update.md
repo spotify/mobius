@@ -1,3 +1,5 @@
+# Update
+
 The `Update` interface contains one method: `update(Model, Event)`. In this section we will refer to
 this method as the Update function. It is meant to be a function in the functional programming sense
 of the word, in other words it should be pure. In order for it to be a pure function, there are some

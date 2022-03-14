@@ -1,3 +1,5 @@
+# Configuring a MobiusLoop
+
 So far, we’ve started the loop in the following manner:
 
 ```java

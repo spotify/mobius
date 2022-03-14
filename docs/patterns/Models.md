@@ -1,3 +1,5 @@
+# Defining Models
+
 Just as Events and Effects, Model objects are opaque to the Mobius framework itself. They should be
 immutable, but other than that they can be anything.
 

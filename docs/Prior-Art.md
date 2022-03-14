@@ -1,3 +1,5 @@
+# Prior Art
+
 Many readers may feel like Mobius is "just like X" - and they are correct. Here's a collection of
 related concepts, tools and frameworks that we're aware of and some of which we have used when
 coming up with Mobius. Being aware of our biases, we don't want to try to make comparisons, but in

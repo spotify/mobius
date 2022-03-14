@@ -1,3 +1,5 @@
+# Model
+
 The Model is an [immutable](../patterns/Immutability.md) representation of the internal state and
 configuration of a [Mobius loop](./Mobius-Loop.md). It contains two kinds of data, often
 overlapping: what you need to make business logic decisions, and what you need to present in the UI.

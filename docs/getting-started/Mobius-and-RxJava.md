@@ -1,3 +1,5 @@
+# Mobius and RxJava
+
 The primary use case for RxJava in Mobius is to execute effects, but because both are reactive
 frameworks, they play quite well together in general. Since the update function in Mobius deals with
 keeping track of state and deciding what should happen when, you can remove a lot of such logic from

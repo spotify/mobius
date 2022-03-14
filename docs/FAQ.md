@@ -1,4 +1,6 @@
-# How do I re-render only the part of the UI that changed when I get a new model?
+# FAQ
+
+## How do I re-render only the part of the UI that changed when I get a new model?
 
 We believe Mobius is and will be a better framework if it’s focused on a single job. That job is
 managing changes in state over time, not how to present that state to the user. It is
@@ -10,7 +12,7 @@ the old data, and doing that diffing “manually” is often reasonably straight
 difference when using Mobius is that you get the data from the MobiusLoop rather than directly from
 the data source.
 
-# Is Mobius an alternative to MV*?
+## Is Mobius an alternative to MV*?
 
 Yes and no, but mostly no. Mobius isn’t a direct replacement or an alternative to MV* (meaning MVC,
 MVP, MVVM, etc.), but it works very well as a building block in the various MV* patterns, and it

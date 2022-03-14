@@ -1,3 +1,5 @@
+# Objectives
+
 Mobius was designed with some specific objectives in mind, and it’s going to be easier both to use
 it correctly and to understand some of the design decisions if you know the underlying thinking. The
 original objectives we set out to achieve were:

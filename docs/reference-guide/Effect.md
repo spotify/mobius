@@ -1,3 +1,5 @@
+# Effect
+
 Effect objects are used by the [Update](./Update.md) function to request that the
 [Effect Handler](./Effect-Handler.md) executes impure code. Impure code either has measurable
 side-effects or has an output that isn't completely determined by its input parameters. For example,

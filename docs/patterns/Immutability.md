@@ -1,3 +1,5 @@
+# Immutability
+
 Most objects in Mobius are required to be immutable. Immutability imposes a constraint on what your
 objects can do, therefore making them easier to reason about. The Mobius framework is in fact based
 on the principle that [Model](../reference-guide/Model.md), [Event](../reference-guide/Event.md),

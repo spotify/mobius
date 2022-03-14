@@ -1,3 +1,5 @@
+# Pure vs Impure Functions
+
 The term [pure function](https://en.wikipedia.org/wiki/Pure_function), means that the function's
 return value is completely determined by its inputs and that executing the function produces no side
 effects. A function that is not pure is called ‘impure’. This distinction is important for primarily

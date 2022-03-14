@@ -1,3 +1,5 @@
+# Effect Handler
+
 Effect Handlers receive [Effects](./Effect.md), execute them, and may produce [Events](./Event.md)
 as a result.
 

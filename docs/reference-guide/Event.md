@@ -1,3 +1,5 @@
+# Event
+
 Events are [immutable](../patterns/Immutability.md) data objects that represent that something has
 happened. Events are what drive a [Mobius loop](./Mobius-Loop.md) forward, and it is only when an
 Event is received that business logic is executed and state is evolved.
