@@ -3,7 +3,7 @@ This document is intended as a quick overview of the core concepts in Mobius. Th
 ## Mobius Loop
 A Mobius loop is a part of an application, usually including a user interface. In a Spotify context, there is usually one loop per feature such as “the album page”, “login flow”, etc., but a loop can also be UI-less and for instance be tied to the lifecycle of an application or a user session.
 
-![](https://github.com/spotify/mobius/wiki/mobius-diagram.png)
+![](./assets/images/mobius-diagram.png)
 
 > A Mobius loop receives [Events](Event), which are passed to an [Update](Update) function together with the current [Model](Model). As a result of running the Update function, the Model might change, and [Effects](Effect) might get dispatched. The Model can be observed by the user interface, and the Effects are received and executed by an [Effect Handler](Effect-Handler).
 
