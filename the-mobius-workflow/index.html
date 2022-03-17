@@ -1,0 +1,1406 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A functional reactive framework for managing state evolution and side-effects.">
+      
+      
+        <meta name="author" content="Spotify">
+      
+      
+        <link rel="canonical" href="https://github.com/spotify/mobius/the-mobius-workflow/">
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.5">
+    
+    
+      
+        <title>Mobius Workflow - Mobius</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.2d9f7617.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.e6a45f82.min.css">
+        
+      
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="light-blue" data-md-color-accent="blue">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#the-mobius-workflow" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Mobius" class="md-header__button md-logo" aria-label="Mobius" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M248 8C111.1 8 0 119.1 0 256s111.1 248 248 248 248-111.1 248-248S384.9 8 248 8zm100.7 364.9c-4.2 0-6.8-1.3-10.7-3.6-62.4-37.6-135-39.2-206.7-24.5-3.9 1-9 2.6-11.9 2.6-9.7 0-15.8-7.7-15.8-15.8 0-10.3 6.1-15.2 13.6-16.8 81.9-18.1 165.6-16.5 237 26.2 6.1 3.9 9.7 7.4 9.7 16.5s-7.1 15.4-15.2 15.4zm26.9-65.6c-5.2 0-8.7-2.3-12.3-4.2-62.5-37-155.7-51.9-238.6-29.4-4.8 1.3-7.4 2.6-11.9 2.6-10.7 0-19.4-8.7-19.4-19.4s5.2-17.8 15.5-20.7c27.8-7.8 56.2-13.6 97.8-13.6 64.9 0 127.6 16.1 177 45.5 8.1 4.8 11.3 11 11.3 19.7-.1 10.8-8.5 19.5-19.4 19.5zm31-76.2c-5.2 0-8.4-1.3-12.9-3.9-71.2-42.5-198.5-52.7-280.9-29.7-3.6 1-8.1 2.6-12.9 2.6-13.2 0-23.3-10.3-23.3-23.6 0-13.6 8.4-21.3 17.4-23.9 35.2-10.3 74.6-15.2 117.5-15.2 73 0 149.5 15.2 205.4 47.8 7.8 4.5 12.9 10.7 12.9 22.6 0 13.6-11 23.3-23.2 23.3z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Mobius
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Mobius Workflow
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="light-blue" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            </label>
+          
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="light-blue" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/spotify/mobius/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    spotify/mobius
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Mobius" class="md-nav__button md-logo" aria-label="Mobius" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M248 8C111.1 8 0 119.1 0 256s111.1 248 248 248 248-111.1 248-248S384.9 8 248 8zm100.7 364.9c-4.2 0-6.8-1.3-10.7-3.6-62.4-37.6-135-39.2-206.7-24.5-3.9 1-9 2.6-11.9 2.6-9.7 0-15.8-7.7-15.8-15.8 0-10.3 6.1-15.2 13.6-16.8 81.9-18.1 165.6-16.5 237 26.2 6.1 3.9 9.7 7.4 9.7 16.5s-7.1 15.4-15.2 15.4zm26.9-65.6c-5.2 0-8.7-2.3-12.3-4.2-62.5-37-155.7-51.9-238.6-29.4-4.8 1.3-7.4 2.6-11.9 2.6-10.7 0-19.4-8.7-19.4-19.4s5.2-17.8 15.5-20.7c27.8-7.8 56.2-13.6 97.8-13.6 64.9 0 127.6 16.1 177 45.5 8.1 4.8 11.3 11 11.3 19.7-.1 10.8-8.5 19.5-19.4 19.5zm31-76.2c-5.2 0-8.4-1.3-12.9-3.9-71.2-42.5-198.5-52.7-280.9-29.7-3.6 1-8.1 2.6-12.9 2.6-13.2 0-23.3-10.3-23.3-23.6 0-13.6 8.4-21.3 17.4-23.9 35.2-10.3 74.6-15.2 117.5-15.2 73 0 149.5 15.2 205.4 47.8 7.8 4.5 12.9 10.7 12.9 22.6 0 13.6-11 23.3-23.2 23.3z"/></svg>
+
+    </a>
+    Mobius
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/spotify/mobius/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    spotify/mobius
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/" class="md-nav__link">
+        Concepts
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../objectives/" class="md-nav__link">
+        Objectives
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Mobius Workflow
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Mobius Workflow
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-model-it-aka-moflow" class="md-nav__link">
+    Step 1: Model it (a.k.a MoFlow)
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 1: Model it (a.k.a MoFlow)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#define-external-events" class="md-nav__link">
+    Define external events
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capture-user-interactions" class="md-nav__link">
+    Capture user interactions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#define-effects" class="md-nav__link">
+    Define effects
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#define-your-model" class="md-nav__link">
+    Define your model
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#define-effects-feedback-events" class="md-nav__link">
+    Define effects feedback events
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-describe-it" class="md-nav__link">
+    Step 2: Describe it
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-plan-it" class="md-nav__link">
+    Step 3: Plan it
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3: Plan it">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#event-sources" class="md-nav__link">
+    Event sources
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#effects-and-their-feedback-events" class="md-nav__link">
+    Effects and their feedback events
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user-interaction-events" class="md-nav__link">
+    User interaction events
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-build-it" class="md-nav__link">
+    Step 4: Build it
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6">
+          Getting Started
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Getting Started" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Getting Started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/creating-a-loop/" class="md-nav__link">
+        Creating a loop
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/mobius-and-rx-java/" class="md-nav__link">
+        Mobius an RxJava
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/mobius-and-android/" class="md-nav__link">
+        Mobius and Android
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/configuring-a-mobius-loop/" class="md-nav__link">
+        Configuring a MobiusLoop
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/logging-and-error-handling/" class="md-nav__link">
+        Logging and Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_7">
+          Reference Guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Reference Guide" data-md-level="1">
+        <label class="md-nav__title" for="__nav_7">
+          <span class="md-nav__icon md-icon"></span>
+          Reference Guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference-guide/mobius-loop/" class="md-nav__link">
+        Mobius Loop
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference-guide/model/" class="md-nav__link">
+        Model
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference-guide/event/" class="md-nav__link">
+        Event
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference-guide/effect/" class="md-nav__link">
+        Effect
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference-guide/update/" class="md-nav__link">
+        Update
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference-guide/effect-handler/" class="md-nav__link">
+        Effect Handler
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference-guide/init/" class="md-nav__link">
+        Init
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference-guide/event-source/" class="md-nav__link">
+        Event Source
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_8">
+          Patterns
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Patterns" data-md-level="1">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          Patterns
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../patterns/immutability/" class="md-nav__link">
+        Immutability
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../patterns/pure-vs-impure-functions/" class="md-nav__link">
+        Pure vs Impure Functions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../patterns/models/" class="md-nav__link">
+        Models
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../patterns/events-and-effects/" class="md-nav__link">
+        Events and Effects
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prior-art/" class="md-nav__link">
+        Prior Art
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../license/" class="md-nav__link">
+        License
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-model-it-aka-moflow" class="md-nav__link">
+    Step 1: Model it (a.k.a MoFlow)
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 1: Model it (a.k.a MoFlow)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#define-external-events" class="md-nav__link">
+    Define external events
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capture-user-interactions" class="md-nav__link">
+    Capture user interactions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#define-effects" class="md-nav__link">
+    Define effects
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#define-your-model" class="md-nav__link">
+    Define your model
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#define-effects-feedback-events" class="md-nav__link">
+    Define effects feedback events
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-describe-it" class="md-nav__link">
+    Step 2: Describe it
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-plan-it" class="md-nav__link">
+    Step 3: Plan it
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3: Plan it">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#event-sources" class="md-nav__link">
+    Event sources
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#effects-and-their-feedback-events" class="md-nav__link">
+    Effects and their feedback events
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user-interaction-events" class="md-nav__link">
+    User interaction events
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-build-it" class="md-nav__link">
+    Step 4: Build it
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+<a href="https://github.com/spotify/mobius/tree/main/docs/the-mobius-workflow.md" title="Edit this page" class="md-content__button md-icon">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+</a>
+
+
+
+<h1 id="the-mobius-workflow">The Mobius Workflow<a class="headerlink" href="#the-mobius-workflow" title="Permanent link">&para;</a></h1>
+<p>While developing the Mobius framework, we often found ourselves using real problems as examples when
+teaching how to use Mobius. After a while, we noticed that we always used the same structure to
+model the problems and, as a consequence, everyone in the team got a better understanding of what
+they were trying to solve and many edge-cases were discovered early on.</p>
+<p>A couple of teams started using this process as a tool to explore requirements early on in the
+project and use the findings to plan what to do, and their efforts have been successful. We call
+this process the Mobius workflow, and it’s the recommended approach when planning and designing
+Mobius loops. Furthermore, it is recommended to take this approach as a team and involve everyone
+with different backgrounds.</p>
+<p>Through this collaboration on requirements discovery and planning, everyone on team ends up with a
+shared understanding and clarity on what the desired outcome is and since the output is directly
+translatable into a Mobius implementation, no details are lost in translation. Moreover,
+collaborative modeling enables the team to uncover edge-cases and specify how those should be dealt
+with.</p>
+<h2 id="step-1-model-it-aka-moflow">Step 1: Model it (a.k.a MoFlow)<a class="headerlink" href="#step-1-model-it-aka-moflow" title="Permanent link">&para;</a></h2>
+<p>When defining your Mobius Update function, start by determining what it'll describe. Consider
+Init/Update functions as a behavior specification for your program. In order to articulate this
+behavior, you need to:</p>
+<ol>
+<li>Establish a lexicon that can be used to describe your behavior accurately</li>
+<li>Create the model that describes your program’s state</li>
+</ol>
+<p>We’ve found that this step is usually most efficient when people from different disciplines
+participate. Doing this first step in a group setting using a whiteboard helps the team figure out
+all the required events for their particular domain.</p>
+<p>As previously mentioned, Events in Mobius can be used to represent:</p>
+<ol>
+<li>User Interactions</li>
+<li>Effects Feedback</li>
+<li>External Events</li>
+</ol>
+<p>These event categories can be used as a guide for establishing the necessary constructs of a Mobius
+program.</p>
+<h3 id="define-external-events">Define external events<a class="headerlink" href="#define-external-events" title="Permanent link">&para;</a></h3>
+<p>Start by identifying external events that provide you with necessary information about the
+environment your program is running in. For example, it must have internet connectivity to be able
+to load data from backend. Therefore, you can start by adding an event that notifies your update
+function of internet connectivity changes.</p>
+<table>
+    <thead>
+        <tr>
+            <th align="center">Events</th>
+            <th align="center">Model</th>
+            <th align="center">Effects</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td align="center"><b><i>InternetStateChanged</i></b></td>
+            <td rowspan=4></td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+
+<h3 id="capture-user-interactions">Capture user interactions<a class="headerlink" href="#capture-user-interactions" title="Permanent link">&para;</a></h3>
+<p>Next you should define user interaction events. Think button taps, navigation, and user input. Take
+a close look at the designs you have and add an event for every interaction that a user can have
+with your app. For example, in our login loop a user can input their email and password, they can
+also tap the Login button and they can choose to navigate to the restore password screen.</p>
+<table>
+    <thead>
+        <tr>
+            <th align="center">Events</th>
+            <th align="center">Model</th>
+            <th align="center">Effects</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td align="center">InternetStateChanged</td>
+            <td rowspan=5></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td align="center"><b><i>EmailInputChanged</i></b></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td align="center"><b><i>PasswordInputChanged</i></b></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td align="center"><b><i>LoginButtonClicked</i></b></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td align="center"><b><i>ForgotPasswordClicked</i></b></td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+
+<h3 id="define-effects">Define effects<a class="headerlink" href="#define-effects" title="Permanent link">&para;</a></h3>
+<p>At this point, you’ll start to see some effects that you would like to have as a result of the user
+interacting with your program. Add these effects to the effects column. In the login example,
+whenever the user clicks on the login button, the program is supposed to attempt logging in.
+Whenever the user clicks on the forgot password button, a restore password screen is supposed to
+appear.</p>
+<table>
+    <thead>
+        <tr>
+            <th align="center">Events</th>
+            <th align="center">Model</th>
+            <th align="center">Effects</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td align="center">InternetStateChanged</td>
+            <td rowspan=5></td>
+            <td align="center"><b><i>AttemptLogin</i></b></td>
+        </tr>
+        <tr>
+            <td align="center">EmailInputChanged</td>
+            <td align="center"><b><i>ShowRestorePasswordScreen</i></b></td>
+        </tr>
+        <tr>
+            <td align="center">PasswordInputChanged</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td align="center">LoginButtonClicked</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td align="center">ForgotPasswordClicked</td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+
+<h3 id="define-your-model">Define your model<a class="headerlink" href="#define-your-model" title="Permanent link">&para;</a></h3>
+<p>By this point, you have defined a set of events and effects. However, in most cases, events cannot
+directly result in effects and that is why your Update function takes two arguments; the current
+model and the event. Your model should represent the state of your feature. It should contain all
+the information necessary to help you make decisions about whether to dispatch effects and what the
+next state of your system should be.</p>
+<p>In our example, we see that in order to log in:</p>
+<ul>
+<li>It is necessary to be online.</li>
+<li>It is necessary to have an email and a password.</li>
+<li>It is necessary to keep track of whether there’s a login attempt in progress to avoid unnecessary
+  further attempts until the current attempt has completed. Furthermore, this piece of information
+  can be used to inform the user about the login attempt in progress.</li>
+<li>Finally, it is desirable that the login button is only enabled when there is a valid email and
+  password, so we need to keep track of that in our model as well</li>
+</ul>
+<table>
+    <thead>
+        <tr>
+            <th align="center">Events</th>
+            <th align="center">Model</th>
+            <th align="center">Effects</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td align="center">InternetStateChanged</td>
+            <td rowspan=5 align="center" valign="top"><b><i>online?
+                        <br>email
+                        <br>password
+                        <br>loggingIn?
+                        <br>canLogin?</i></b>
+                        </td>
+            <td align="center">AttemptLogin</td>
+        </tr>
+        <tr>
+            <td align="center">EmailInputChanged</td>
+            <td align="center">ShowRestorePasswordScreen</td>
+        </tr>
+        <tr>
+            <td align="center">PasswordInputChanged</td>
+            <td align="center"></td>
+        </tr>
+        <tr>
+            <td align="center">LoginButtonClicked</td>
+            <td align="center"></td>
+        </tr>
+        <tr>
+            <td align="center">ForgotPasswordClicked</td>
+            <td align="center"></td>
+        </tr>
+    </tbody>
+</table>
+
+<h3 id="define-effects-feedback-events">Define effects feedback events<a class="headerlink" href="#define-effects-feedback-events" title="Permanent link">&para;</a></h3>
+<p>Once you have the model structure that will allow you to make decisions about dispatching effects in
+place, you can move on to defining the third kind of events: effect feedback (note that not all
+effects must necessarily generate feedback events). In our example, we see that of the two effects
+we have defined, only the AttemptLogin effect could generate feedback events: LoginSuccessful and
+LoginFailed.</p>
+<table>
+    <thead>
+        <tr>
+            <th align="center">Events</th>
+            <th align="center">Model</th>
+            <th align="center">Effects</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td align="center">InternetStateChanged</td>
+            <td rowspan=7 align="center" valign="top">online?
+                        <br>email
+                        <br>password
+                        <br>loggingIn?
+                        <br>canLogin?
+                        </td>
+            <td align="center">AttemptLogin</td>
+        </tr>
+        <tr>
+            <td align="center">EmailInputChanged</td>
+            <td align="center">ShowRestorePasswordScreen</td>
+        </tr>
+        <tr>
+            <td align="center">PasswordInputChanged</td>
+            <td align="center"></td>
+        </tr>
+        <tr>
+            <td align="center">LoginButtonClicked</td>
+            <td align="center"></td>
+        </tr>
+        <tr>
+            <td align="center">ForgotPasswordClicked</td>
+            <td align="center"></td>
+        </tr>
+        <tr>
+            <td align="center"><b><i>LoginSuccessful</i></b></td>
+            <td align="center"></td>
+        </tr>
+        <tr>
+            <td align="center"><b><i>LoginFailed</i></b></td>
+            <td align="center"></td>
+        </tr>
+    </tbody>
+</table>
+
+<p>Each time you add events, you should go back to the Effect definition step until you’ve defined all
+events and effects for your domain and expanded your model to contain the required information for
+processing all events and dispatching all effects. In our example, we see that we can add a couple
+of more effects to respond to the LoginSuccessful and LoginFailed events.</p>
+<table>
+    <thead>
+        <tr>
+            <th align="center">Events</th>
+            <th align="center">Model</th>
+            <th align="center">Effects</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td align="center">InternetStateChanged</td>
+            <td rowspan=7 align="center" valign="top">online?
+                        <br>email
+                        <br>password
+                        <br>loggingIn?
+                        <br>canLogin?
+                        </td>
+            <td align="center">AttemptLogin</td>
+        </tr>
+        <tr>
+            <td align="center">EmailInputChanged</td>
+            <td align="center">ShowRestorePasswordScreen</td>
+        </tr>
+        <tr>
+            <td align="center">PasswordInputChanged</td>
+            <td align="center"><b><i>NavigateToHome</i></b></td>
+        </tr>
+        <tr>
+            <td align="center">LoginButtonClicked</td>
+            <td align="center"><b><i>ShowErrorToast</i></b></td>
+        </tr>
+        <tr>
+            <td align="center">ForgotPasswordClicked</td>
+            <td align="center"></td>
+        </tr>
+        <tr>
+            <td align="center">LoginSuccessful</td>
+            <td align="center"></td>
+        </tr>
+        <tr>
+            <td align="center">LoginFailed</td>
+            <td align="center"></td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="step-2-describe-it">Step 2: Describe it<a class="headerlink" href="#step-2-describe-it" title="Permanent link">&para;</a></h2>
+<p>Now that you have established all the necessary details that are required to write your behavior
+specification, you can start building your Update function.</p>
+<p>Building an Update function comprises the following steps:</p>
+<ol>
+<li>Think of a scenario that your tests need to cover, eg.</li>
+</ol>
+<blockquote>
+<p><strong>given</strong> that the user is offline</p>
+<p><strong>when</strong> the login button is clicked</p>
+<p><strong>then</strong> show an error message</p>
+</blockquote>
+<ol>
+<li>Create/modify your Event, Effect, and Model types</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@DataEnum</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">interface</span> <span class="nc">Event_dataenum</span> <span class="p">{</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="c1">// ...</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">dataenum_case</span> <span class="nf">LoginButtonClicked</span><span class="p">();</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="c1">// ...</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nd">@DataEnum</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="kd">interface</span> <span class="nc">Effect_dataenum</span> <span class="p">{</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="c1">// ...</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">dataenum_case</span> <span class="nf">ShowErrorToast</span><span class="p">(</span><span class="n">String</span> <span class="n">message</span><span class="p">);</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="c1">// ...</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">}</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="nd">@AutoValue</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="kd">static</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">Model</span> <span class="p">{</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="c1">// ...</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    <span class="kd">public</span> <span class="kd">abstract</span> <span class="kt">boolean</span> <span class="nf">connected</span><span class="p">();</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    <span class="c1">// ...</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="p">}</span>
+</code></pre></div>
+<ol>
+<li>Write tests for the scenario</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">spec</span><span class="p">.</span><span class="na">given</span><span class="p">(</span><span class="n">Model</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>        <span class="p">.</span><span class="na">connected</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        <span class="p">.</span><span class="na">build</span><span class="p">())</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        <span class="p">.</span><span class="na">when</span><span class="p">(</span><span class="n">Event</span><span class="p">.</span><span class="na">loginButtonClicked</span><span class="p">())</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="p">.</span><span class="na">then</span><span class="p">(</span><span class="n">assertThatNext</span><span class="p">(</span><span class="n">hasEffect</span><span class="p">(</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="n">Effect</span><span class="p">.</span><span class="na">showErrorToast</span><span class="p">(</span><span class="s">&quot;must be online to log in&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        <span class="p">)));</span>
+</code></pre></div>
+<ol>
+<li>Change the code in your Update function to make the new tests pass</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// ...</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">if</span><span class="p">(</span><span class="n">event</span><span class="p">.</span><span class="na">isLoginButtonClicked</span><span class="p">()</span><span class="o">&amp;&amp;!</span><span class="n">model</span><span class="p">.</span><span class="na">connected</span><span class="p">()){</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="n">effects</span><span class="p">(</span><span class="n">Effect</span><span class="p">.</span><span class="na">showErrorToast</span><span class="p">(</span><span class="s">&quot;must be online to log in&quot;</span><span class="p">)));</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="p">}</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1">// ...</span>
+</code></pre></div>
+<ol>
+<li>
+<p>Repeat steps 1 through 4 until you’ve exhausted all scenarios</p>
+</li>
+<li>
+<p>Think of some unlikely scenarios and write some more tests!</p>
+</li>
+</ol>
+<p>This step is really about solidifying what you’ve captured in the first step. It’ll also help you
+find out if you’ve missed certain behaviors or if some behaviors conflict with others. It also helps
+you validate the completeness of your model. Once you’re done writing your tests and Update
+function, you would have described in detail how your program will behave and answered all unknown
+questions early on. This step usually doesn’t take more than a day since it is relatively easy to
+write Update functions thanks to their pure nature.</p>
+<h2 id="step-3-plan-it">Step 3: Plan it<a class="headerlink" href="#step-3-plan-it" title="Permanent link">&para;</a></h2>
+<p>Now that you’ve defined your Events, Effects, Model and Update, you can use this information to
+derive tasks that describe what work needs to be done for your project. You’ll notice that most of
+the things that you need to build will produce one or more of the Events that you’ve defined. We
+recommend that you cross-check your list of events and determine what components you need to build
+to produce these events. The idea is to define tasks for building the blocks that interact with your
+Update function.</p>
+<h3 id="event-sources">Event sources<a class="headerlink" href="#event-sources" title="Permanent link">&para;</a></h3>
+<p>Start with your EventSources which provide your external events. In our example, we had only one
+event that is categorized as external: InternetStateChanged. So we know that we’ll have to add a
+task for building that EventSource.</p>
+<h3 id="effects-and-their-feedback-events">Effects and their feedback events<a class="headerlink" href="#effects-and-their-feedback-events" title="Permanent link">&para;</a></h3>
+<p>Once you’ve created tasks for the external event sources, move on to Effects. We’ve found that it is
+best to create an effect handler per effect. Create a task for each of your effects and associate
+their feedback events with that task.</p>
+<h3 id="user-interaction-events">User interaction events<a class="headerlink" href="#user-interaction-events" title="Permanent link">&para;</a></h3>
+<p>This is where you start breaking up your UI into tasks. If your UI is simple, you could potentially
+have only one task for building it. However, for complex UIs we recommend dividing them into smaller
+pieces and associating events with each of these pieces.</p>
+<p>Now that you’ve defined your different tasks, you can group them together to create user stories
+that you can add to your project tracking tool. This process works whether you use Scrum, Kanban or
+any other agile (or even waterfall) process framework since it produces a list of the work that
+needs to happen, but it lets you decide how to manage the building process the way you like.
+Furthermore, you can use the tasks that you’ve made to identify dependencies you may have on other
+work that needs to be dealt with before you start.</p>
+<h2 id="step-4-build-it">Step 4: Build it<a class="headerlink" href="#step-4-build-it" title="Permanent link">&para;</a></h2>
+<p>Time to write some more code! Check out
+the <a href="../getting-started/creating-a-loop/">getting started guide</a> for examples on how to build
+effect handlers and connect your UI to Mobius.</p>
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../objectives/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Objectives" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Objectives
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../faq/" class="md-footer__link md-footer__link--next" aria-label="Next: FAQ" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              FAQ
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.bd0b6b67.min.js"}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.467223ff.min.js"></script>
+      
+    
+  </body>
+</html>
