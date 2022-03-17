@@ -1,4 +1,4 @@
-![Mobius Logo](https://github.com/spotify/mobius/wiki/mobius-logo.png)
+![Mobius Logo](/docs/assets/images/mobius-logo.png)
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.spotify.mobius/mobius-core.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.spotify.mobius%22)
 [![Build Status](https://travis-ci.org/spotify/mobius.svg?branch=master)](https://travis-ci.org/spotify/mobius)
@@ -8,7 +8,7 @@
 
 Mobius is a functional reactive framework for managing state evolution and side-effects, with add-ons for connecting to Android UIs and RxJava Observables. It emphasizes separation of concerns, testability, and isolating stateful parts of the code.
 
-To learn more, see the [wiki](https://github.com/spotify/mobius/wiki) for a user guide. To see Mobius in action, check out the [sample TODO](https://github.com/spotify/mobius-android-sample) app based on the app from [Android Architecture Blueprints](https://github.com/googlesamples/android-architecture). You can also
+To learn more, visit the [website][mkdocs] for a user guide. To see Mobius in action, check out the [sample TODO](https://github.com/spotify/mobius-android-sample) app based on the app from [Android Architecture Blueprints](https://github.com/googlesamples/android-architecture). You can also
 watch a [talk from Android @Scale introducing Mobius](https://www.facebook.com/atscaleevents/videos/2025571921049235/).
 
 ## Status
@@ -33,6 +33,21 @@ implementation 'com.spotify.mobius:mobius-rx3:LATEST_RELEASE'      // only for R
 implementation 'com.spotify.mobius:mobius-android:LATEST_RELEASE'  // only for Android support
 implementation 'com.spotify.mobius:mobius-extras:LATEST_RELEASE'   // utilities for common patterns
 ```
+
+### mobius-core [![Javadocs](http://www.javadoc.io/badge/com.spotify.mobius/mobius-core.svg?color=blue)](http://www.javadoc.io/doc/com.spotify.mobius/mobius-core)
+This is the core of Mobius, which all other modules depend on. It is a pure Java library that is completely self-contained. This is the only module that you need when using Mobius, because the others are optional extensions to the core.
+
+### mobius-test [![Javadocs](http://www.javadoc.io/badge/com.spotify.mobius/mobius-test.svg?color=blue)](http://www.javadoc.io/doc/com.spotify.mobius/mobius-test)
+The test module contains utilities that help you write tests for Mobius applications. It should only be used as a test dependency.
+
+### mobius-rx [![Javadocs](http://www.javadoc.io/badge/com.spotify.mobius/mobius-rx.svg?color=blue)](http://www.javadoc.io/doc/com.spotify.mobius/mobius-rx) / mobius-rx2  [![Javadocs](http://www.javadoc.io/badge/com.spotify.mobius/mobius-rx2.svg?color=blue)](http://www.javadoc.io/doc/com.spotify.mobius/mobius-rx2) / mobius-rx3 [![Javadocs](http://www.javadoc.io/badge/com.spotify.mobius/mobius-rx3.svg?color=blue)](http://www.javadoc.io/doc/com.spotify.mobius/mobius-rx3)
+The rx modules contain extensions for RxJava. You should use one of them in your Mobius applications since they simplify creating effect handlers and event sources. Both RxJava modules share the same API, the only difference is that one is built for RxJava 1.x and the other for RxJava 2.x.
+
+### mobius-android [![Javadocs](http://www.javadoc.io/badge/com.spotify.mobius/mobius-android.svg?color=blue)](http://www.javadoc.io/doc/com.spotify.mobius/mobius-android)
+The android module primarily contains classes for hooking up a MobiusLoop to Android.
+
+### mobius-extras [![Javadocs](http://www.javadoc.io/badge/com.spotify.mobius/mobius-extras.svg?color=blue)](http://www.javadoc.io/doc/com.spotify.mobius/mobius-extras)
+The extras module contains utilities and classes that help reducing boilerplate for some more advanced usage patterns (for example, nested update functions).
 
 ## Mobius in Action - Building a Counter
 
@@ -124,7 +139,7 @@ public static void main(String[] args) {
 }
 ```
 
-This covers the fundamentals of Mobius. To learn more, head on over to our [wiki](/../../wiki).
+This covers the fundamentals of Mobius. To learn more, head on over to our [website][mkdocs].
 
 ## Building
 
@@ -140,4 +155,5 @@ We're using Google's auto-formatter to format the code. The build pipeline is se
 
 This project adheres to the [Open Code of Conduct][code-of-conduct]. By participating, you are expected to honor this code.
 
+[mkdocs]: https://spotify.github.io/mobius/
 [code-of-conduct]: https://github.com/spotify/code-of-conduct/blob/master/code-of-conduct.md
