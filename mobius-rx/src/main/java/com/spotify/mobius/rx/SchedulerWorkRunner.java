@@ -20,6 +20,9 @@
 package com.spotify.mobius.rx;
 
 import com.spotify.mobius.runners.WorkRunner;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import javax.annotation.Nonnull;
 import rx.Scheduler;
 import rx.functions.Action0;
 
@@ -27,6 +30,7 @@ import rx.functions.Action0;
 public class SchedulerWorkRunner implements WorkRunner {
 
   private final Scheduler.Worker worker;
+  @Nonnull private final Lock lock = new ReentrantLock();
 
   public SchedulerWorkRunner(Scheduler scheduler) {
     this.worker = scheduler.createWorker();
@@ -34,17 +38,27 @@ public class SchedulerWorkRunner implements WorkRunner {
 
   @Override
   public void post(final Runnable runnable) {
-    worker.schedule(
-        new Action0() {
-          @Override
-          public void call() {
-            runnable.run();
-          }
-        });
+    lock.lock();
+    try {
+      worker.schedule(
+          new Action0() {
+            @Override
+            public void call() {
+              runnable.run();
+            }
+          });
+    } finally {
+      lock.unlock();
+    }
   }
 
   @Override
   public void dispose() {
-    worker.unsubscribe();
+    lock.lock();
+    try {
+      worker.unsubscribe();
+    } finally {
+      lock.unlock();
+    }
   }
 }

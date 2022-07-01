@@ -21,15 +21,14 @@ package com.spotify.mobius.runners;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -101,21 +100,31 @@ public class ExecutorServiceWorkRunnerTest {
   }
 
   @Test
-  public void tasksShouldBeRejectedAfterDispose() throws Exception {
+  public void tasksShouldBeSkippedAfterDispose() throws Exception {
     ExecutorService service = Executors.newSingleThreadExecutor();
+    final List<Integer> output = new CopyOnWriteArrayList<>();
 
     underTest = new ExecutorServiceWorkRunner(service);
-    underTest.dispose();
+    underTest.post(
+        new Runnable() {
+          @Override
+          public void run() {
+            output.add(1);
+            output.add(2);
+          }
+        });
 
-    thrown.expect(RejectedExecutionException.class);
+    underTest.dispose();
 
     underTest.post(
         new Runnable() {
           @Override
           public void run() {
-            System.err.println("ERROR: this shouldn't run/be printed!");
+            output.add(3);
+            output.add(4);
           }
         });
+    assertThat(output, equalTo(asList(1, 2)));
   }
 
   @Test

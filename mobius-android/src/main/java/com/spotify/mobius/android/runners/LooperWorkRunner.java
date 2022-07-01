@@ -22,11 +22,15 @@ package com.spotify.mobius.android.runners;
 import android.os.Handler;
 import android.os.Looper;
 import com.spotify.mobius.runners.WorkRunner;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import javax.annotation.Nonnull;
 
 /** A work runner that uses a {@link Looper} to run work. */
 public class LooperWorkRunner implements WorkRunner {
   private final Handler handler;
-  private volatile boolean disposed;
+  private boolean disposed;
+  @Nonnull private final Lock lock = new ReentrantLock();
 
   LooperWorkRunner(Looper looper) {
     this.handler = new Handler(looper);
@@ -35,8 +39,13 @@ public class LooperWorkRunner implements WorkRunner {
   /** Will cancel all Runnables posted to this looper. */
   @Override
   public void dispose() {
-    handler.removeCallbacksAndMessages(null);
-    disposed = true;
+    lock.lock();
+    try {
+      handler.removeCallbacksAndMessages(null);
+      disposed = true;
+    } finally {
+      lock.unlock();
+    }
   }
 
   /**
@@ -46,8 +55,13 @@ public class LooperWorkRunner implements WorkRunner {
    */
   @Override
   public void post(Runnable runnable) {
-    if (disposed) return;
-    handler.post(runnable);
+    lock.lock();
+    try {
+      if (disposed) return;
+      handler.post(runnable);
+    } finally {
+      lock.unlock();
+    }
   }
 
   /**

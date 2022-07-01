@@ -45,6 +45,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -628,23 +631,36 @@ public class MobiusLoopControllerTest {
   private static class KnownThreadWorkRunner implements WorkRunner {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private volatile Thread workerThread = null;
+    @Nonnull private final Lock lock = new ReentrantLock();
 
     @Override
     @SuppressWarnings("FutureReturnValueIgnored")
     public void post(final Runnable runnable) {
-      executorService.submit(
-          new Runnable() {
-            @Override
-            public void run() {
-              workerThread = Thread.currentThread();
-              runnable.run();
-            }
-          });
+      lock.lock();
+      try {
+        if (!executorService.isTerminated() && !executorService.isShutdown()) {
+          executorService.submit(
+              new Runnable() {
+                @Override
+                public void run() {
+                  workerThread = Thread.currentThread();
+                  runnable.run();
+                }
+              });
+        }
+      } finally {
+        lock.unlock();
+      }
     }
 
     @Override
     public void dispose() {
-      executorService.shutdown();
+      lock.lock();
+      try {
+        executorService.shutdown();
+      } finally {
+        lock.unlock();
+      }
     }
   }
 }

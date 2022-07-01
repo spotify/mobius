@@ -28,6 +28,9 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.util.concurrent.SettableFuture;
 import com.spotify.mobius.disposables.Disposable;
 import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.functions.Producer;
+import com.spotify.mobius.runners.WorkRunner;
+import com.spotify.mobius.runners.WorkRunners;
 import com.spotify.mobius.test.RecordingConsumer;
 import com.spotify.mobius.test.RecordingModelObserver;
 import com.spotify.mobius.test.TestWorkRunner;
@@ -37,6 +40,7 @@ import com.spotify.mobius.testdomain.TestEffect;
 import com.spotify.mobius.testdomain.TestEvent;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
@@ -273,6 +277,50 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
       Thread.sleep(random.nextInt(30));
 
       mobiusLoop.dispose();
+    }
+  }
+
+  @Test
+  public void shouldSafelyDisposeWhenDisposeAndEventsAreOnDifferentThreads() throws Exception {
+    final Random random = new Random();
+    final MobiusLoop.Builder<String, TestEvent, TestEffect> builder =
+        Mobius.loop(update, effectHandler)
+            .eventRunner(
+                new Producer<>() {
+                  @Nonnull
+                  @Override
+                  public WorkRunner get() {
+                    return WorkRunners.from(Executors.newFixedThreadPool(4));
+                  }
+                });
+    new Thread(
+        new Runnable() {
+          @Override
+          public void run() {
+            for (int i = 0; i < 100; i++) {
+              mobiusLoop = builder.startFrom("foo");
+              try {
+                Thread.sleep(random.nextInt(10));
+              } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+              }
+              mobiusLoop.dispose();
+            }
+          }
+        })
+        .start();
+
+    for (int i = 0; i < 1000; i++) {
+      try {
+        mobiusLoop.dispatchEvent(new TestEvent("bar"));
+        Thread.sleep(1);
+      } catch (IllegalStateException e) {
+        if (e.getMessage() != null) {
+          assertFalse(e.getMessage().startsWith("Exception processing event"));
+        }
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
