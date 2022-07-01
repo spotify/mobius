@@ -293,7 +293,7 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
                     return WorkRunners.from(Executors.newFixedThreadPool(4));
                   }
                 });
-    new Thread(
+    final Thread thread = new Thread(
         new Runnable() {
           @Override
           public void run() {
@@ -307,8 +307,8 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
               mobiusLoop.dispose();
             }
           }
-        })
-        .start();
+        });
+    thread.start();
 
     for (int i = 0; i < 1000; i++) {
       try {
@@ -322,6 +322,8 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
         throw new RuntimeException(e);
       }
     }
+
+    thread.join();
   }
 
   static void releaseLockAfterDelay(Semaphore lock, int delay) {
