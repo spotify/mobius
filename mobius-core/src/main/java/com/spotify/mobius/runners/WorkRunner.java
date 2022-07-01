@@ -23,5 +23,9 @@ import com.spotify.mobius.disposables.Disposable;
 
 /** Interface for posting runnables to be executed using different scheduling mechanisms. */
 public interface WorkRunner extends Disposable {
+  /**
+   * Must discard any new {@link Runnable} immediately after dispose method of {@link Disposable} is
+   * called. Not doing this may result in undesired side effects, crashes, race conditions etc.
+   */
   void post(Runnable runnable);
 }

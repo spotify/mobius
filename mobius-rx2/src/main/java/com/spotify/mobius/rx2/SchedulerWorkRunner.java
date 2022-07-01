@@ -23,10 +23,14 @@ import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 import com.spotify.mobius.runners.WorkRunner;
 import io.reactivex.Scheduler;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import javax.annotation.Nonnull;
 
 public class SchedulerWorkRunner implements WorkRunner {
 
   private final Scheduler.Worker worker;
+  @Nonnull private final Lock lock = new ReentrantLock();
 
   public SchedulerWorkRunner(Scheduler scheduler) {
     this.worker = checkNotNull(scheduler).createWorker();
@@ -34,11 +38,21 @@ public class SchedulerWorkRunner implements WorkRunner {
 
   @Override
   public void post(final Runnable runnable) {
-    worker.schedule(runnable);
+    lock.lock();
+    try {
+      worker.schedule(runnable);
+    } finally {
+      lock.unlock();
+    }
   }
 
   @Override
   public void dispose() {
-    worker.dispose();
+    lock.lock();
+    try {
+      worker.dispose();
+    } finally {
+      lock.unlock();
+    }
   }
 }

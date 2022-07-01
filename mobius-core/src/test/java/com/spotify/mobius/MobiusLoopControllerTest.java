@@ -19,6 +19,7 @@
  */
 package com.spotify.mobius;
 
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.verify;
 import com.spotify.mobius.CapturingLogger.AfterUpdateArgs;
 import com.spotify.mobius.CapturingLogger.BeforeUpdateArgs;
 import com.spotify.mobius.functions.Consumer;
+import com.spotify.mobius.runners.ExecutorServiceWorkRunner;
 import com.spotify.mobius.runners.ImmediateWorkRunner;
 import com.spotify.mobius.runners.WorkRunner;
 import com.spotify.mobius.runners.WorkRunners;
@@ -45,6 +47,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -626,25 +631,22 @@ public class MobiusLoopControllerTest {
   }
 
   private static class KnownThreadWorkRunner implements WorkRunner {
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final ExecutorServiceWorkRunner delegate =
+        new ExecutorServiceWorkRunner(newSingleThreadExecutor());
     private volatile Thread workerThread = null;
 
     @Override
     @SuppressWarnings("FutureReturnValueIgnored")
     public void post(final Runnable runnable) {
-      executorService.submit(
-          new Runnable() {
-            @Override
-            public void run() {
-              workerThread = Thread.currentThread();
-              runnable.run();
-            }
-          });
+      delegate.post(() -> {
+        workerThread = Thread.currentThread();
+        runnable.run();
+      });
     }
 
     @Override
     public void dispose() {
-      executorService.shutdown();
+      delegate.dispose();
     }
   }
 }

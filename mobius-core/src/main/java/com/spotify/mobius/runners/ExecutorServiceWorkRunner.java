@@ -22,6 +22,8 @@ package com.spotify.mobius.runners;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ public class ExecutorServiceWorkRunner implements WorkRunner {
   private static final Logger LOGGER = LoggerFactory.getLogger(ExecutorServiceWorkRunner.class);
 
   @Nonnull private final ExecutorService service;
+  @Nonnull private final Lock lock = new ReentrantLock();
 
   public ExecutorServiceWorkRunner(ExecutorService service) {
     this.service = service;
@@ -41,17 +44,28 @@ public class ExecutorServiceWorkRunner implements WorkRunner {
   @SuppressWarnings("FutureReturnValueIgnored")
   @Override
   public void post(Runnable runnable) {
-    service.submit(runnable);
+    lock.lock();
+    try {
+      if (!service.isTerminated() && !service.isShutdown()) {
+        service.submit(runnable);
+      }
+    } finally {
+      lock.unlock();
+    }
   }
 
   @Override
   public void dispose() {
     try {
-      List<Runnable> runnables = service.shutdownNow();
-
-      if (!runnables.isEmpty()) {
-        LOGGER.warn(
-            "Disposing ExecutorServiceWorkRunner with {} outstanding tasks.", runnables.size());
+      lock.lock();
+      try {
+        List<Runnable> runnables = service.shutdownNow();
+        if (!runnables.isEmpty()) {
+          LOGGER.warn(
+              "Disposing ExecutorServiceWorkRunner with {} outstanding tasks.", runnables.size());
+        }
+      } finally {
+        lock.unlock();
       }
 
       if (!service.awaitTermination(100, TimeUnit.MILLISECONDS)) {
