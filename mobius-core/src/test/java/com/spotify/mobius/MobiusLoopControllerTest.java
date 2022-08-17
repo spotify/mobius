@@ -41,15 +41,10 @@ import com.spotify.mobius.runners.ExecutorServiceWorkRunner;
 import com.spotify.mobius.runners.ImmediateWorkRunner;
 import com.spotify.mobius.runners.WorkRunner;
 import com.spotify.mobius.runners.WorkRunners;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -638,10 +633,11 @@ public class MobiusLoopControllerTest {
     @Override
     @SuppressWarnings("FutureReturnValueIgnored")
     public void post(final Runnable runnable) {
-      delegate.post(() -> {
-        workerThread = Thread.currentThread();
-        runnable.run();
-      });
+      delegate.post(
+          () -> {
+            workerThread = Thread.currentThread();
+            runnable.run();
+          });
     }
 
     @Override

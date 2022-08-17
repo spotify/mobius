@@ -293,21 +293,22 @@ public class MobiusLoopDisposalBehavior extends MobiusLoopTest {
                     return WorkRunners.from(Executors.newFixedThreadPool(4));
                   }
                 });
-    final Thread thread = new Thread(
-        new Runnable() {
-          @Override
-          public void run() {
-            for (int i = 0; i < 100; i++) {
-              mobiusLoop = builder.startFrom("foo");
-              try {
-                Thread.sleep(random.nextInt(10));
-              } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+    final Thread thread =
+        new Thread(
+            new Runnable() {
+              @Override
+              public void run() {
+                for (int i = 0; i < 100; i++) {
+                  mobiusLoop = builder.startFrom("foo");
+                  try {
+                    Thread.sleep(random.nextInt(10));
+                  } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                  }
+                  mobiusLoop.dispose();
+                }
               }
-              mobiusLoop.dispose();
-            }
-          }
-        });
+            });
     thread.start();
 
     for (int i = 0; i < 1000; i++) {
