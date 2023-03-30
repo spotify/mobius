@@ -21,32 +21,61 @@ package com.spotify.mobius;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Provides a connection that queues up messages until a delegate to consume them is available.
- * Useful for setting up circular dependencies safely. All methods are synchronized for ease of
- * implementation.
+ * Useful for setting up circular dependencies safely.
  */
 class QueuingConnection<I> implements Connection<I> {
 
-  private final List<I> queue = new ArrayList<>();
+  // The lifecycle has the following stages:
+  // - initial, queuing incoming messages
+  // - active, forward to delegate
+  // - disposed, ignore incoming items.
+  //
+  // The algorithm runs a risk of forwarding events to the delegate out-of-order in the following
+  // situation:
+  // 1. The queue has items A and B in it.
+  // 2. setDelegate is called, and changes the state to ACTIVE
+  // 3. before the queue has been fully drained, accept() is invoked with item C.
+  // 4. C may be processed before A and/or B.
+  //
+  // This is a bit surprising, but in keeping with Mobius's lack of ordering guarantees.
 
-  private Connection<I> delegate;
-  private boolean disposed = false;
+  private enum Lifecycle {
+    QUEUING,
+    ACTIVE,
+    DISPOSED
+  }
 
-  synchronized void setDelegate(Connection<I> delegate) {
-    if (this.delegate != null) {
-      throw new IllegalStateException("Attempt at setting delegate twice");
-    }
+  private final AtomicReference<Lifecycle> state = new AtomicReference<>(Lifecycle.QUEUING);
+  private final List<I> queue = new CopyOnWriteArrayList<>();
 
-    this.delegate = checkNotNull(delegate);
+  // set only in a single place, guarded by the lifecycle state.
+  private final AtomicReference<Connection<I>> delegate = new AtomicReference<>();
 
-    if (disposed) {
+  void setDelegate(Connection<I> delegate) {
+    if (state.get() == Lifecycle.DISPOSED) {
       return;
     }
 
+    if (!this.delegate.compareAndSet(null, checkNotNull(delegate))) {
+      throw new IllegalStateException("Attempt at setting delegate twice");
+    }
+
+    if (!state.compareAndSet(Lifecycle.QUEUING, Lifecycle.ACTIVE)) {
+      // This set fails if we've been disposed - not going to be common, but let's not forward items
+      // to the delegate in that case. And let's make sure that the delegate is disposed,
+      // since there's a race between reading the delegate in dispose() and setting it here.
+      // Calling dispose twice is safe as per its contract.
+      delegate.dispose();
+      return;
+    }
+
+    // This may fail if we get disposed while we're draining the queue. That should be acceptable.
     for (I item : queue) {
       delegate.accept(item);
     }
@@ -55,21 +84,27 @@ class QueuingConnection<I> implements Connection<I> {
   }
 
   @Override
-  public synchronized void accept(I value) {
-    if (delegate != null) {
-      delegate.accept(value);
-      return;
+  public void accept(I value) {
+    switch (state.get()) {
+      case QUEUING:
+        queue.add(value);
+        break;
+      case ACTIVE:
+        delegate.get().accept(value);
+        break;
+      case DISPOSED:
+        // ignore incoming items when disposed
     }
-
-    queue.add(value);
   }
 
   @Override
-  public synchronized void dispose() {
-    disposed = true;
+  public void dispose() {
+    state.set(Lifecycle.DISPOSED);
 
-    if (delegate != null) {
-      delegate.dispose();
+    Connection<I> toDispose = delegate.get();
+
+    if (toDispose != null) {
+      toDispose.dispose();
     }
   }
 }
