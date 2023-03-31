@@ -23,8 +23,8 @@ import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -55,7 +55,7 @@ class QueuingConnection<I> implements Connection<I> {
 
   private final AtomicReference<Lifecycle> state = new AtomicReference<>(Lifecycle.QUEUING);
 
-  private final BlockingQueue<I> queue = new ArrayBlockingQueue<>(50);
+  private final BlockingQueue<I> queue = new LinkedBlockingQueue<>();
   private final AtomicReference<Connection<I>> delegate = new AtomicReference<>();
 
   void setDelegate(Connection<I> delegate) {
@@ -118,10 +118,21 @@ class QueuingConnection<I> implements Connection<I> {
   public void dispose() {
     state.set(Lifecycle.DISPOSED);
 
-    Connection<I> toDispose = delegate.get();
+    // clear the delegate field to make life easier for the GC.
+    @SuppressWarnings("unchecked")
+    Connection<I> toDispose = delegate.getAndSet((Connection<I>) NOOP_CONNECTION);
 
     if (toDispose != null) {
       toDispose.dispose();
     }
   }
+
+  private static final Connection<?> NOOP_CONNECTION =
+      new Connection<Object>() {
+        @Override
+        public void accept(Object value) {}
+
+        @Override
+        public void dispose() {}
+      };
 }
