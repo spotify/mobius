@@ -31,45 +31,36 @@ import java.util.List;
  */
 class QueuingConnection<I> implements Connection<I> {
 
-  private final List<I> queue = new ArrayList<>();
+  private CompletableFuture<Connection<I>> delegate = new CompletableFuture<>();
 
-  private Connection<I> delegate;
-  private boolean disposed = false;
-
-  synchronized void setDelegate(Connection<I> delegate) {
-    if (this.delegate != null) {
+  void setDelegate(Connection<I> delegate) {
+    final CompletableFuture<Connection<I>> thisDelegate = this.delegate;
+    if (thisDelegate == null) {
+      return;
+    }
+    thisDelegate.complete(checkNotNull(delegate));
+    if (thisDelegate.getNow() != delegate) {
       throw new IllegalStateException("Attempt at setting delegate twice");
     }
-
-    this.delegate = checkNotNull(delegate);
-
-    if (disposed) {
-      return;
-    }
-
-    for (I item : queue) {
-      delegate.accept(item);
-    }
-
-    queue.clear();
   }
 
   @Override
-  public synchronized void accept(I value) {
-    if (delegate != null) {
-      delegate.accept(value);
+  public void accept(I value) {
+    final CompletableFuture<Connection<I>> thisDelegate = this.delegate;
+    if (thisDelegate == null) {
       return;
     }
-
-    queue.add(value);
+    thisDelegate.thenAccept(d -> d.accept(value));
   }
 
   @Override
-  public synchronized void dispose() {
-    disposed = true;
-
-    if (delegate != null) {
-      delegate.dispose();
+  public void dispose() {
+    final CompletableFuture<Connection<I>> thisDelegate = this.delegate;
+    if (thisDelegate == null) {
+      return;
     }
+    thisDelegate.dispose();
+    delegate = null;
   }
 }
+
