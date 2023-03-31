@@ -21,8 +21,10 @@ package com.spotify.mobius;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -52,9 +54,8 @@ class QueuingConnection<I> implements Connection<I> {
   }
 
   private final AtomicReference<Lifecycle> state = new AtomicReference<>(Lifecycle.QUEUING);
-  private final List<I> queue = new CopyOnWriteArrayList<>();
 
-  // set only in a single place, guarded by the lifecycle state.
+  private final BlockingQueue<I> queue = new ArrayBlockingQueue<>(50);
   private final AtomicReference<Connection<I>> delegate = new AtomicReference<>();
 
   void setDelegate(Connection<I> delegate) {
@@ -75,19 +76,35 @@ class QueuingConnection<I> implements Connection<I> {
       return;
     }
 
-    // This may fail if we get disposed while we're draining the queue. That should be acceptable.
-    for (I item : queue) {
-      delegate.accept(item);
-    }
+    // This may fail if we get disposed while we're draining the queue. There's also a race between
+    // this draining operation and new items arriving via the accept() method. Both should be
+    // acceptable - the first, because the risk is small, and the caller will be in charge of the
+    // lifecycle (disposing/setting the delegate), and the latter because of Mobius's lack of
+    // ordering guarantees.
+    drainQueueIfActive();
+  }
 
-    queue.clear();
+  private void drainQueueIfActive() {
+    if (state.get() == Lifecycle.ACTIVE) {
+      List<I> items = new ArrayList<>();
+
+      queue.drainTo(items);
+
+      for (I item : items) {
+        delegate.get().accept(item);
+      }
+    }
   }
 
   @Override
   public void accept(I value) {
     switch (state.get()) {
       case QUEUING:
+        // here, setDelegate may change state to Active and drain the queue,
         queue.add(value);
+        // meaning that we'll need to check if the queue needs to be drained now that we've added
+        // an item.
+        drainQueueIfActive();
         break;
       case ACTIVE:
         delegate.get().accept(value);
