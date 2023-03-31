@@ -19,59 +19,41 @@
  */
 package com.spotify.mobius;
 
-import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Provides a connection that queues up messages until a delegate to consume them is available.
- * Useful for setting up circular dependencies safely. All methods are synchronized for ease of
- * implementation.
+ * Useful for setting up circular dependencies safely. Methods are non-blocking.
  */
 class QueuingConnection<I> implements Connection<I> {
+  private final QueuingDelegate queuingDelegate = new QueuingDelegate();
 
-  private final Connection<I> noop = new Connection<I>() {
-    @Override
-    void accept(I value) {}
+  /**
+   * Tracks the state of this connection; there are three:
+   *
+   * <p><nl>
+   * <li>Initial, when the delegate queues all incoming events. In this state, the delegate is
+   *     exactly the {@link #queuingDelegate} instance.
+   * <li>Active, when the delegate is the 'real' connection to send events to.
+   * <li>Disposed, when the delegate is the {@link #NOOP} instance, which silently discards all
+   *     events. </nl>
+   */
+  private final AtomicReference<Connection<I>> delegate = new AtomicReference<>(queuingDelegate);
 
-    @Override
-    void dispose() {}
-  };
-
-  private final Connection<I> queued = new Connection<I>() {
-    final BlockingQueue<I> queue = new ArrayBlockingQueue<>(50);
-    
-    @Override
-    void accept(I value) {
-      queue.add(value);
-      pumpQueue();
+  void setDelegate(Connection<I> active) {
+    if (delegate.get() == NOOP) {
+      return;
     }
 
-    private void pumpQueue() {
-      final Connection<I> thisDelegate = QueuingConnection.this.delegate.get();
-      if (thisDelegate != this) {
-        while (true) {
-          I value = queue.poll();
-          if (value == null) {
-            return;
-          }
-          thisDelegate.accept(value);
-        }
-      }
+    if (!delegate.compareAndSet(queuingDelegate, active)) {
+      throw new IllegalStateException("Attempt at setting the active delegate twice");
     }
-    
-    @Override
-    void dispose() {}
-  };
 
-  private final AtomicReference<Connection<I>> delegate = new AtomicReference<>(queued);
-
-  void setDelegate(Connection<I> delegate) {
-    if (!this.delegate.compareAndSet(queued, delegate)) {
-      throw new IllegalStateException("Attempt at setting delegate twice");
-    }
-    queued.pumpQueue();
+    // now that we know we have an active connection to send messages to, drain the queue of any
+    // messages.
+    queuingDelegate.drainQueueIfActive();
   }
 
   @Override
@@ -81,8 +63,56 @@ class QueuingConnection<I> implements Connection<I> {
 
   @Override
   public void dispose() {
-    final Connection<I> prev = delegate.getAndSet(noop);
+    @SuppressWarnings("unchecked")
+    final Connection<I> prev = delegate.getAndSet((Connection<I>) NOOP);
+
     prev.dispose();
   }
-}
 
+  private static final Connection<?> NOOP =
+      new Connection<Object>() {
+        @Override
+        public void accept(Object value) {}
+
+        @Override
+        public void dispose() {}
+      };
+
+  private class QueuingDelegate implements Connection<I> {
+    private final BlockingQueue<I> queue = new LinkedBlockingQueue<>();
+
+    @Override
+    public void accept(I value) {
+      queue.add(value);
+
+      // this call solves a race between the setDelegate and accept methods in the outer class:
+      // 1. Thread 1 calls accept, and gets the queuing delegate (this class).
+      // 2. Thread 2 calls setDelegate, sets the active delegate, and drains the queue.
+      // 3. Thread 1 adds an item to the queue via the instruction above.
+      //
+      // checking if the queue needs draining after each accept solves that.
+      drainQueueIfActive();
+    }
+
+    @Override
+    public void dispose() {
+      queue.clear();
+    }
+
+    private void drainQueueIfActive() {
+      final Connection<I> currentDelegate = delegate.get();
+
+      // if the delegate is no longer the 'queueing delegate', then we're active and should forward
+      // the queued messages. We could be 'disposed', but that's fine.
+      if (currentDelegate != queuingDelegate) {
+        while (true) {
+          I value = queue.poll();
+          if (value == null) {
+            return;
+          }
+          currentDelegate.accept(value);
+        }
+      }
+    }
+  }
+}
