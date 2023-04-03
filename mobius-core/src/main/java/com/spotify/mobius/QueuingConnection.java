@@ -19,57 +19,100 @@
  */
 package com.spotify.mobius;
 
-import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Provides a connection that queues up messages until a delegate to consume them is available.
- * Useful for setting up circular dependencies safely. All methods are synchronized for ease of
- * implementation.
+ * Useful for setting up circular dependencies safely. Methods are non-blocking.
  */
 class QueuingConnection<I> implements Connection<I> {
+  private final QueuingDelegate queuingDelegate = new QueuingDelegate();
 
-  private final List<I> queue = new ArrayList<>();
+  /**
+   * Tracks the state of this connection; there are three:
+   *
+   * <p><nl>
+   * <li>Initial, when the delegate queues all incoming events. In this state, the delegate is
+   *     exactly the {@link #queuingDelegate} instance.
+   * <li>Active, when the delegate is the 'real' connection to send events to.
+   * <li>Disposed, when the delegate is the {@link #NOOP} instance, which silently discards all
+   *     events. </nl>
+   */
+  private final AtomicReference<Connection<I>> delegate = new AtomicReference<>(queuingDelegate);
 
-  private Connection<I> delegate;
-  private boolean disposed = false;
-
-  synchronized void setDelegate(Connection<I> delegate) {
-    if (this.delegate != null) {
-      throw new IllegalStateException("Attempt at setting delegate twice");
-    }
-
-    this.delegate = checkNotNull(delegate);
-
-    if (disposed) {
+  void setDelegate(Connection<I> active) {
+    if (delegate.get() == NOOP) {
       return;
     }
 
-    for (I item : queue) {
-      delegate.accept(item);
+    if (!delegate.compareAndSet(queuingDelegate, active)) {
+      throw new IllegalStateException("Attempt at setting the active delegate twice");
     }
 
-    queue.clear();
+    // now that we know we have an active connection to send messages to, drain the queue of any
+    // messages.
+    queuingDelegate.drainQueueIfActive();
   }
 
   @Override
-  public synchronized void accept(I value) {
-    if (delegate != null) {
-      delegate.accept(value);
-      return;
-    }
-
-    queue.add(value);
+  public void accept(I value) {
+    delegate.get().accept(value);
   }
 
   @Override
-  public synchronized void dispose() {
-    disposed = true;
+  public void dispose() {
+    @SuppressWarnings("unchecked")
+    final Connection<I> prev = delegate.getAndSet((Connection<I>) NOOP);
 
-    if (delegate != null) {
-      delegate.dispose();
+    prev.dispose();
+  }
+
+  private static final Connection<?> NOOP =
+      new Connection<Object>() {
+        @Override
+        public void accept(Object value) {}
+
+        @Override
+        public void dispose() {}
+      };
+
+  private class QueuingDelegate implements Connection<I> {
+    private final BlockingQueue<I> queue = new LinkedBlockingQueue<>();
+
+    @Override
+    public void accept(I value) {
+      queue.add(value);
+
+      // this call solves a race between the setDelegate and accept methods in the outer class:
+      // 1. Thread 1 calls accept, and gets the queuing delegate (this class).
+      // 2. Thread 2 calls setDelegate, sets the active delegate, and drains the queue.
+      // 3. Thread 1 adds an item to the queue via the instruction above.
+      //
+      // checking if the queue needs draining after each accept solves that.
+      drainQueueIfActive();
+    }
+
+    @Override
+    public void dispose() {
+      queue.clear();
+    }
+
+    private void drainQueueIfActive() {
+      final Connection<I> currentDelegate = delegate.get();
+
+      // if the delegate is no longer the 'queueing delegate', then we're active and should forward
+      // the queued messages. We could be 'disposed', but that's fine.
+      if (currentDelegate != queuingDelegate) {
+        while (true) {
+          I value = queue.poll();
+          if (value == null) {
+            return;
+          }
+          currentDelegate.accept(value);
+        }
+      }
     }
   }
 }
