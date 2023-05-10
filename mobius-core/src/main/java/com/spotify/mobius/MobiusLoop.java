@@ -194,18 +194,21 @@ public class MobiusLoop<M, E, F> implements Loop<M, E, F> {
       return () -> {};
     }
 
+    FireAtLeastOnceObserver<M> wrapped = new FireAtLeastOnceObserver<>(observer);
+
+    modelObservers.add(wrapped);
+
     final M currentModel = mostRecentModel;
     if (currentModel != null) {
-      // Start by emitting the most recently received model.
-      observer.accept(currentModel);
+      // Start by emitting the most recently received model, if one hasn't already been emitted
+      // because of a racing model update
+      wrapped.acceptIfFirst(currentModel);
     }
-
-    modelObservers.add(checkNotNull(observer));
 
     return new Disposable() {
       @Override
       public void dispose() {
-        modelObservers.remove(observer);
+        modelObservers.remove(wrapped);
       }
     };
   }
