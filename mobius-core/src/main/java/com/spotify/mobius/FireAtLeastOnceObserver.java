@@ -24,7 +24,7 @@ import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 import com.spotify.mobius.functions.Consumer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class FireAtLeastOnceObserver<V> implements Consumer<V> {
+class FireAtLeastOnceObserver<V> implements Consumer<V> {
   private enum State {
     UNFIRED,
     FIRING,
