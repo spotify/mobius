@@ -43,8 +43,8 @@ public interface Loop<M, E, F> extends Disposable {
    * notified of future changes to the model until the loop or the returned {@link Disposable} is
    * disposed.
    *
-   * <p>If the addition of the observer races with an event that changes the current model, the
-   * observer may get notified twice of the same model.
+   * <p>The observer is guaranteed to get notified of models in the same order that they are emitted
+   * by the loop, but there is no guarantee about which model will be the first one observed.
    *
    * @param observer a non-null observer of model changes
    * @return a {@link Disposable} that can be used to stop further notifications to the observer
