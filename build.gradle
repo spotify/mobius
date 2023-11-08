@@ -3,7 +3,7 @@ import com.github.sherter.googlejavaformatgradleplugin.VerifyGoogleJavaFormat
 
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
         google()
         maven {
             url "https://plugins.gradle.org/m2/"
@@ -11,23 +11,21 @@ buildscript {
     }
     dependencies {
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.13.0"
-        classpath('com.android.tools.build:gradle:4.0.0')
-        classpath 'net.researchgate:gradle-release:2.8.1'
     }
 }
 
 plugins {
-    id 'com.github.sherter.google-java-format' version '0.8'
-    id 'com.github.hierynomus.license' version '0.15.0'
+    id 'com.github.sherter.google-java-format' version '0.9'
+    id 'com.benjaminsproule.license' version '0.16.2'
     id 'io.codearte.nexus-staging' version '0.21.2'
     id 'net.ltgt.errorprone' version '1.2.1'
+    id 'com.android.library' version '7.4.2' apply false
+    id 'maven-publish'
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
-
-apply plugin: 'net.researchgate.release'
 
 static def isAndroidProject(Project p) {
     return p.plugins.findPlugin('com.android.library')
@@ -64,7 +62,6 @@ subprojects {
     apply plugin: 'net.ltgt.errorprone'
 
     repositories {
-        jcenter()
         mavenCentral()
     }
 
@@ -112,23 +109,9 @@ task format(type: GoogleJavaFormat) {
 task verifyFormat(type: VerifyGoogleJavaFormat) {
     exclude '**/package-info.java'
 }
-task build(dependsOn: getTasksByName('build', true))
-task uploadArchivesAggregate(dependsOn: getTasksByName('uploadArchives', true))
-
-release {
-    failOnUnversionedFiles = false
-    tagTemplate = 'v$version'
-
-    git {
-        requireBranch = 'master'
-        pushToRemote = 'upstream'
-    }
-}
-
-afterReleaseBuild.dependsOn uploadArchivesAggregate
 
 allprojects {
-    apply plugin: 'com.github.hierynomus.license'
+    apply plugin: 'com.benjaminsproule.license'
 
     license {
         header rootProject.file('apache2.header')
@@ -143,3 +126,4 @@ nexusStaging {
     packageGroup = "com.spotify"
     numberOfRetries = 30
 }
+

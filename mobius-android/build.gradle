@@ -27,6 +27,7 @@ static def gitSha() {
 }
 
 android {
+    namespace = "com.spotify.mobius.android"
     compileSdkVersion rootProject.ext.compileSdkVersion
     compileOptions {
       sourceCompatibility JavaVersion.VERSION_1_8
@@ -40,6 +41,13 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+
 }
 
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
