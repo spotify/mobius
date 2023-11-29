@@ -83,6 +83,7 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
     synchronized (lock) {
       setObserver(owner, liveEffectsObserver, null);
       ignoreBackgroundEffects = true;
+      pausedEffectsQueue.clear();
     }
   }
 
