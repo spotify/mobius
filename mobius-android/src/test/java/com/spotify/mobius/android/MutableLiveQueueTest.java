@@ -101,6 +101,19 @@ public class MutableLiveQueueTest {
   }
 
   @Test
+  public void shouldNotQueueEventsWhenSetToIgnoreBackgroundEventsAndNoObserver() {
+    mutableLiveQueue.setObserverIgnoringPausedEffects(fakeLifecycleOwner1, liveObserver);
+    fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
+    mutableLiveQueue.post("one");
+    mutableLiveQueue.post("two");
+    mutableLiveQueue.setObserver(fakeLifecycleOwner1, liveObserver, pausedObserver);
+    fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
+
+    assertThat(liveObserver.valueCount(), equalTo(0));
+    assertThat(pausedObserver.valueCount(), equalTo(0));
+  }
+
+  @Test
   public void shouldSendQueuedEventsWithValidPausedObserver() {
     fakeLifecycleOwner1.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
 

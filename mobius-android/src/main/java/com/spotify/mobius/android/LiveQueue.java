@@ -53,6 +53,16 @@ public interface LiveQueue<T> {
       @Nonnull LifecycleOwner lifecycleOwner, @Nonnull Observer<T> liveEffectsObserver);
 
   /**
+   * A utility method for calling {@link #setObserver(LifecycleOwner, Observer, Observer)} that
+   * substitutes null for the optional observer. This method will also cause any effects that occur
+   * in background to be ignored, and they will not besent if a new pausedEffectsObserver is added.
+   * The paused effects will not be added in a queue at all, so there will be no exceptions thrown
+   * due to queue size exceeding a limit.
+   */
+  void setObserverIgnoringPausedEffects(
+      @Nonnull LifecycleOwner lifecycleOwner, @Nonnull Observer<T> liveEffectsObserver);
+
+  /**
    * The <code>LiveQueue</code> supports only a single observer, so calling this method will
    * override any previous observers set.<br>
    * Effects while the lifecycle is active are sent only to the liveEffectsObserver.<br>

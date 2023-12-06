@@ -55,6 +55,7 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
   @Nullable private Observer<T> liveObserver = null;
   @Nullable private Observer<Iterable<T>> pausedObserver = null;
   private boolean lifecycleOwnerIsPaused = true;
+  private boolean ignoreBackgroundEffects = false;
 
   MutableLiveQueue(WorkRunner effectsWorkRunner, int capacity) {
     this.effectsWorkRunner = effectsWorkRunner;
@@ -77,6 +78,16 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
   }
 
   @Override
+  public void setObserverIgnoringPausedEffects(
+      @Nonnull LifecycleOwner owner, @Nonnull Observer<T> liveEffectsObserver) {
+    synchronized (lock) {
+      setObserver(owner, liveEffectsObserver, null);
+      ignoreBackgroundEffects = true;
+      pausedEffectsQueue.clear();
+    }
+  }
+
+  @Override
   public void setObserver(
       @Nonnull LifecycleOwner lifecycleOwner,
       @Nonnull Observer<T> liveObserver,
@@ -89,6 +100,7 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
       this.pausedObserver = pausedObserver;
       this.lifecycleOwnerIsPaused = true;
       lifecycleOwner.getLifecycle().addObserver(new LifecycleObserverHelper());
+      ignoreBackgroundEffects = false;
     }
   }
 
@@ -110,7 +122,7 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
   void post(@Nonnull final T data) {
     synchronized (lock) {
       if (lifecycleOwnerIsPaused) {
-        if (!pausedEffectsQueue.offer(data)) {
+        if (shouldQueuePausedEffects() && !pausedEffectsQueue.offer(data)) {
           throw new IllegalStateException(
               "Maximum effect queue size ("
                   + pausedEffectsQueue.size()
@@ -121,6 +133,10 @@ final class MutableLiveQueue<T> implements LiveQueue<T> {
         effectsWorkRunner.post(() -> sendToLiveObserver(data));
       }
     }
+  }
+
+  private boolean shouldQueuePausedEffects() {
+    return !ignoreBackgroundEffects;
   }
 
   private void onLifecycleChanged(Lifecycle.Event event) {
