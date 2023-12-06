@@ -1,0 +1,37 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+    id 'java-library'
+}
+
+dependencies {
+    api project(':mobius-core')
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${versions.kotlinxCoroutines}"
+
+    testImplementation project(':mobius-test')
+    testImplementation "junit:junit:${versions.junit}"
+    testImplementation 'app.cash.turbine:turbine:1.0.0'
+    testImplementation 'com.google.truth:truth:1.1.5'
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:${versions.kotlinxCoroutines}"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+test {
+    testLogging {
+        events "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+apply from: rootProject.file('gradle/jacoco-coverage.gradle')
+

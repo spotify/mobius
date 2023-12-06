@@ -9,6 +9,7 @@ pluginManagement {
 rootProject.name = 'mobius'
 
 include 'mobius-core'
+include 'mobius-coroutines'
 include 'mobius-test'
 include 'mobius-rx'
 include 'mobius-rx2'
