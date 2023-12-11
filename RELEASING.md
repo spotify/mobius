@@ -12,12 +12,11 @@ https://github.com/Codearte/gradle-nexus-staging-plugin#server-credentials.
  1. Run `./gradlew clean test` and make sure everything passes.
  1. Run `./gradlew publish -PSONATYPE_NEXUS_USERNAME=<user> -PSONATYPE_NEXUS_PASSWORD=<password>`
     and follow the instructions.
- 1. Enter the release version when prompted or press Enter for default (Please double check the version if you do so).
- 1. Enter the next development version when prompted or press Enter for default (Please double check the version if you do so).
- 1. When the build has successfully completed, run `./gradlew closeAndReleaseRepo`. If this times out
-    or fails some other way, log in manually to https://oss.sonatype.org/ and either complete the
-    release through closing and releasing the staging repository, or by cleaning up and rerunning.
+ 1. When the build has successfully completed, log in manually to https://oss.sonatype.org/ and 
+    either complete the release through closing and releasing the staging repository, 
+    or by cleaning up and rerunning.
  1. Add a description of the new release at https://github.com/spotify/mobius/releases.
  1. Once the new set of artifacts is available on https://repo.maven.apache.org/maven2/com/spotify/mobius/, update the
     `baselineVersion` property in [binary_compatibility.gradle](gradle/binary_compatibility.gradle) to the
     version that was just released.
+ 1. Update the version in gradle.properties in the master branch to the next version
