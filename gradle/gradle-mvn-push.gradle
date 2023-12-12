@@ -78,7 +78,7 @@ afterEvaluate {
 
                     pom {
                         name = POM_NAME
-                        packaging = "pom"
+                        packaging = "aar"
                         description = POM_DESCRIPTION
                         url = POM_URL
                         scm {
