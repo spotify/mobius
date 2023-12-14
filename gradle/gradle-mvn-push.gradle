@@ -36,6 +36,7 @@ afterEvaluate {
         publications {
             if (!isAndroid) {
                 mavenJava(MavenPublication) {
+
                     from components.java
 
                     groupId = GROUP
@@ -77,7 +78,7 @@ afterEvaluate {
 
                     pom {
                         name = POM_NAME
-                        packaging = "pom"
+                        packaging = "aar"
                         description = POM_DESCRIPTION
                         url = POM_URL
                         scm {
@@ -117,8 +118,8 @@ afterEvaluate {
     }
 
     signing {
-        required { isReleaseBuild() && gradle.taskGraph.hasTask("publish") }
-        sign configurations.archives
+        required { isReleaseBuild() }
+        sign publishing.publications
     }
 
     if (JavaVersion.current().isJava8Compatible()) {
