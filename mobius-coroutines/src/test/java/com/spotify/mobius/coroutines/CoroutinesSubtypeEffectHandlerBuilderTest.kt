@@ -2,6 +2,7 @@ package com.spotify.mobius.coroutines
 
 import com.google.common.truth.Truth.assertThat
 import com.spotify.mobius.coroutines.MobiusCoroutines.Companion.subtypeEffectHandler
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
@@ -12,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
+@ExperimentalCoroutinesApi
 class CoroutinesSubtypeEffectHandlerBuilderTest {
 
     @Test
@@ -20,7 +22,6 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
         `when` = "two effect handlers are added for the same effect",
         then = "an exception is thrown"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun duplicateEffectHandler() {
         assertThrows(RuntimeException::class.java) {
             subtypeEffectHandler<Effect, Event>()
@@ -35,7 +36,6 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
         `when` = "an effect is produced",
         then = "an exception is thrown"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun emptyEffectHandler() {
         assertThrows(RuntimeException::class.java) {
             runTest {
@@ -55,7 +55,6 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
         `when` = "a matching effect is produced",
         then = "the effect is consumed successfully"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun actionEffectHandler() = runTest {
         var actionCalled = false
         val effectHandler = subtypeEffectHandler<Effect, Event>()
@@ -75,7 +74,6 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
         `when` = "a matching effect is produced",
         then = "the exception is propagated"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun actionEffectHandlerError() {
         val effectHandler = subtypeEffectHandler<Effect, Event>()
             .addAction<Effect.Simple> { error("Error in Action") }
@@ -96,7 +94,6 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
         `when` = "a matching effect is produced",
         then = "the effect is consumed successfully"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun consumerEffectHandler() = runTest {
         var effectConsumed: Effect? = null
         val effectHandler = subtypeEffectHandler<Effect, Event>()
@@ -112,12 +109,36 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
 
     @Test
     @Requirement(
+        given = "A connectable with a producer as effect handler",
+        `when` = "a matching effect is produced",
+        then = "the effect is consumed successfully " +
+                "AND the produced event is propagated"
+    )
+    fun producerEffectHandler() = runTest {
+        var producerCalled = false
+        var eventProduced: Event? = null
+        val effectHandler = subtypeEffectHandler<Effect, Event>()
+            .addProducer<Effect.Simple> {
+                producerCalled = true
+                Event.SingleValue("Produced event")
+            }
+
+        effectHandler.build(coroutineContext)
+            .connect { eventProduced = it }
+            .accept(Effect.Simple)
+        advanceUntilIdle()
+
+        assertThat(producerCalled).isTrue()
+        assertThat(eventProduced).isEqualTo(Event.SingleValue("Produced event"))
+    }
+
+    @Test
+    @Requirement(
         given = "A connectable with a function as effect handler",
         `when` = "a matching effect is produced",
         then = "the effect is consumed successfully " +
                 "AND the produced event is propagated"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun functionEffectHandler() = runTest {
         var eventProduced: Event? = null
         var effectConsumed: Effect? = null
@@ -143,7 +164,6 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
         then = "the effect is consumed successfully " +
                 "AND all the produced events are propagated"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun flowProducerEffectHandler() = runTest {
         val eventsProduced = mutableListOf<Event>()
         var effectConsumed: Effect? = null
@@ -174,7 +194,6 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
         `when` = "the effect handler is disposed",
         then = "all running task are cancelled"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun disposeEffectHandler() = runTest {
         var effectStarted = false
         var effectFinished = false
