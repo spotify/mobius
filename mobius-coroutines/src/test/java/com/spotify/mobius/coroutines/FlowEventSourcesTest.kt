@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.spotify.mobius.EventSource
 import com.spotify.mobius.coroutines.FlowEventSources.Companion.asFlow
 import com.spotify.mobius.disposables.Disposable
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -14,6 +15,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
+@ExperimentalCoroutinesApi
 class FlowEventSourcesTest {
 
     @Test
@@ -22,7 +24,6 @@ class FlowEventSourcesTest {
         `when` = "a flow produces an event",
         then = "the event is notified"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun eventIsNotified() = runTest {
         val eventsReceived = mutableListOf<Event>()
         val eventSource = FlowEventSources.fromFlows(
@@ -42,7 +43,6 @@ class FlowEventSourcesTest {
         `when` = "a flow produces an event after subscribe",
         then = "the event is notified"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun eventIsNotifiedAfterSubscribe() = runTest {
         val eventsReceived = mutableListOf<Event>()
         val eventSource = FlowEventSources.fromFlows<Event>(
@@ -67,7 +67,6 @@ class FlowEventSourcesTest {
         `when` = "any flow produces an event",
         then = "the event is notified immediately"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun multipleFlows() = runTest {
         val eventsReceived = mutableListOf<Event>()
         val eventSource = FlowEventSources.fromFlows<Event>(
@@ -96,7 +95,6 @@ class FlowEventSourcesTest {
         `when` = "a flow produces an event in a different context",
         then = "the event is notified"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun flowInDifferentContexts() = runTest {
         val eventsReceived = mutableListOf<Event>()
         val flowDispatcher = StandardTestDispatcher(testScheduler)
@@ -118,7 +116,6 @@ class FlowEventSourcesTest {
         `when` = "event source is disposed",
         then = "no more events are processed"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun eventSourceDisposed() = runTest {
         val eventsReceived = mutableListOf<Event>()
         val eventSource = FlowEventSources.fromFlows<Event>(
@@ -149,7 +146,6 @@ class FlowEventSourcesTest {
         `when` = "the child event source produces an event",
         then = "the event from the child event source are notified correctly"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun eventSourceEventsAreNotified() = runTest {
         val eventsReceived = mutableListOf<Event>()
         val eventSource = FlowEventSources.fromFlows<Event>(
@@ -173,7 +169,6 @@ class FlowEventSourcesTest {
         `when` = "the parent event source is disposed",
         then = "the child event source is also disposed"
     )
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun eventSourceIsDisposedCorrectly() = runTest {
         var disposeCalled = false
         val eventSource = FlowEventSources.fromFlows(

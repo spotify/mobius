@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
+@ExperimentalCoroutinesApi
 class DispatcherWorkerTest {
 
     @Test
@@ -20,7 +21,6 @@ class DispatcherWorkerTest {
         `when` = "a work is post",
         then = "the work is processed"
     )
-    @ExperimentalCoroutinesApi
     fun postedWorkIsProcessed() = runTest {
         val worker = DispatcherWorker(coroutineContext)
         var taskProcessed = false
@@ -37,7 +37,6 @@ class DispatcherWorkerTest {
         `when` = "a work is post throwing an exception",
         then = "the exception is propagated"
     )
-    @ExperimentalCoroutinesApi
     fun exceptionsArePropagated() {
         assertThrows("Exception in work", RuntimeException::class.java) {
             runTest {
@@ -55,7 +54,6 @@ class DispatcherWorkerTest {
         `when` = "worker is disposed while a work is running",
         then = "the work is cancelled"
     )
-    @ExperimentalCoroutinesApi
     fun workIsCancelled() = runTest {
         var workStarted = false
         var workFinished = false
@@ -86,7 +84,6 @@ class DispatcherWorkerTest {
         `when` = "a work is post",
         then = "the work is not processed"
     )
-    @ExperimentalCoroutinesApi
     fun workOnDisposedWorker() = runTest {
         var workStarted = false
         val worker = DispatcherWorker(StandardTestDispatcher(testScheduler))

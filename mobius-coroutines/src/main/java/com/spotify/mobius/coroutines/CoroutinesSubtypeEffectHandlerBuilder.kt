@@ -39,6 +39,13 @@ class CoroutinesSubtypeEffectHandlerBuilder<F : Any, E : Any> {
         flowOf()
     }
 
+    inline fun <reified G : F> addProducer(
+        crossinline producer: suspend () -> E
+    ) = addFlowProducer<G> {
+        val event = producer.invoke()
+        flowOf(event)
+    }
+
     inline fun <reified G : F> addFunction(
         crossinline function: suspend (G) -> E
     ): CoroutinesSubtypeEffectHandlerBuilder<F, E> = addFlowProducer<G> { effect ->
