@@ -4,6 +4,8 @@ import com.spotify.mobius.Connectable
 import com.spotify.mobius.Connection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KClass
@@ -51,6 +53,12 @@ class CoroutinesSubtypeEffectHandlerBuilder<F : Any, E : Any> {
     ): CoroutinesSubtypeEffectHandlerBuilder<F, E> = addFlowProducer<G> { effect ->
         val event = function.invoke(effect)
         flowOf(event)
+    }
+
+    inline fun <reified G : F> addFlow(
+        crossinline flowCollectorFunction: suspend FlowCollector<E>.(G) -> Unit
+    ): CoroutinesSubtypeEffectHandlerBuilder<F, E> = addFlowProducer<G> { effect ->
+        flow { flowCollectorFunction(effect) }
     }
 
     inline fun <reified G : F> addFlowProducer(

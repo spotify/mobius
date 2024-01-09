@@ -159,6 +159,35 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
 
     @Test
     @Requirement(
+        given = "A connectable with a flow as effect handler",
+        `when` = "a matching effect is produced",
+        then = "the effect is consumed successfully " +
+                "AND all the produced events are propagated"
+    )
+    fun flowEffectHandler() = runTest {
+        val eventsProduced = mutableListOf<Event>()
+        var effectConsumed: Effect? = null
+        val effectHandler = subtypeEffectHandler<Effect, Event>()
+            .addFlow<Effect.ValueList> { effect ->
+                effectConsumed = effect
+                effect.tokens.forEach { token -> emit(Event.SingleValue(token)) }
+            }
+
+        effectHandler.build(coroutineContext)
+            .connect { eventsProduced.add(it) }
+            .accept(Effect.ValueList(listOf("token1", "token2", "token3")))
+        advanceUntilIdle()
+
+        assertThat(effectConsumed).isEqualTo(Effect.ValueList(listOf("token1", "token2", "token3")))
+        assertThat(eventsProduced).containsExactly(
+            Event.SingleValue("token1"),
+            Event.SingleValue("token2"),
+            Event.SingleValue("token3"),
+        )
+    }
+
+    @Test
+    @Requirement(
         given = "A connectable with a flow producer as effect handler",
         `when` = "a matching effect is produced",
         then = "the effect is consumed successfully " +
