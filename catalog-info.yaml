@@ -4,4 +4,4 @@ metadata:
   name: mobius
 spec:
   type: resource
-  owner: zenith
+  owner: blink
