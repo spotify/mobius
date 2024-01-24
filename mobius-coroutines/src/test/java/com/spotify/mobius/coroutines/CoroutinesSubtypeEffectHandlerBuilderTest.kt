@@ -1,19 +1,16 @@
 package com.spotify.mobius.coroutines
 
 import com.google.common.truth.Truth.assertThat
+import com.spotify.mobius.coroutines.CoroutinesSubtypeEffectHandlerBuilder.ExecutionPolicy
 import com.spotify.mobius.coroutines.MobiusCoroutines.Companion.subtypeEffectHandler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.*
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 class CoroutinesSubtypeEffectHandlerBuilderTest {
 
     @Test
@@ -41,7 +38,7 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
             runTest {
                 val effectHandler = subtypeEffectHandler<Effect, Event>()
 
-                effectHandler.build(coroutineContext)
+                effectHandler.build(UnconfinedTestDispatcher(testScheduler))
                     .connect { }
                     .accept(Effect.Simple)
                 advanceUntilIdle()
@@ -60,7 +57,8 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
         val effectHandler = subtypeEffectHandler<Effect, Event>()
             .addAction<Effect.Simple> { actionCalled = true }
 
-        effectHandler.build(coroutineContext)
+
+        effectHandler.build(UnconfinedTestDispatcher(testScheduler))
             .connect { }
             .accept(Effect.Simple)
         advanceUntilIdle()
@@ -80,7 +78,7 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
 
         assertThrows(RuntimeException::class.java) {
             runTest {
-                effectHandler.build(coroutineContext)
+                effectHandler.build(UnconfinedTestDispatcher(testScheduler))
                     .connect { }
                     .accept(Effect.Simple)
                 advanceUntilIdle()
@@ -99,7 +97,7 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
         val effectHandler = subtypeEffectHandler<Effect, Event>()
             .addConsumer<Effect.SingleValue> { effectConsumed = it }
 
-        effectHandler.build(coroutineContext)
+        effectHandler.build(UnconfinedTestDispatcher(testScheduler))
             .connect { }
             .accept(Effect.SingleValue("Effect to consume"))
         advanceUntilIdle()
@@ -123,7 +121,7 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
                 Event.SingleValue("Produced event")
             }
 
-        effectHandler.build(coroutineContext)
+        effectHandler.build(UnconfinedTestDispatcher(testScheduler))
             .connect { eventProduced = it }
             .accept(Effect.Simple)
         advanceUntilIdle()
@@ -148,13 +146,42 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
                 Event.SingleValue("Produced event")
             }
 
-        effectHandler.build(coroutineContext)
+        effectHandler.build(UnconfinedTestDispatcher(testScheduler))
             .connect { eventProduced = it }
             .accept(Effect.SingleValue("Effect to produce event"))
         advanceUntilIdle()
 
         assertThat(effectConsumed).isEqualTo(Effect.SingleValue("Effect to produce event"))
         assertThat(eventProduced).isEqualTo(Event.SingleValue("Produced event"))
+    }
+
+    @Test
+    @Requirement(
+        given = "A connectable with a flow as effect handler",
+        `when` = "a matching effect is produced",
+        then = "the effect is consumed successfully " +
+                "AND all the produced events are propagated"
+    )
+    fun flowEffectHandler() = runTest {
+        val eventsProduced = mutableListOf<Event>()
+        var effectConsumed: Effect? = null
+        val effectHandler = subtypeEffectHandler<Effect, Event>()
+            .addFlow<Effect.ValueList> { effect ->
+                effectConsumed = effect
+                effect.tokens.forEach { token -> emit(Event.SingleValue(token)) }
+            }
+
+        effectHandler.build(UnconfinedTestDispatcher(testScheduler))
+            .connect { eventsProduced.add(it) }
+            .accept(Effect.ValueList(listOf("token1", "token2", "token3")))
+        advanceUntilIdle()
+
+        assertThat(effectConsumed).isEqualTo(Effect.ValueList(listOf("token1", "token2", "token3")))
+        assertThat(eventsProduced).containsExactly(
+            Event.SingleValue("token1"),
+            Event.SingleValue("token2"),
+            Event.SingleValue("token3"),
+        )
     }
 
     @Test
@@ -175,7 +202,7 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
                 }
             }
 
-        effectHandler.build(coroutineContext)
+        effectHandler.build(UnconfinedTestDispatcher(testScheduler))
             .connect { eventsProduced.add(it) }
             .accept(Effect.ValueList(listOf("token1", "token2", "token3")))
         advanceUntilIdle()
@@ -204,8 +231,9 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
                 effectFinished = true
             }
 
-        val connection = effectHandler.build(StandardTestDispatcher(testScheduler) + Job())
+        val connection = effectHandler.build(StandardTestDispatcher(testScheduler))
             .connect { }
+
         connection.accept(Effect.Simple)
         advanceTimeBy(500)
         connection.dispose()
@@ -215,10 +243,120 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
         assertThat(effectFinished).isFalse()
     }
 
+    @Test
+    @Requirement(
+        given = "An effect handler using RunSequentially cancellation policy",
+        `when` = "several matching effects are produced",
+        then = "all the effect are started successfully" +
+                "AND the effects are consumed sequentially"
+    )
+    fun processEffectHandlerSequentially() = runTest {
+        val effectsConsumed = mutableListOf<Effect.DelayAction>()
+        val effectHandler = subtypeEffectHandler<Effect, Event>()
+            .addConsumer<Effect.DelayAction>(executionPolicy = ExecutionPolicy.RunSequentially()) { effect ->
+                delay(effect.delayMillis)
+                effectsConsumed.add(effect)
+            }
+
+
+        val connection = effectHandler.build(StandardTestDispatcher(testScheduler))
+            .connect { }
+        connection.accept(Effect.DelayAction(300))
+        connection.accept(Effect.DelayAction(200))
+        connection.accept(Effect.DelayAction(100))
+        advanceUntilIdle()
+
+        assertThat(effectsConsumed).containsExactly(
+            Effect.DelayAction(300),
+            Effect.DelayAction(200),
+            Effect.DelayAction(100)
+        ).inOrder()
+    }
+
+    @Test
+    @Requirement(
+        given = "An effect handler using RunConcurrently cancellation policy",
+        `when` = "several matching effects are produced",
+        then = "all the effect are started successfully" +
+                "AND the effects are consumed concurrently"
+    )
+    fun processEffectHandlerConcurrently() = runTest {
+        val effectsConsumed = mutableListOf<Effect.DelayAction>()
+        val effectHandler = subtypeEffectHandler<Effect, Event>()
+            .addConsumer<Effect.DelayAction>(executionPolicy = ExecutionPolicy.RunConcurrently()) { effect ->
+                delay(effect.delayMillis)
+                effectsConsumed.add(effect)
+            }
+
+        val connection = effectHandler.build(StandardTestDispatcher(testScheduler))
+            .connect { }
+        connection.accept(Effect.DelayAction(300))
+        connection.accept(Effect.DelayAction(200))
+        connection.accept(Effect.DelayAction(100))
+        advanceUntilIdle()
+
+        assertThat(effectsConsumed).containsExactly(
+            Effect.DelayAction(100),
+            Effect.DelayAction(200),
+            Effect.DelayAction(300)
+        ).inOrder()
+    }
+
+    @Test
+    @Requirement(
+        given = "An effect handler using CancelPrevious cancellation policy",
+        `when` = "several matching effects are produced",
+        then = "all the effect are started successfully" +
+                "AND new effects cancel previous effects while running"
+    )
+    fun processEffectHandlerCancelPrevious() = runTest {
+        val effectsStarted = mutableListOf<Effect.DelayAction>()
+        val effectsFinished = mutableListOf<Effect.DelayAction>()
+        val effectHandler = subtypeEffectHandler<Effect, Event>()
+            .addConsumer<Effect.DelayAction>(executionPolicy = ExecutionPolicy.CancelPrevious()) { effect ->
+                effectsStarted.add(effect)
+                delay(effect.delayMillis)
+                effectsFinished.add(effect)
+            }
+
+        val connection = effectHandler.build(StandardTestDispatcher(testScheduler))
+            .connect { }
+
+        connection.accept(Effect.DelayAction(300))
+        advanceTimeBy(50)
+        assertThat(effectsStarted).containsExactly(
+            Effect.DelayAction(300),
+        )
+        assertThat(effectsFinished).isEmpty()
+
+        connection.accept(Effect.DelayAction(200))
+        advanceTimeBy(210)
+        assertThat(effectsStarted).containsExactly(
+            Effect.DelayAction(300),
+            Effect.DelayAction(200),
+        ).inOrder()
+        assertThat(effectsFinished).containsExactly(
+            Effect.DelayAction(200),
+        )
+
+        connection.accept(Effect.DelayAction(100))
+        advanceUntilIdle()
+        assertThat(effectsStarted).containsExactly(
+            Effect.DelayAction(300),
+            Effect.DelayAction(200),
+            Effect.DelayAction(100)
+        ).inOrder()
+        assertThat(effectsFinished).containsExactly(
+            Effect.DelayAction(200),
+            Effect.DelayAction(100),
+        ).inOrder()
+    }
+
     private sealed interface Effect {
         data object Simple : Effect
         data class SingleValue(val id: String) : Effect
         data class ValueList(val tokens: List<String>) : Effect
+        data class DelayAction(val delayMillis: Long) : Effect
     }
 
     private sealed interface Event {
