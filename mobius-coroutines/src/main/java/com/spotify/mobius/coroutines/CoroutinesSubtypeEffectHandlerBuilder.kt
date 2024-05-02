@@ -11,9 +11,11 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
-import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.suspendCoroutine
 import kotlin.reflect.KClass
 
 /**
@@ -221,7 +223,8 @@ class CoroutinesSubtypeEffectHandlerBuilder<F : Any, E : Any> {
     fun build(coroutineContext: CoroutineContext = EmptyCoroutineContext) = Connectable { eventConsumer ->
         val scope = CoroutineScope(coroutineContext)
         val eventsChannel = Channel<E>()
-        val subEffectChannels = ConcurrentHashMap<KClass<out F>, Channel<F>>()
+        val subEffectChannelsMap = mutableMapOf<KClass<out F>, Channel<F>>()
+        val mutex = Mutex()
 
         // Connects the eventConsumer
         scope.launch {
@@ -233,18 +236,26 @@ class CoroutinesSubtypeEffectHandlerBuilder<F : Any, E : Any> {
         object : Connection<F> {
             override fun accept(effect: F) {
                 scope.launch {
-                    // Creates an effectChannel if this is the first time the effect is processed
-                    val subEffectChannel = subEffectChannels.computeIfAbsent(effect::class) {
-                        val subEffectChannel = Channel<F>()
-                        val effectHandler =
-                            effectsHandlersMap[effect::class] ?: error("No effectHandler for $effect")
-                        // Connects the effectHandler if this is the first time the effect is processed
-                        scope.launch {
-                            if (isActive) effectHandler.handleEffects(subEffectChannel, eventsChannel)
+                    val subEffectChannel = mutex.withLock {
+                        // Prevents the creation of an effectChannel if the scope is not active
+                        if(!isActive) return@launch
+
+                        subEffectChannelsMap.getOrPut(effect::class) {
+                            // Creates an effectChannel the first time the effect is processed
+                            val subEffectChannel = Channel<F>()
+                            val effectHandler = effectsHandlersMap[effect::class]
+                                ?: error("No effectHandler for $effect")
+                            // Connects the effectHandler the first time the effect is processed
+                            scope.launch {
+                                if (isActive) effectHandler.handleEffects(
+                                    subEffectChannel, eventsChannel
+                                )
+                            }
+                            subEffectChannel
                         }
-                        subEffectChannel
                     }
 
+                    // Prevents the processing of the effect if the scope is not active
                     if (isActive) subEffectChannel.send(effect)
                 }
             }
@@ -252,7 +263,12 @@ class CoroutinesSubtypeEffectHandlerBuilder<F : Any, E : Any> {
             override fun dispose() {
                 scope.cancel("Effect Handler disposed")
                 eventsChannel.close()
-                subEffectChannels.forEachValue(1) { it.close() }
+                runBlocking {
+                    mutex.withLock {
+                        subEffectChannelsMap.values.forEach { it.close() }
+                        subEffectChannelsMap.clear()
+                    }
+                }
             }
         }
     }
