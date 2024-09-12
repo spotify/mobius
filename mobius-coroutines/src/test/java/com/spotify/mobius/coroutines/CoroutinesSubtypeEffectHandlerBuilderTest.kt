@@ -1,14 +1,16 @@
 package com.spotify.mobius.coroutines
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import com.spotify.mobius.coroutines.CoroutinesSubtypeEffectHandlerBuilder.ExecutionPolicy
 import com.spotify.mobius.coroutines.MobiusCoroutines.Companion.subtypeEffectHandler
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.*
 import org.junit.Assert.assertThrows
 import org.junit.Test
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CoroutinesSubtypeEffectHandlerBuilderTest {
@@ -350,6 +352,62 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
             Effect.DelayAction(200),
             Effect.DelayAction(100),
         ).inOrder()
+    }
+
+    @Test
+    @Throws(InterruptedException::class, ExecutionException::class)
+    fun toTransformerNoEventsAreGeneratedAfterDispose() {
+
+        val executor = Executors.newSingleThreadExecutor()
+        val scope = CoroutineScope(executor.asCoroutineDispatcher())
+
+        // given a handler that responds with events
+        val connectable = subtypeEffectHandler<Effect, Event>()
+            .addFunction<Effect> { Event.SingleValue("value") }
+            .build()
+
+        // when a connectable is subscribed to (many times to make this non-flaky/less flaky)
+        for (i in 1..999) {
+
+            var disposed = false
+            var calledAfterDispose = false
+            val connection = connectable.connect {
+                if (disposed) {
+                    calledAfterDispose = true
+                }
+            }
+
+            // given a channel that continuously emits stuff
+            val job = scope.launch {
+                while (isActive) {
+                    connection.accept(Effect.Simple)
+                }
+            }
+
+
+            // the sleep here and below is not strictly necessary, but it helps provoke errors more
+            // frequently (on my laptop at least..). YMMV in case there is another issue like this one
+            // in the future.
+            runBlocking {
+                delay(1)
+            }
+
+            // then, the event observer doesn't receive events after it has been disposed.
+            connection.dispose()
+            disposed = true
+
+            runBlocking {
+                delay(3)
+            }
+
+            assertWithMessage("accept called after dispose on attempt %s", i)
+                .that(calledAfterDispose)
+                .isFalse()
+
+            job.cancel()
+        }
+
+        scope.cancel()
     }
 
     private sealed interface Effect {

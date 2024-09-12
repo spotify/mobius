@@ -1,19 +1,20 @@
 package com.spotify.mobius.coroutines
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import com.spotify.mobius.EventSource
 import com.spotify.mobius.coroutines.FlowEventSources.Companion.asFlow
 import com.spotify.mobius.disposables.Disposable
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.flowOn
+import com.spotify.mobius.functions.Consumer
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
 
 @ExperimentalCoroutinesApi
 class FlowEventSourcesTest {
@@ -184,6 +185,123 @@ class FlowEventSourcesTest {
         advanceUntilIdle()
 
         assertThat(disposeCalled).isTrue()
+    }
+
+    @Test
+    @Throws(InterruptedException::class, ExecutionException::class)
+    fun fromFlowNoEventsAreGeneratedAfterDispose() {
+
+        val executor = Executors.newSingleThreadExecutor()
+        val scope = CoroutineScope(executor.asCoroutineDispatcher())
+        val flow = MutableStateFlow(0)
+
+
+        // given a channel that constantly emits events
+        scope.launch {
+            var i = 0
+            while (isActive) {
+                flow.value = i++
+            }
+        }
+
+        val source = FlowEventSources.fromFlows(Dispatchers.Default, flow)
+
+        // when a connectable is subscribed to (many times to make this non-flaky/less flaky)
+        for (i in 1..999) {
+
+            var disposed = false
+            var calledAfterDispose = false
+            val connection = source.subscribe {
+                if (disposed) {
+                    calledAfterDispose = true
+                }
+            }
+
+            // the sleep here and below is not strictly necessary, but it helps provoke errors more
+            // frequently (on my laptop at least..). YMMV in case there is another issue like this one
+            // in the future.
+            runBlocking {
+                delay(1)
+            }
+
+            // then, the event observer doesn't receive events after it has been disposed.
+            connection.dispose()
+            disposed = true
+
+            runBlocking {
+                delay(3)
+            }
+
+            assertWithMessage("accept called after dispose on attempt %s", i)
+                .that(calledAfterDispose)
+                .isFalse()
+        }
+
+        scope.cancel()
+    }
+
+    @Test
+    @Throws(InterruptedException::class, ExecutionException::class)
+    fun toFlowNoEventsAreGeneratedAfterDispose() {
+
+        val executor = Executors.newSingleThreadExecutor()
+        val scope = CoroutineScope(executor.asCoroutineDispatcher())
+        val flow = MutableStateFlow(0)
+
+
+        // given a channel that constantly emits events
+        scope.launch {
+            var i = 0
+            while (isActive) {
+                flow.value = i++
+            }
+        }
+
+        val source = object : EventSource<Int> {
+            override fun subscribe(eventConsumer: Consumer<Int>): Disposable {
+                val job = scope.launch {
+                    flow.collect { eventConsumer.accept(it) }
+                }
+                return Disposable {
+                    job.cancel()
+                }
+            }
+        }
+
+        // when a connectable is subscribed to (many times to make this non-flaky/less flaky)
+        for (i in 1..999) {
+
+            var disposed = false
+            var calledAfterDispose = false
+            val job = scope.launch {
+                source.asFlow().collect {
+                    if (disposed) {
+                        calledAfterDispose = true
+                    }
+                }
+            }
+
+            // the sleep here and below is not strictly necessary, but it helps provoke errors more
+            // frequently (on my laptop at least..). YMMV in case there is another issue like this one
+            // in the future.
+            runBlocking {
+                delay(1)
+            }
+
+            // then, the event observer doesn't receive events after it has been disposed.
+            job.cancel()
+            disposed = true
+
+            runBlocking {
+                delay(3)
+            }
+
+            assertWithMessage("accept called after dispose on attempt %s", i)
+                .that(calledAfterDispose)
+                .isFalse()
+        }
+
+        scope.cancel()
     }
 
     private data class Event(val id: String)

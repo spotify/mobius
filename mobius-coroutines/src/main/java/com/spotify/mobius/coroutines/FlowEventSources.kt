@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import java.util.concurrent.CancellationException
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.CoroutineContext
 
 /** Contains utility methods for converting back and forth between [Flow]s and [EventSource]s. */
@@ -33,12 +34,24 @@ interface FlowEventSources {
         fun <E : Any> fromFlows(coroutineContext: CoroutineContext = Dispatchers.Default, vararg flows: Flow<E>) =
             EventSource { consumer ->
                 val scope = CoroutineScope(coroutineContext)
+                var disposed = AtomicBoolean(false)
 
                 scope.launch {
-                    flows.asIterable().merge().collect { consumer.accept(it) }
+                    flows.asIterable().merge().collect {
+                        synchronized(disposed) {
+                            if (!disposed.get()) {
+                                consumer.accept(it)
+                            }
+                        }
+                    }
                 }
 
-                Disposable { scope.cancel(CancellationException("EventSource disposed")) }
+                Disposable {
+                    synchronized(disposed) {
+                        disposed.set(true)
+                    }
+                    scope.cancel(CancellationException("EventSource disposed"))
+                }
             }
 
         /**

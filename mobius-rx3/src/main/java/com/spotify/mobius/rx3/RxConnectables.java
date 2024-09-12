@@ -34,6 +34,7 @@ import io.reactivex.rxjava3.functions.Action;
 import io.reactivex.rxjava3.functions.Cancellable;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.subjects.PublishSubject;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
 
 /**
@@ -47,12 +48,13 @@ public final class RxConnectables {
   public static <I, O> Connectable<I, O> fromTransformer(
       @NonNull final ObservableTransformer<I, O> transformer) {
     checkNotNull(transformer);
-    final Connectable<I, O> acctualConnectable =
+    final Connectable<I, O> actualConnectable =
         new Connectable<I, O>() {
           @Nonnull
           @Override
           public Connection<I> connect(com.spotify.mobius.functions.Consumer<O> output) {
             final PublishSubject<I> subject = PublishSubject.create();
+            final AtomicBoolean disposed = new AtomicBoolean();
 
             final Disposable disposable =
                 subject
@@ -61,7 +63,11 @@ public final class RxConnectables {
                         new Consumer<O>() {
                           @Override
                           public void accept(O value) throws Throwable {
-                            output.accept(value);
+                            synchronized (disposed) {
+                              if (!disposed.get()) {
+                                output.accept(value);
+                              }
+                            }
                           }
                         });
 
@@ -73,12 +79,15 @@ public final class RxConnectables {
 
               @Override
               public void dispose() {
+                synchronized (disposed) {
+                  disposed.set(true);
+                }
                 disposable.dispose();
               }
             };
           }
         };
-    return new DiscardAfterDisposeConnectable<>(acctualConnectable);
+    return new DiscardAfterDisposeConnectable<>(actualConnectable);
   }
 
   @NonNull
@@ -92,7 +101,16 @@ public final class RxConnectables {
               @Override
               public void subscribe(@NonNull ObservableEmitter<O> emitter) throws Throwable {
                 com.spotify.mobius.functions.Consumer<O> output = emitter::onNext;
-                final Connection<I> input = connectable.connect(output);
+                final AtomicBoolean disposed = new AtomicBoolean();
+                final Connection<I> input =
+                    connectable.connect(
+                        i -> {
+                          synchronized (disposed) {
+                            if (!disposed.get()) {
+                              output.accept(i);
+                            }
+                          }
+                        });
                 final Disposable disposable =
                     upstream.subscribe(
                         new Consumer<I>() {
@@ -118,6 +136,9 @@ public final class RxConnectables {
                     new Cancellable() {
                       @Override
                       public void cancel() throws Throwable {
+                        synchronized (disposed) {
+                          disposed.set(true);
+                        }
                         disposable.dispose();
                         input.dispose();
                       }
