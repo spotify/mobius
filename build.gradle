@@ -10,7 +10,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.13.0"
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.23.4"
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.20'
     }
 }

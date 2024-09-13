@@ -19,13 +19,22 @@
  */
 package com.spotify.mobius.rx2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
 import com.spotify.mobius.ConnectionLimitExceededException;
 import com.spotify.mobius.functions.Consumer;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.ObservableTransformer;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.subjects.PublishSubject;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
@@ -96,5 +105,154 @@ public class RxConnectablesTest {
 
     observer.awaitTerminalEvent(1, TimeUnit.SECONDS);
     observer.assertError(expected);
+  }
+
+  @Test
+  public void toTransformerNoEventsAreGeneratedAfterDispose()
+      throws InterruptedException, ExecutionException {
+    Connectable<Integer, String> intToString =
+        new Connectable<>() {
+          @Nonnull
+          @Override
+          public Connection<Integer> connect(Consumer<String> output)
+              throws ConnectionLimitExceededException {
+            return new Connection<Integer>() {
+              @Override
+              public void accept(Integer value) {
+                output.accept(value.toString());
+              }
+
+              @Override
+              public void dispose() {}
+            };
+          }
+        };
+
+    // given an observable that continuously emits stuff
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    PublishSubject<Integer> subject = PublishSubject.create();
+
+    final AtomicInteger count = new AtomicInteger();
+    final AtomicBoolean stop = new AtomicBoolean();
+
+    Future<?> future =
+        executor.submit(
+            () -> {
+              while (!stop.get()) {
+                subject.onNext(count.incrementAndGet());
+              }
+            });
+
+    // and a connectable to that observable
+    ObservableTransformer<Integer, String> transformer = RxConnectables.toTransformer(intToString);
+    Observable<String> underTest = subject.compose(transformer);
+
+    // when a connectable is subscribed to (many times to make this non-flaky/less flaky)
+    for (int i = 1; i < 1000; i++) {
+
+      // then, the event observer doesn't receive events after it has been disposed.
+      EventRxConsumer consumer = new EventRxConsumer();
+
+      Disposable disposable = underTest.subscribe(consumer);
+
+      // the sleep here and below is not strictly necessary, but it helps provoke errors more
+      // frequently (on my laptop at least..). YMMV in case there is another issue like this one
+      // in the future.
+      Thread.sleep(1);
+
+      disposable.dispose();
+      consumer.disposed = true;
+
+      Thread.sleep(3);
+
+      assertThat(consumer.acceptCalledAfterDispose)
+          .describedAs("accept called after dispose on attempt %d", i)
+          .isFalse();
+    }
+
+    stop.set(true);
+    future.get();
+  }
+
+  @Test
+  public void fromTransformerNoEventsAreGeneratedAfterDispose()
+      throws InterruptedException, ExecutionException {
+    ObservableTransformer<Integer, String> intToString =
+        new ObservableTransformer<Integer, String>() {
+          @Override
+          public @NonNull ObservableSource<String> apply(@NonNull Observable<Integer> upstream) {
+            return upstream.map(Object::toString);
+          }
+        };
+
+    // given an observable that continuously emits stuff
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    PublishSubject<Integer> subject = PublishSubject.create();
+
+    final AtomicInteger count = new AtomicInteger();
+    final AtomicBoolean stop = new AtomicBoolean();
+
+    Future<?> future =
+        executor.submit(
+            () -> {
+              while (!stop.get()) {
+                subject.onNext(count.incrementAndGet());
+              }
+            });
+
+    // and a connectable to that observable
+    Connectable<Integer, String> underTest = RxConnectables.fromTransformer(intToString);
+
+    // when a connectable is subscribed to (many times to make this non-flaky/less flaky)
+    for (int i = 1; i < 1000; i++) {
+
+      // then, the event observer doesn't receive events after it has been disposed.
+      EventConsumer consumer = new EventConsumer();
+      Connection<Integer> input = underTest.connect(consumer);
+
+      Disposable disposable = subject.subscribe(input::accept);
+
+      // the sleep here and below is not strictly necessary, but it helps provoke errors more
+      // frequently (on my laptop at least..). YMMV in case there is another issue like this one
+      // in the future.
+      Thread.sleep(1);
+
+      input.dispose();
+      disposable.dispose();
+      consumer.disposed = true;
+
+      Thread.sleep(3);
+
+      assertThat(consumer.acceptCalledAfterDispose)
+          .describedAs("accept called after dispose on attempt %d", i)
+          .isFalse();
+    }
+
+    stop.set(true);
+    future.get();
+  }
+
+  private static class EventRxConsumer implements io.reactivex.functions.Consumer<String> {
+    public volatile boolean disposed = false;
+    public volatile boolean acceptCalledAfterDispose = false;
+
+    @Override
+    public void accept(String s) {
+      if (disposed) {
+        acceptCalledAfterDispose = true;
+      }
+    }
+  }
+
+  private static class EventConsumer implements Consumer<String> {
+    public volatile boolean disposed = false;
+    public volatile boolean acceptCalledAfterDispose = false;
+
+    @Override
+    public void accept(String value) {
+      if (disposed) {
+        acceptCalledAfterDispose = true;
+      }
+    }
   }
 }

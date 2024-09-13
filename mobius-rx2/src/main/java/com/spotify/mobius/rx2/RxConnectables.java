@@ -33,6 +33,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Cancellable;
 import io.reactivex.subjects.PublishSubject;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
 
 /**
@@ -52,6 +53,7 @@ public final class RxConnectables {
           @Override
           public Connection<I> connect(final Consumer<O> output) {
             final PublishSubject<I> subject = PublishSubject.create();
+            final AtomicBoolean disposed = new AtomicBoolean();
 
             final Disposable disposable =
                 subject
@@ -60,7 +62,11 @@ public final class RxConnectables {
                         new io.reactivex.functions.Consumer<O>() {
                           @Override
                           public void accept(O e) {
-                            output.accept(e);
+                            synchronized (disposed) {
+                              if (!disposed.get()) {
+                                output.accept(e);
+                              }
+                            }
                           }
                         });
 
@@ -72,6 +78,9 @@ public final class RxConnectables {
 
               @Override
               public void dispose() {
+                synchronized (disposed) {
+                  disposed.set(true);
+                }
                 disposable.dispose();
               }
             };
@@ -97,9 +106,16 @@ public final class RxConnectables {
                         emitter.onNext(value);
                       }
                     };
-
-                final Connection<I> input = connectable.connect(output);
-
+                final AtomicBoolean disposed = new AtomicBoolean();
+                final Connection<I> input =
+                    connectable.connect(
+                        i -> {
+                          synchronized (disposed) {
+                            if (!disposed.get()) {
+                              output.accept(i);
+                            }
+                          }
+                        });
                 final Disposable disposable =
                     upstream.subscribe(
                         new io.reactivex.functions.Consumer<I>() {
@@ -125,6 +141,9 @@ public final class RxConnectables {
                     new Cancellable() {
                       @Override
                       public void cancel() throws Exception {
+                        synchronized (disposed) {
+                          disposed.set(true);
+                        }
                         disposable.dispose();
                         input.dispose();
                       }
