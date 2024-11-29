@@ -21,8 +21,11 @@ package com.spotify.mobius.runners;
 
 import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nonnull;
 
 /**
@@ -39,21 +42,38 @@ public class WorkRunners {
 
   @Nonnull
   public static WorkRunner singleThread() {
-    return from(Executors.newSingleThreadExecutor());
+    return from(Executors.newSingleThreadExecutor(THREAD_FACTORY));
   }
 
   @Nonnull
   public static WorkRunner fixedThreadPool(int n) {
-    return from(Executors.newFixedThreadPool(n));
+    return from(Executors.newFixedThreadPool(n, THREAD_FACTORY));
   }
 
   @Nonnull
   public static WorkRunner cachedThreadPool() {
-    return from(Executors.newCachedThreadPool());
+    return from(Executors.newCachedThreadPool(THREAD_FACTORY));
   }
 
   @Nonnull
   public static WorkRunner from(ExecutorService service) {
     return new ExecutorServiceWorkRunner(checkNotNull(service));
+  }
+
+  private static final MyThreadFactory THREAD_FACTORY = new MyThreadFactory();
+
+  private static class MyThreadFactory implements ThreadFactory {
+
+    private static final AtomicLong threadCount = new AtomicLong(0);
+
+    @Override
+    public Thread newThread(Runnable runnable) {
+      Thread thread = Executors.defaultThreadFactory().newThread(checkNotNull(runnable));
+
+      thread.setName(
+          String.format(Locale.ENGLISH, "mobius-thread-%d", threadCount.incrementAndGet()));
+
+      return thread;
+    }
   }
 }

@@ -25,11 +25,7 @@ import com.spotify.mobius.functions.Producer;
 import com.spotify.mobius.internal_util.ImmutableUtil;
 import com.spotify.mobius.runners.WorkRunner;
 import com.spotify.mobius.runners.WorkRunners;
-import java.util.Locale;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -109,14 +105,14 @@ public final class Mobius {
           @Nonnull
           @Override
           public WorkRunner get() {
-            return WorkRunners.from(Executors.newSingleThreadExecutor(Builder.THREAD_FACTORY));
+            return MobiusPlugins.defaultEventRunner();
           }
         },
         new Producer<WorkRunner>() {
           @Nonnull
           @Override
           public WorkRunner get() {
-            return WorkRunners.from(Executors.newCachedThreadPool(Builder.THREAD_FACTORY));
+            return MobiusPlugins.defaultEffectRunner();
           }
         });
   }
@@ -177,9 +173,6 @@ public final class Mobius {
   }
 
   static final class Builder<M, E, F> implements MobiusLoop.Builder<M, E, F> {
-
-    private static final MyThreadFactory THREAD_FACTORY = new MyThreadFactory();
-
     private final Update<M, E, F> update;
     private final Connectable<F, E> effectHandler;
     @Nullable private final Init<M, F> init;
@@ -319,21 +312,6 @@ public final class Mobius {
           eventSource,
           checkNotNull(eventRunner.get()),
           checkNotNull(effectRunner.get()));
-    }
-
-    private static class MyThreadFactory implements ThreadFactory {
-
-      private static final AtomicLong threadCount = new AtomicLong(0);
-
-      @Override
-      public Thread newThread(Runnable runnable) {
-        Thread thread = Executors.defaultThreadFactory().newThread(checkNotNull(runnable));
-
-        thread.setName(
-            String.format(Locale.ENGLISH, "mobius-thread-%d", threadCount.incrementAndGet()));
-
-        return thread;
-      }
     }
   }
 }
