@@ -26,7 +26,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
-
 import javax.annotation.Nonnull;
 
 /**
@@ -72,7 +71,7 @@ public class WorkRunners {
       Thread thread = Executors.defaultThreadFactory().newThread(checkNotNull(runnable));
 
       thread.setName(
-              String.format(Locale.ENGLISH, "mobius-thread-%d", threadCount.incrementAndGet()));
+          String.format(Locale.ENGLISH, "mobius-thread-%d", threadCount.incrementAndGet()));
 
       return thread;
     }

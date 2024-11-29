@@ -25,9 +25,7 @@ import com.spotify.mobius.functions.Producer;
 import com.spotify.mobius.internal_util.ImmutableUtil;
 import com.spotify.mobius.runners.WorkRunner;
 import com.spotify.mobius.runners.WorkRunners;
-
 import java.util.Set;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
