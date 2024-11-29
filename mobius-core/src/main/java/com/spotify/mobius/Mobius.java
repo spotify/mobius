@@ -23,14 +23,11 @@ import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 import com.spotify.mobius.functions.Producer;
 import com.spotify.mobius.internal_util.ImmutableUtil;
-import com.spotify.mobius.runners.DefaultWorkRunners;
 import com.spotify.mobius.runners.WorkRunner;
 import com.spotify.mobius.runners.WorkRunners;
-import java.util.Locale;
+
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicLong;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -106,20 +103,20 @@ public final class Mobius {
         null,
         (Connectable<M, E>) NOOP_EVENT_SOURCE,
         (MobiusLoop.Logger<M, E, F>) NOOP_LOGGER,
-            new Producer<>() {
-                @Nonnull
-                @Override
-                public WorkRunner get() {
-                    return DefaultWorkRunners.defaultEventRunner();
-                }
-            },
-            new Producer<>() {
-                @Nonnull
-                @Override
-                public WorkRunner get() {
-                    return DefaultWorkRunners.defaultEffectRunner();
-                }
-            });
+        new Producer<WorkRunner>() {
+          @Nonnull
+          @Override
+          public WorkRunner get() {
+            return MobiusPlugins.defaultEventRunner();
+          }
+        },
+        new Producer<WorkRunner>() {
+          @Nonnull
+          @Override
+          public WorkRunner get() {
+            return MobiusPlugins.defaultEffectRunner();
+          }
+        });
   }
 
   /**

@@ -1,9 +1,12 @@
-package com.spotify.mobius.runners;
+package com.spotify.mobius;
+
+import com.spotify.mobius.runners.WorkRunner;
+import com.spotify.mobius.runners.WorkRunners;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class DefaultWorkRunners {
+public class MobiusPlugins {
 
     @Nullable
     private static WorkRunner EFFECT_RUNNER_OVERRIDE;
@@ -19,7 +22,7 @@ public class DefaultWorkRunners {
     }
 
     @Nonnull
-    public static WorkRunner defaultEffectRunner() {
+    static WorkRunner defaultEffectRunner() {
         if (EFFECT_RUNNER_OVERRIDE != null) {
             return EFFECT_RUNNER_OVERRIDE;
         }
@@ -27,7 +30,7 @@ public class DefaultWorkRunners {
     }
 
     @Nonnull
-    public static WorkRunner defaultEventRunner() {
+    static WorkRunner defaultEventRunner() {
         if (EVENT_RUNNER_OVERRIDE != null) {
             return EVENT_RUNNER_OVERRIDE;
         }
