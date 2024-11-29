@@ -23,6 +23,7 @@ import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 import com.spotify.mobius.functions.Producer;
 import com.spotify.mobius.internal_util.ImmutableUtil;
+import com.spotify.mobius.runners.DefaultWorkRunners;
 import com.spotify.mobius.runners.WorkRunner;
 import com.spotify.mobius.runners.WorkRunners;
 import java.util.Locale;
@@ -109,14 +110,14 @@ public final class Mobius {
                 @Nonnull
                 @Override
                 public WorkRunner get() {
-                    return WorkRunners.singleThread();
+                    return DefaultWorkRunners.defaultEventRunner();
                 }
             },
             new Producer<>() {
                 @Nonnull
                 @Override
                 public WorkRunner get() {
-                    return WorkRunners.cachedThreadPool();
+                    return DefaultWorkRunners.defaultEffectRunner();
                 }
             });
   }
