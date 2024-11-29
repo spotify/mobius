@@ -105,20 +105,20 @@ public final class Mobius {
         null,
         (Connectable<M, E>) NOOP_EVENT_SOURCE,
         (MobiusLoop.Logger<M, E, F>) NOOP_LOGGER,
-        new Producer<WorkRunner>() {
-          @Nonnull
-          @Override
-          public WorkRunner get() {
-            return WorkRunners.from(Executors.newSingleThreadExecutor(Builder.THREAD_FACTORY));
-          }
-        },
-        new Producer<WorkRunner>() {
-          @Nonnull
-          @Override
-          public WorkRunner get() {
-            return WorkRunners.from(Executors.newCachedThreadPool(Builder.THREAD_FACTORY));
-          }
-        });
+            new Producer<>() {
+                @Nonnull
+                @Override
+                public WorkRunner get() {
+                    return WorkRunners.singleThread();
+                }
+            },
+            new Producer<>() {
+                @Nonnull
+                @Override
+                public WorkRunner get() {
+                    return WorkRunners.cachedThreadPool();
+                }
+            });
   }
 
   /**
@@ -177,9 +177,6 @@ public final class Mobius {
   }
 
   static final class Builder<M, E, F> implements MobiusLoop.Builder<M, E, F> {
-
-    private static final MyThreadFactory THREAD_FACTORY = new MyThreadFactory();
-
     private final Update<M, E, F> update;
     private final Connectable<F, E> effectHandler;
     @Nullable private final Init<M, F> init;
@@ -319,21 +316,6 @@ public final class Mobius {
           eventSource,
           checkNotNull(eventRunner.get()),
           checkNotNull(effectRunner.get()));
-    }
-
-    private static class MyThreadFactory implements ThreadFactory {
-
-      private static final AtomicLong threadCount = new AtomicLong(0);
-
-      @Override
-      public Thread newThread(Runnable runnable) {
-        Thread thread = Executors.defaultThreadFactory().newThread(checkNotNull(runnable));
-
-        thread.setName(
-            String.format(Locale.ENGLISH, "mobius-thread-%d", threadCount.incrementAndGet()));
-
-        return thread;
-      }
     }
   }
 }
