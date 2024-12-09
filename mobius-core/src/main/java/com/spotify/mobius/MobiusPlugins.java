@@ -19,6 +19,7 @@
  */
 package com.spotify.mobius;
 
+import com.spotify.mobius.functions.Producer;
 import com.spotify.mobius.runners.WorkRunner;
 import com.spotify.mobius.runners.WorkRunners;
 import javax.annotation.Nonnull;
@@ -26,41 +27,43 @@ import javax.annotation.Nullable;
 
 public class MobiusPlugins {
 
-  @Nullable private static WorkRunner EFFECT_RUNNER_OVERRIDE;
-  @Nullable private static WorkRunner EVENT_RUNNER_OVERRIDE;
+  @Nullable private static Producer<WorkRunner> EFFECT_RUNNER_OVERRIDE_PRODUCER;
+  @Nullable private static Producer<WorkRunner> EVENT_RUNNER_OVERRIDE_PRODUCER;
 
   /**
-   * Sets the effect runner that will be used in {@link MobiusLoop} when effectRunner was not
-   * provided to {@link MobiusLoop.Builder}.
+   * Sets the effect runner producer that will be used in {@link MobiusLoop} when effectRunner was
+   * not provided to {@link MobiusLoop.Builder}.
    *
-   * @param defaultEffectRunner the {@link WorkRunner} to use as the default effect runner
+   * @param defaultEffectRunnerProducer the {@link WorkRunner} producer to use as the default effect
+   *     runner. A new instance needs to be provided each time the producer is called.
    */
-  public static void setDefaultEffectRunner(WorkRunner defaultEffectRunner) {
-    EFFECT_RUNNER_OVERRIDE = defaultEffectRunner;
+  public static void setDefaultEffectRunner(Producer<WorkRunner> defaultEffectRunnerProducer) {
+    EFFECT_RUNNER_OVERRIDE_PRODUCER = defaultEffectRunnerProducer;
   }
 
   /**
-   * Sets the event runner that will be used in {@link MobiusLoop} when eventRunner was not provided
-   * to {@link MobiusLoop.Builder}.
+   * Sets the event runner producer that will be used in {@link MobiusLoop} when eventRunner was not
+   * provided to {@link MobiusLoop.Builder}.
    *
-   * @param defaultEventRunner the {@link WorkRunner} to use as the default event runner
+   * @param defaultEventRunnerProducer the {@link WorkRunner} producer to use as the default event
+   *     runner. A new instance needs to be provided each time the producer is called.
    */
-  public static void setDefaultEventRunner(WorkRunner defaultEventRunner) {
-    EVENT_RUNNER_OVERRIDE = defaultEventRunner;
+  public static void setDefaultEventRunner(Producer<WorkRunner> defaultEventRunnerProducer) {
+    EVENT_RUNNER_OVERRIDE_PRODUCER = defaultEventRunnerProducer;
   }
 
   @Nonnull
   static WorkRunner defaultEffectRunner() {
-    if (EFFECT_RUNNER_OVERRIDE != null) {
-      return EFFECT_RUNNER_OVERRIDE;
+    if (EFFECT_RUNNER_OVERRIDE_PRODUCER != null) {
+      return EFFECT_RUNNER_OVERRIDE_PRODUCER.get();
     }
     return WorkRunners.cachedThreadPool();
   }
 
   @Nonnull
   static WorkRunner defaultEventRunner() {
-    if (EVENT_RUNNER_OVERRIDE != null) {
-      return EVENT_RUNNER_OVERRIDE;
+    if (EVENT_RUNNER_OVERRIDE_PRODUCER != null) {
+      return EVENT_RUNNER_OVERRIDE_PRODUCER.get();
     }
     return WorkRunners.singleThread();
   }
