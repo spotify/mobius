@@ -32,23 +32,27 @@ public class MobiusPlugins {
 
   /**
    * Sets the effect runner producer that will be used in {@link MobiusLoop} when effectRunner was
-   * not provided to {@link MobiusLoop.Builder}.
+   * not provided to {@link MobiusLoop.Builder}. Affects only the loops created after this call.
    *
    * @param defaultEffectRunnerProducer the {@link WorkRunner} producer to use as the default effect
-   *     runner. A new instance needs to be provided each time the producer is called.
+   *     runner (a new instance needs to be provided each time the producer is called) or null to
+   *     restore the default one
    */
-  public static void setDefaultEffectRunner(Producer<WorkRunner> defaultEffectRunnerProducer) {
+  public static void setDefaultEffectRunner(
+      @Nullable Producer<WorkRunner> defaultEffectRunnerProducer) {
     EFFECT_RUNNER_OVERRIDE_PRODUCER = defaultEffectRunnerProducer;
   }
 
   /**
    * Sets the event runner producer that will be used in {@link MobiusLoop} when eventRunner was not
-   * provided to {@link MobiusLoop.Builder}.
+   * provided to {@link MobiusLoop.Builder}. Affects only the loops created after this call.
    *
    * @param defaultEventRunnerProducer the {@link WorkRunner} producer to use as the default event
-   *     runner. A new instance needs to be provided each time the producer is called.
+   *     runner (a new instance needs to be provided each time the producer is called) or null to
+   *     restore the default one
    */
-  public static void setDefaultEventRunner(Producer<WorkRunner> defaultEventRunnerProducer) {
+  public static void setDefaultEventRunner(
+      @Nullable Producer<WorkRunner> defaultEventRunnerProducer) {
     EVENT_RUNNER_OVERRIDE_PRODUCER = defaultEventRunnerProducer;
   }
 
