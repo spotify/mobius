@@ -23,16 +23,13 @@ import static com.spotify.mobius.internal_util.Preconditions.checkNotNull;
 
 import com.spotify.mobius.functions.Consumer;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 class FireAtLeastOnceObserver<V> implements Consumer<V> {
-  private enum State {
-    UNFIRED,
-    FIRING,
-    READY,
-  }
 
   private final Consumer<V> delegate;
-  private volatile State state = State.UNFIRED;
+  private volatile boolean hasStartedEmitting = false;
   private final ConcurrentLinkedQueue<V> queue = new ConcurrentLinkedQueue<>();
 
   public FireAtLeastOnceObserver(Consumer<V> delegate) {
@@ -41,58 +38,55 @@ class FireAtLeastOnceObserver<V> implements Consumer<V> {
 
   @Override
   public void accept(V value) {
-    // this is a bit racy, with three threads handling values with order 1, 2 and 3, respectively:
-    // 1. thread 1 has called accceptIfUnfired and is in safeConsume, having published its value to
-    //    observers, and having just set the state to READY
-    // 2. thread 2 has called accept, and is in safeConsume, before the first synchronized section
-    // 3. thread 3 has called accept and is about to check the current state.
-    //
-    // now, if thread 3 reads READY and calls the delegate's accept method directly, before
-    // thread 2 sets the state to FIRING and publishes its data, the observer will see 1, 3, 2.
-    // this means that this class isn't safe for racing calls to accept(), but given that it's
-    // only intended to be used within the event processing, which is sequential, that is not a
-    // risk.
-    // do note that this class isn't generally useful outside the specific context of event
-    // processing.
-    if (state != State.READY) {
-      safeConsume(value, true);
-    } else {
-      delegate.accept(value);
-    }
+    queue.add(value);
+    drainQueue();
   }
+
+  private final AtomicReference<AtomicReference<V>> firstValue = new AtomicReference<>(null);
 
   public void acceptIfFirst(V value) {
-    if (state == State.UNFIRED) {
-      safeConsume(value, false);
+    // Wrap the value, so that we are able to represent having a `null` value vs. not having a value
+    // at all.
+    AtomicReference<V> wrappedValue = new AtomicReference<>(value);
+    if (firstValue.compareAndSet(null, wrappedValue)) {
+      drainQueue();
     }
   }
 
-  private void safeConsume(V value, boolean acceptAlways) {
-    // this synchronized section mustn't call unsafe external code like the delegate's accept
-    // method to avoid the risk of deadlocks. It's synchronized because it's changing two stateful
-    // fields: the 'state' and the 'queue', and those need to go together to guarantee ordering
-    // of the emitted values.
-    synchronized (this) {
-      // add this item to the queue if we haven't fired, or if it should be added anyway
-      if (state == State.UNFIRED || acceptAlways) {
-        queue.add(value);
+  private final AtomicBoolean processing = new AtomicBoolean(false);
+
+  private void drainQueue() {
+    if (!processing.compareAndSet(false, true)) {
+      // already draining the queue
+      return;
+    }
+
+    // We are now in a safe section that can only execute on one thread at the time.
+
+    // If this is the first time, try to emit a value that only can be emitted if it is first.
+    if (!hasStartedEmitting) {
+      hasStartedEmitting = true;
+      AtomicReference<V> wrappedValue = firstValue.get();
+      if (wrappedValue != null) {
+        delegate.accept(wrappedValue.get());
       }
-
-      // set state to FIRING to prevent acceptIfUnfired from adding items to the queue and messing
-      // ordering up - regular accept mustn't invoke the delegate consumer directly until we've
-      // processed the queue and entered READY state.
-      state = State.FIRING;
     }
 
-    for (V toSend = queue.poll(); toSend != null; toSend = queue.poll()) {
-      delegate.accept(value);
-    }
+    boolean done = false;
 
-    synchronized (this) {
-      // it's possible for a racing 'accept' call to add an item to the queue after the last poll
-      // above, so check in an exclusive way that the queue is in fact empty TODO: not correct.
-      if (queue.isEmpty()) {
-        state = State.READY;
+    while (!done) {
+      try {
+        for (V toSend = queue.poll(); toSend != null; toSend = queue.poll()) {
+          delegate.accept(toSend);
+        }
+
+      } finally {
+        processing.set(false); // leave the safe section
+
+        // If the queue is empty or if we can't reacquire the processing lock, we're done,
+        // because either there is nothing to do, or someone else will process the queue.
+        // Note: it's important that we check the queue first, otherwise we might leak the lock.
+        done = queue.isEmpty() || !processing.compareAndSet(false, true);
       }
     }
   }
