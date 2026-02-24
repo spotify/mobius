@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/github/license/spotify/mobius.svg)](LICENSE)
 [![Join the chat at https://gitter.im/spotify/mobius](https://badges.gitter.im/spotify/mobius.svg)](https://gitter.im/spotify/mobius)
 
-Mobius is a functional reactive framework for managing state evolution and side-effects, with add-ons for connecting to Android UIs and RxJava Observables. It emphasizes separation of concerns, testability, and isolating stateful parts of the code.
+Mobius is a functional reactive framework for managing state evolution and side-effects, with add-ons for connecting to Android UIs, RxJava Observables, and Kotlin Coroutines. It emphasizes separation of concerns, testability, and isolating stateful parts of the code.
 
 To learn more, visit the [website][mkdocs] for a user guide. To see Mobius in action, check out the [sample TODO](https://github.com/spotify/mobius-android-sample) app based on the app from [Android Architecture Blueprints](https://github.com/googlesamples/android-architecture). You can also
 watch a [talk from Android @Scale introducing Mobius](https://www.facebook.com/atscaleevents/videos/2025571921049235/).
@@ -29,8 +29,9 @@ testImplementation 'com.spotify.mobius:mobius-test:LATEST_RELEASE'
 implementation 'com.spotify.mobius:mobius-rx:LATEST_RELEASE'       // only for RxJava 1 support
 implementation 'com.spotify.mobius:mobius-rx2:LATEST_RELEASE'      // only for RxJava 2 support
 implementation 'com.spotify.mobius:mobius-rx3:LATEST_RELEASE'      // only for RxJava 3 support
-implementation 'com.spotify.mobius:mobius-android:LATEST_RELEASE'  // only for Android support
-implementation 'com.spotify.mobius:mobius-extras:LATEST_RELEASE'   // utilities for common patterns
+implementation 'com.spotify.mobius:mobius-android:LATEST_RELEASE'    // only for Android support
+implementation 'com.spotify.mobius:mobius-coroutines:LATEST_RELEASE' // only for Kotlin Coroutines support
+implementation 'com.spotify.mobius:mobius-extras:LATEST_RELEASE'     // utilities for common patterns
 ```
 
 ### mobius-core [![Javadocs](http://www.javadoc.io/badge/com.spotify.mobius/mobius-core.svg?color=blue)](http://www.javadoc.io/doc/com.spotify.mobius/mobius-core)
@@ -44,6 +45,9 @@ The rx modules contain extensions for RxJava. You should use one of them in your
 
 ### mobius-android [![Javadocs](http://www.javadoc.io/badge/com.spotify.mobius/mobius-android.svg?color=blue)](http://www.javadoc.io/doc/com.spotify.mobius/mobius-android)
 The android module primarily contains classes for hooking up a MobiusLoop to Android.
+
+### mobius-coroutines [![Javadocs](http://www.javadoc.io/badge/com.spotify.mobius/mobius-coroutines.svg?color=blue)](http://www.javadoc.io/doc/com.spotify.mobius/mobius-coroutines)
+The coroutines module contains utilities for connecting Mobius with Kotlin Coroutines. It provides suspend function-based effect handlers, Flow-based event sources, and a subtype effect handler builder with configurable execution policies (sequential, concurrent, or cancel previous).
 
 ### mobius-extras [![Javadocs](http://www.javadoc.io/badge/com.spotify.mobius/mobius-extras.svg?color=blue)](http://www.javadoc.io/doc/com.spotify.mobius/mobius-extras)
 The extras module contains utilities and classes that help reducing boilerplate for some more advanced usage patterns (for example, nested update functions).
