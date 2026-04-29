@@ -27,7 +27,9 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.*
 import org.junit.Assert.assertThrows
+import org.junit.Assert.fail
 import org.junit.Test
+import java.util.Collections
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 
@@ -266,6 +268,51 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
 
     @Test
     @Requirement(
+        given = "A disposed connection",
+        `when` = "an effect is accepted",
+        then = "the registered handler is not invoked"
+    )
+    fun acceptAfterDisposeIsANoOp() = runTest {
+        var handlerCalled = false
+        val connection = subtypeEffectHandler<Effect, Event>()
+            .addAction<Effect.Simple> { handlerCalled = true }
+            .build(UnconfinedTestDispatcher(testScheduler))
+            .connect { }
+
+        connection.dispose()
+        connection.accept(Effect.Simple)
+        advanceUntilIdle()
+
+        assertThat(handlerCalled).isFalse()
+    }
+
+    @Test
+    @Requirement(
+        given = "A connection with a handler in flight",
+        `when` = "dispose is called multiple times",
+        then = "no exception is thrown"
+    )
+    fun multipleDisposeIsIdempotent() {
+        val uncaughtExceptions = Collections.synchronizedList(mutableListOf<Throwable>())
+        val internalExceptionHandler = CoroutineExceptionHandler { _, t -> uncaughtExceptions.add(t) }
+
+        val connection = subtypeEffectHandler<Effect, Event>()
+            .addAction<Effect.Simple> { delay(50) }
+            .build(internalExceptionHandler)
+            .connect { }
+
+        connection.accept(Effect.Simple)
+        Thread.sleep(10) // let the handler start
+
+        repeat(5) { connection.dispose() }
+
+        Thread.sleep(50) // let cancellations settle
+
+        assertThat(uncaughtExceptions).isEmpty()
+    }
+
+    @Test
+    @Requirement(
         given = "An effect handler using RunSequentially cancellation policy",
         `when` = "several matching effects are produced",
         then = "all the effect are started successfully" +
@@ -380,10 +427,22 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
         val executor = Executors.newSingleThreadExecutor()
         val scope = CoroutineScope(executor.asCoroutineDispatcher())
 
-        // given a handler that responds with events
+        // Capture exceptions thrown inside the connectable's internal coroutines. Without this
+        // handler they propagate to the JVM uncaught-exception handler, which doesn't fail the
+        // test — masking races like ClosedSendChannelException between accept() and dispose().
+        val uncaughtExceptions = Collections.synchronizedList(mutableListOf<Throwable>())
+        val internalExceptionHandler = CoroutineExceptionHandler { _, t -> uncaughtExceptions.add(t) }
+
+        // given a handler that responds with events. Note: handler is registered for the concrete
+        // subtype actually being dispatched — lookup uses exact KClass match. The delay holds the
+        // sub-effect channel busy so accept-coroutines suspend on send, widening the race window
+        // when dispose() closes the sub-channel concurrently (the production crash signature).
         val connectable = subtypeEffectHandler<Effect, Event>()
-            .addFunction<Effect> { Event.SingleValue("value") }
-            .build()
+            .addFunction<Effect.Simple> {
+                delay(1)
+                Event.SingleValue("value")
+            }
+            .build(internalExceptionHandler)
 
         // when a connectable is subscribed to (many times to make this non-flaky/less flaky)
         for (i in 1..999) {
@@ -396,9 +455,12 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
                 }
             }
 
-            // given a channel that continuously emits stuff
+            // given several producers that emit a burst of effects (bounded so suspended
+            // coroutines don't pile up faster than they can drain — with a delayed handler the
+            // unbounded variant exhausts native resources before the test loop completes)
             val job = scope.launch {
-                while (isActive) {
+                repeat(200) {
+                    if (!isActive) return@launch
                     connection.accept(Effect.Simple)
                 }
             }
@@ -424,9 +486,74 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
                 .isFalse()
 
             job.cancel()
+
+            // Fail fast on the first race
+            if (uncaughtExceptions.isNotEmpty()) break
         }
 
         scope.cancel()
+
+        assertWithMessage("Uncaught exceptions in connectable's internal coroutines: %s", uncaughtExceptions)
+            .that(uncaughtExceptions)
+            .isEmpty()
+    }
+
+    @Test
+    @Requirement(
+        given = "An effect is being handled and another is suspended on the sub-effect channel",
+        `when` = "the connection is disposed",
+        then = "no uncaught exception is thrown by the suspended sender"
+    )
+    fun disposeWhileEffectSuspendedOnSubChannelDoesNotCrash() {
+        val uncaughtExceptions = Collections.synchronizedList(mutableListOf<Throwable>())
+        val internalExceptionHandler = CoroutineExceptionHandler { _, t -> uncaughtExceptions.add(t) }
+
+        // Sets up the precondition for the production crash: an accept-coroutine suspended on
+        // subEffectChannel.send when dispose() closes the channel. With the bug present, the
+        // close races against scope.cancel and can wake the suspended sender with
+        // ClosedSendChannelException instead of CancellationException. Repeated to raise the
+        // chance the race resolves in the bad direction (kotlinx-coroutines tends to win
+        // cancellation propagation, but production has shown it can lose).
+        repeat(200) { iteration ->
+            val handlerCanProceed = CompletableDeferred<Unit>()
+            val handlerStarted = CompletableDeferred<Unit>()
+
+            val connectable = subtypeEffectHandler<Effect, Event>()
+                .addAction<Effect.Simple> {
+                    handlerStarted.complete(Unit)
+                    handlerCanProceed.await()
+                }
+                .build(internalExceptionHandler)
+
+            val connection = connectable.connect { }
+
+            runBlocking {
+                // First effect — handler starts and suspends on handlerCanProceed.
+                connection.accept(Effect.Simple)
+                handlerStarted.await()
+
+                // Second effect — accept-coroutine acquires mutex, finds existing channel,
+                // releases mutex, calls subEffectChannel.send(effect). send suspends because
+                // the receiver is busy awaiting handlerCanProceed.
+                connection.accept(Effect.Simple)
+
+                // Give the second accept-coroutine time to actually reach the suspended send.
+                delay(20)
+
+                // Dispose. This closes the sub-effect channel, which can wake the suspended
+                // sender with ClosedSendChannelException if cancellation hasn't propagated yet.
+                connection.dispose()
+
+                // Unblock the handler so it can exit (scope is cancelled so its await throws
+                // CancellationException, which is the expected, handled outcome).
+                handlerCanProceed.complete(Unit)
+                delay(20)
+            }
+
+            if (uncaughtExceptions.isNotEmpty()) {
+                fail("Uncaught exception during dispose race on iteration $iteration: $uncaughtExceptions")
+            }
+        }
     }
 
     private sealed interface Effect {
