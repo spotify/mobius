@@ -280,14 +280,13 @@ class CoroutinesSubtypeEffectHandlerBuilder<F : Any, E : Any> {
             }
 
             override fun dispose() {
+                // scope.cancel() alone is sufficient: it cancels the events consumer, every
+                // effect handler, and every accept-coroutine, all of which release their
+                // references to eventsChannel and the sub-effect channels via cancellation.
+                // Explicit channel.close() here used to race against the cancellation
+                // propagation and could surface ClosedSendChannelException to the platform
+                // uncaught handler instead of CancellationException.
                 scope.cancel("Effect Handler disposed")
-                eventsChannel.close()
-                runBlocking {
-                    mutex.withLock {
-                        subEffectChannelsMap.values.forEach { it.close() }
-                        subEffectChannelsMap.clear()
-                    }
-                }
             }
         }
     }
