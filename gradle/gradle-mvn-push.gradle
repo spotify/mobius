@@ -1,26 +1,9 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
+apply plugin: 'com.gradleup.nmcp'
 
 def isReleaseBuild() {
     return VERSION_NAME.contains("SNAPSHOT") == false
-}
-
-def getReleaseRepositoryUrl() {
-    return hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
-            : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-}
-
-def getSnapshotRepositoryUrl() {
-    return hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
-            : "https://oss.sonatype.org/content/repositories/snapshots/"
-}
-
-def getRepositoryUsername() {
-    return hasProperty('SONATYPE_NEXUS_USERNAME') ? SONATYPE_NEXUS_USERNAME : ""
-}
-
-def getRepositoryPassword() {
-    return hasProperty('SONATYPE_NEXUS_PASSWORD') ? SONATYPE_NEXUS_PASSWORD : ""
 }
 
 afterEvaluate {
@@ -100,18 +83,6 @@ afterEvaluate {
                             }
                         }
                     }
-                }
-            }
-        }
-
-        repositories {
-            maven {
-                def releasesRepoUrl = getReleaseRepositoryUrl()
-                def snapshotsRepoUrl = getSnapshotRepositoryUrl()
-                url = isReleaseBuild() ? releasesRepoUrl : snapshotsRepoUrl
-                credentials {
-                    username = getRepositoryUsername()
-                    password = getRepositoryPassword()
                 }
             }
         }
