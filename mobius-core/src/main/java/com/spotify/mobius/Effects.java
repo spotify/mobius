@@ -45,7 +45,7 @@ public final class Effects {
   // super type even if you only submit items of a sub type. Hence the 'G extends F' type parameter.
   public static <F, G extends F> Set<F> effects(G... effects) {
     Set<F> result = new HashSet<>(effects.length);
-    Collections.addAll(result, (F[]) Preconditions.checkArrayNoNulls((F[]) effects));
+    Collections.addAll(result, Preconditions.checkArrayNoNulls((F[]) effects));
 
     return result;
   }
