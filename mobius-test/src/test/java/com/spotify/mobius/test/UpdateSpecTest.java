@@ -41,7 +41,7 @@ public class UpdateSpecTest {
         if (!"HELLO".equals(model)) {
           return Next.noChange();
         }
-        return Next.next(model.toUpperCase(), effects(1, 2));
+        return Next.next(model.toUpperCase(java.util.Locale.ROOT), effects(1, 2));
       };
   private static final UpdateSpec<String, String, Integer> CRASH_SPEC =
       new UpdateSpec<>(

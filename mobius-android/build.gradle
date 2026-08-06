@@ -28,17 +28,20 @@ static def gitSha() {
 
 android {
     namespace = "com.spotify.mobius.android"
-    compileSdkVersion rootProject.ext.compileSdkVersion
+    compileSdk rootProject.ext.compileSdkVersion
     compileOptions {
       sourceCompatibility JavaVersion.VERSION_1_8
       targetCompatibility JavaVersion.VERSION_1_8
     }
+    buildFeatures {
+        buildConfig true
+    }
     defaultConfig {
-        minSdkVersion rootProject.ext.minSdkVersion
+        minSdk rootProject.ext.minSdkVersion
         buildConfigField "String", "LIBRARY_VERSION", "\"${VERSION_NAME}\""
         buildConfigField "String", "GIT_SHA", "\"${gitSha()}\""
     }
-    lintOptions {
+    lint {
         disable 'InvalidPackage'
     }
     publishing {

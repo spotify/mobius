@@ -81,7 +81,7 @@ class CapturingLogger<M, E, F> implements MobiusLoop.Logger<M, E, F> {
 
     abstract Throwable exception();
 
-    public static <M, F> InitErrorArgs<M> create(M model, Throwable exception) {
+    public static <M> InitErrorArgs<M> create(M model, Throwable exception) {
       return new AutoValue_CapturingLogger_InitErrorArgs<>(model, exception);
     }
   }

@@ -274,7 +274,9 @@ public class CompositeLoggerTest {
     }
 
     Throwable createException()
-        throws IllegalAccessException, InstantiationException, NoSuchMethodException,
+        throws IllegalAccessException,
+            InstantiationException,
+            NoSuchMethodException,
             InvocationTargetException {
       return exceptionClazz().getDeclaredConstructor().newInstance();
     }
@@ -319,7 +321,9 @@ public class CompositeLoggerTest {
     }
 
     Throwable createException()
-        throws IllegalAccessException, InstantiationException, NoSuchMethodException,
+        throws IllegalAccessException,
+            InstantiationException,
+            NoSuchMethodException,
             InvocationTargetException {
       return exceptionClazz().getDeclaredConstructor().newInstance();
     }
