@@ -14,9 +14,10 @@ buildscript {
 plugins {
     id 'com.diffplug.spotless' version '6.25.0'
     id 'com.benjaminsproule.license' version '0.16.2'
-    id 'io.codearte.nexus-staging' version '0.21.2'
     id 'net.ltgt.errorprone' version '3.1.0'
     id 'com.android.library' version '8.2.0' apply false
+    id 'com.gradleup.nmcp' version '1.6.1' apply false
+    id 'com.gradleup.nmcp.aggregation' version '1.6.1'
     id 'maven-publish'
 }
 
@@ -115,7 +116,16 @@ allprojects {
     getTasksByName('check', false).each { checkTask -> checkTask.dependsOn(tasks.withType(Javadoc)) }
 }
 
-nexusStaging {
-    packageGroup = "com.spotify"
-    numberOfRetries = 30
+nmcpAggregation {
+    centralPortal {
+        username = findProperty("SONATYPE_NEXUS_USERNAME") ?: ""
+        password = findProperty("SONATYPE_NEXUS_PASSWORD") ?: ""
+        publishingType = "USER_MANAGED"
+    }
+}
+
+dependencies {
+    subprojects.each { sub ->
+        nmcpAggregation project(sub.path)
+    }
 }
