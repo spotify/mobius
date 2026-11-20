@@ -21,11 +21,18 @@ package com.spotify.mobius.coroutines
 
 import com.google.common.truth.Ordered
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import com.spotify.mobius.functions.Consumer
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.*
+import kotlinx.coroutines.withContext
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MobiusCoroutinesTest {
@@ -107,6 +114,61 @@ class MobiusCoroutinesTest {
             Event.Success("success1"),
             Event.Failure("failure1"),
         )
+    }
+
+    @Test
+    @Requirement(
+        given = "an effect handler created from MobiusCoroutines.effectHandler",
+        `when` = "an effect sends an event after the effect handler is disposed",
+        then = "the event is not delivered"
+    )
+    fun effectHandlerDropsEventsAfterDispose() = runTest {
+        val testEventConsumer = TestEventConsumer()
+
+        val connection = MobiusCoroutines.effectHandler<Effect, Event>(StandardTestDispatcher(testScheduler)) { effect, eventConsumer ->
+            effect as Effect.ComputeSuccess
+            withContext(NonCancellable) {
+                delay(effect.delayMillis)
+                eventConsumer.accept(Event.Success(effect.id))
+            }
+        }.connect(testEventConsumer)
+        connection.accept(Effect.ComputeSuccess("success1", 100))
+        advanceTimeBy(50)
+
+        connection.dispose()
+        advanceUntilIdle()
+        testEventConsumer.assertConsumedEvents()
+    }
+
+    @Test
+    @Requirement(
+        given = "an event is being delivered by an effect handler created from MobiusCoroutines.effectHandler",
+        `when` = "the connection is disposed",
+        then = "dispose waits until the delivery is done"
+    )
+    fun effectHandlerDisposeWaitsForEventInDelivery() {
+        val deliveryStarted = CountDownLatch(1)
+        val deliveryCanFinish = CountDownLatch(1)
+        val disposeReturned = CountDownLatch(1)
+
+        val connection = MobiusCoroutines.effectHandler<Effect, Event>(Dispatchers.Default) { effect, eventConsumer ->
+            eventConsumer.accept(Event.Loading((effect as Effect.ComputeSuccess).id))
+        }.connect {
+            deliveryStarted.countDown()
+            deliveryCanFinish.await(5, TimeUnit.SECONDS)
+        }
+        connection.accept(Effect.ComputeSuccess("success1", 0))
+        assertThat(deliveryStarted.await(5, TimeUnit.SECONDS)).isTrue()
+
+        thread {
+            connection.dispose()
+            disposeReturned.countDown()
+        }
+
+        assertWithMessage("dispose returned while an event was being delivered")
+            .that(disposeReturned.await(100, TimeUnit.MILLISECONDS)).isFalse()
+        deliveryCanFinish.countDown()
+        assertThat(disposeReturned.await(5, TimeUnit.SECONDS)).isTrue()
     }
 
     private fun TestScope.createEffectHandler() =
