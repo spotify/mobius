@@ -45,12 +45,14 @@ interface MobiusCoroutines {
             onEffect: suspend (effect: F, eventConsumer: Consumer<E>) -> Unit
         ) = Connectable { eventConsumer ->
             val scope = CoroutineScope(coroutineContext)
+            val safeEventConsumer = SafeEventConsumer(eventConsumer)
             object : Connection<F> {
                 override fun accept(value: F) {
-                    scope.launch { onEffect.invoke(value, eventConsumer) }
+                    scope.launch { onEffect.invoke(value, safeEventConsumer) }
                 }
 
                 override fun dispose() {
+                    safeEventConsumer.dispose()
                     scope.cancel("Effect Handler disposed")
                 }
             }

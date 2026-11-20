@@ -244,11 +244,12 @@ class CoroutinesSubtypeEffectHandlerBuilder<F : Any, E : Any> {
         val eventsChannel = Channel<E>()
         val subEffectChannelsMap = mutableMapOf<KClass<out F>, Channel<F>>()
         val mutex = Mutex()
+        val safeEventConsumer = SafeEventConsumer(eventConsumer)
 
         // Connects the eventConsumer
         scope.launch {
             for (event in eventsChannel) {
-                if (isActive) eventConsumer.accept(event)
+                if (isActive) safeEventConsumer.accept(event)
             }
         }
 
@@ -280,9 +281,11 @@ class CoroutinesSubtypeEffectHandlerBuilder<F : Any, E : Any> {
             }
 
             override fun dispose() {
-                // scope.cancel() alone is sufficient: it cancels the events consumer, every
-                // effect handler, and every accept-coroutine, all of which release their
-                // references to eventsChannel and the sub-effect channels via cancellation.
+                safeEventConsumer.dispose()
+                // For releasing the channels, scope.cancel() alone is sufficient: it cancels the
+                // events consumer, every effect handler, and every accept-coroutine, all of which
+                // release their references to eventsChannel and the sub-effect channels via
+                // cancellation.
                 // Explicit channel.close() here used to race against the cancellation
                 // propagation and could surface ClosedSendChannelException to the platform
                 // uncaught handler instead of CancellationException.
