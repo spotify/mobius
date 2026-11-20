@@ -26,7 +26,7 @@ import com.spotify.mobius.functions.Consumer
  * Forwards events to [delegate] until disposed. [dispose] waits for an in-flight [accept] to finish,
  * because MobiusLoop rejects events once the dispose of its effect handler or event source returns.
  */
-internal class SafeEventConsumer<E>(private val delegate: Consumer<E>) : Consumer<E>, Disposable {
+internal class SafeEventConsumer<E : Any>(private val delegate: Consumer<E>) : Consumer<E>, Disposable {
     private var disposed = false
 
     @Synchronized
