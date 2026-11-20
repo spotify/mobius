@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.suspendCoroutine
@@ -244,11 +245,15 @@ class CoroutinesSubtypeEffectHandlerBuilder<F : Any, E : Any> {
         val eventsChannel = Channel<E>()
         val subEffectChannelsMap = mutableMapOf<KClass<out F>, Channel<F>>()
         val mutex = Mutex()
+        val disposed = AtomicBoolean(false)
 
-        // Connects the eventConsumer
+        // Connects the eventConsumer. The lock makes dispose() wait for an in-flight event, because
+        // MobiusLoop rejects events after dispose() returns.
         scope.launch {
             for (event in eventsChannel) {
-                if (isActive) eventConsumer.accept(event)
+                synchronized(disposed) {
+                    if (isActive && !disposed.get()) eventConsumer.accept(event)
+                }
             }
         }
 
@@ -280,9 +285,13 @@ class CoroutinesSubtypeEffectHandlerBuilder<F : Any, E : Any> {
             }
 
             override fun dispose() {
-                // scope.cancel() alone is sufficient: it cancels the events consumer, every
-                // effect handler, and every accept-coroutine, all of which release their
-                // references to eventsChannel and the sub-effect channels via cancellation.
+                synchronized(disposed) {
+                    disposed.set(true)
+                }
+                // For releasing the channels, scope.cancel() alone is sufficient: it cancels the
+                // events consumer, every effect handler, and every accept-coroutine, all of which
+                // release their references to eventsChannel and the sub-effect channels via
+                // cancellation.
                 // Explicit channel.close() here used to race against the cancellation
                 // propagation and could surface ClosedSendChannelException to the platform
                 // uncaught handler instead of CancellationException.
