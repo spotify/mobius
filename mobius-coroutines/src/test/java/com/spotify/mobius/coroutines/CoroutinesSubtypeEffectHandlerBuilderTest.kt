@@ -30,8 +30,11 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.fail
 import org.junit.Test
 import java.util.Collections
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CoroutinesSubtypeEffectHandlerBuilderTest {
@@ -554,6 +557,44 @@ class CoroutinesSubtypeEffectHandlerBuilderTest {
                 fail("Uncaught exception during dispose race on iteration $iteration: $uncaughtExceptions")
             }
         }
+    }
+
+    @Test
+    @Requirement(
+        given = "An event is being delivered to the event consumer",
+        `when` = "the connection is disposed",
+        then = "dispose waits until the delivery is done"
+    )
+    fun disposeWaitsForEventInDelivery() {
+        val deliveryStarted = CountDownLatch(1)
+        val deliveryCanFinish = CountDownLatch(1)
+        val disposeReturned = CountDownLatch(1)
+
+        val connection = subtypeEffectHandler<Effect, Event>()
+            .addFunction<Effect.Simple> { Event.SingleValue("value") }
+            .build(Dispatchers.Default)
+            .connect {
+                deliveryStarted.countDown()
+                deliveryCanFinish.await(5, TimeUnit.SECONDS)
+            }
+
+        connection.accept(Effect.Simple)
+        assertThat(deliveryStarted.await(5, TimeUnit.SECONDS)).isTrue()
+
+        thread {
+            connection.dispose()
+            disposeReturned.countDown()
+        }
+
+        // MobiusLoop rejects events once dispose() of its effect handler has returned, so dispose
+        // must not return while an event is still being delivered.
+        assertWithMessage("dispose returned while an event was being delivered")
+            .that(disposeReturned.await(100, TimeUnit.MILLISECONDS))
+            .isFalse()
+
+        deliveryCanFinish.countDown()
+
+        assertThat(disposeReturned.await(5, TimeUnit.SECONDS)).isTrue()
     }
 
     private sealed interface Effect {
